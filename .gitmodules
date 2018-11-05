@@ -1,0 +1,3 @@
+[submodule "third-party/HElib"]
+	path = third-party/HElib
+	url = https://github.com/shaih/HElib.git
