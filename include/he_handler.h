@@ -26,8 +26,12 @@ class he_handler
 
         int decrypt();
         ZZX decrypt(Ctxt & ctxt);
+        int decrypt(std::string & ctxt);
 
         void aggregate(int count);
+        void add(std::string & ctxt);
+
+        int getSum();
 
     protected:
 
@@ -41,6 +45,8 @@ class he_handler
         long m_d; // Degree of the field extension [default=1]
         long m_k; // Security parameter [default=80] 
         long m_s; // Minimum number of slots [default=0]
+
+        Ctxt * m_pPartSum;
 
         FHEcontext * m_pContext;
         FHESecKey * m_pPrivateKey;

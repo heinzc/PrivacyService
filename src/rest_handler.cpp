@@ -56,14 +56,9 @@ void rest_handler::handle_get(http_request message) {
             return;
         }
     } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) {
-        if(input_counter < 3) {
-            message.reply(status_codes::Forbidden, "not enough inputs provided");
-            return;
-        } else {
-            int sum = m_pController->getHE_handler()->decrypt();
-            message.reply(status_codes::OK, to_string(sum));
-            return;
-        }
+        int sum = m_pController->getHE_handler()->getSum();
+        message.reply(status_codes::OK, to_string(sum));
+        return;
     }
 
     message.reply(status_codes::NotFound,"WAT?!");
@@ -110,6 +105,12 @@ void rest_handler::handle_post(http_request message) {
         
         message.reply(status_codes::OK,encrypt_ptxt(stvalue));
     }
+    else if(std::find(paths.begin(), paths.end(), "add") != paths.end()) {
+        string stvalue = message.extract_string().get();
+
+        m_pController->getHE_handler()->add(stvalue);
+        message.reply(status_codes::OK,"läuft!");
+    }
 
     message.reply(status_codes::NotFound,"WAT?!");
     return ;
@@ -141,7 +142,6 @@ void rest_handler::handle_put(http_request message)
 
 
 void rest_handler::produce_ctxt(string pt) {
-    
     int value = stoi(pt);
 
     m_pController->getHE_handler()->encrypt_and_store(value, input_counter);

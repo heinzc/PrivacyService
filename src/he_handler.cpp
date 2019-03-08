@@ -15,6 +15,8 @@ he_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, l
 	m_k = k;                 // Security parameter [default=80] 
     m_s = s;                   // Minimum number of slots [default=0]
 
+	m_pPartSum = 0;
+
     m_pContext = 0;
     m_pPrivateKey = 0;
 	m_pController = 0;
@@ -57,27 +59,6 @@ void he_handler::initialize() {
 
 
 Ctxt he_handler::encrypt(long x) {
-	// //const FHEPubKey& publicKey = *m_pPrivateKey;
-
-	// // Parameters needed to reconstruct the context
-	// unsigned long m, p, r;
-	// vector<long> gens, ords;
-	
-	// fstream pubKeyFile("pubkey.txt", fstream::in);
-	// assert(pubKeyFile.is_open());
-	
-	// // Initializes a context object with some parameters from the file
-	// readContextBase(pubKeyFile, m, p, r, gens, ords);
-	// FHEcontext context(m, p, r, gens, ords);
-	
-	// // Reads the context itself
-	// pubKeyFile >> context;
-
-	// FHEPubKey publicKey(context);
-	// pubKeyFile >> publicKey;
-	
-	// pubKeyFile.close();
-
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 
 	Ctxt ctxt(publicKey); // Initialize ciphertext using publicKey
@@ -105,26 +86,6 @@ string he_handler::encrypt_as_string(long x) {
 }
 
 int he_handler::decrypt() {
-
-	// // Parameters needed to reconstruct the context
-	// unsigned long m, p, r;
-	// vector<long> gens, ords;
-	
-	// fstream pubKeyFile("pubkey.txt", fstream::in);
-	// assert(pubKeyFile.is_open());
-	
-	// // Initializes a context object with some parameters from the file
-	// readContextBase(pubKeyFile, m, p, r, gens, ords);
-	// FHEcontext context(m, p, r, gens, ords);
-	
-	// // Reads the context itself
-	// pubKeyFile >> context;
-
-	// FHEPubKey publicKey(*m_pContext);
-	// pubKeyFile >> publicKey;
-	
-	// pubKeyFile.close();
-
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	
 	fstream ciphertextFile("ciphertextsum.txt", fstream::in);
@@ -143,26 +104,29 @@ int he_handler::decrypt() {
 
 ZZX he_handler::decrypt(Ctxt & ctxt) {
 	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
-	// // Parameters used to reconstruct the context
-	// unsigned long m, p, r;
-	// vector<long> gens, ords;
-	
-	// // Read the context to reconstruct the secret key
-	// fstream secKeyFile("privkey.txt", fstream::in);
-	// readContextBase(secKeyFile, m, p, r, gens, ords);
-	// FHEcontext context(m, p, r, gens, ords);
-	// secKeyFile >> context;
-	
-	// // Initializes the secret key object using the context and reads the key from the file
-	// FHESecKey secretKey(*m_pContext);
-	// secKeyFile >> secretKey;
-
 	FHESecKey secretKey = *m_pPrivateKey;
 
 	secretKey.Decrypt(ptxt, ctxt);
 	//m_pPrivateKey->Decrypt(ptxt, *ctxt);
 
 	return ptxt;
+}
+
+int he_handler::decrypt(std::string & ctxt) {
+	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
+	const FHEPubKey& publicKey = *m_pPrivateKey;
+	Ctxt ctsum = Ctxt(publicKey);
+
+	std::stringstream ss (ctxt);
+	ss >> ctsum;
+
+	FHESecKey secretKey = *m_pPrivateKey;
+	secretKey.Decrypt(ptxt, ctsum);
+
+	int sum;
+	conv(sum, ptxt[0]);
+
+	return sum;
 }
 
 void he_handler::aggregate(int count)
@@ -208,6 +172,40 @@ void he_handler::aggregate(int count)
     assert(ciphertext.is_open());
     ciphertext << ctsum;
     ciphertext.close();
+}
+
+
+
+void he_handler::add(std::string & ctxt) {
+	const FHEPubKey& publicKey = *m_pPrivateKey;
+	Ctxt * ct = new Ctxt(publicKey);
+
+	std::stringstream ss (ctxt);
+	ss >> *ct;
+
+	if (m_pPartSum == 0) {
+		m_pPartSum = ct;
+	} 
+	else {
+		*m_pPartSum += *ct;
+		delete ct;
+	}
+}
+
+int he_handler::getSum() {
+	if (m_pPartSum == 0)
+		return 0;
+
+	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
+	FHESecKey secretKey = *m_pPrivateKey;
+
+	secretKey.Decrypt(ptxt, *m_pPartSum);
+	//m_pPrivateKey->Decrypt(ptxt, *ctxt);
+
+	int sum;
+	conv(sum, ptxt[0]);
+
+	return sum;
 }
 
 
