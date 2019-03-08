@@ -13,7 +13,7 @@
 class he_handler
 {
     public:
-        he_handler(long m = 0, long p = 257, long r = 1, long L = 16, long c = 2, long w = 64, long d = 1, long k = 80, long s = 0);
+        he_handler(long m = 0, long p = 257, long r = 1, long L = 16, long c = 2, long w = 64, long d = 1, long k = 20, long s = 0);
         virtual ~he_handler();
 
         void setController(he_controller * controller);
@@ -22,6 +22,7 @@ class he_handler
 
         Ctxt encrypt(long x);
         void encrypt_and_store(long x, int id);
+        std::string encrypt_as_string(long x);
 
         int decrypt();
         ZZX decrypt(Ctxt & ctxt);

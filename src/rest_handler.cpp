@@ -102,11 +102,16 @@ void rest_handler::handle_post(http_request message) {
     if(std::find(paths.begin(), paths.end(), "produce") != paths.end()) {
         string stvalue = message.extract_string().get();
         produce_ctxt(stvalue);
-
+        message.reply(status_codes::OK,message.to_string());
         input_counter++;
     }
+    else if(std::find(paths.begin(), paths.end(), "encrypt") != paths.end()) {
+        string stvalue = message.extract_string().get();
+        
+        message.reply(status_codes::OK,encrypt_ptxt(stvalue));
+    }
 
-    message.reply(status_codes::OK,message.to_string());
+    message.reply(status_codes::NotFound,"WAT?!");
     return ;
 }
 
@@ -140,4 +145,10 @@ void rest_handler::produce_ctxt(string pt) {
     int value = stoi(pt);
 
     m_pController->getHE_handler()->encrypt_and_store(value, input_counter);
+}
+
+string rest_handler::encrypt_ptxt(string pt) {
+    int value = stoi(pt);
+
+    return m_pController->getHE_handler()->encrypt_as_string(value);
 }

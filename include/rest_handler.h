@@ -33,6 +33,7 @@ class rest_handler
         void handle_error(pplx::task<void>& t);
 
         void produce_ctxt(string pt);
+        string encrypt_ptxt(string pt);
 
         http_listener m_listener;
 

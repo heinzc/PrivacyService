@@ -1,4 +1,5 @@
 #include "../include/he_handler.h"
+#include <sstream>
 
 using namespace std;
 
@@ -56,26 +57,28 @@ void he_handler::initialize() {
 
 
 Ctxt he_handler::encrypt(long x) {
-	//const FHEPubKey& publicKey = *m_pPrivateKey;
+	// //const FHEPubKey& publicKey = *m_pPrivateKey;
 
-	// Parameters needed to reconstruct the context
-	unsigned long m, p, r;
-	vector<long> gens, ords;
+	// // Parameters needed to reconstruct the context
+	// unsigned long m, p, r;
+	// vector<long> gens, ords;
 	
-	fstream pubKeyFile("pubkey.txt", fstream::in);
-	assert(pubKeyFile.is_open());
+	// fstream pubKeyFile("pubkey.txt", fstream::in);
+	// assert(pubKeyFile.is_open());
 	
-	// Initializes a context object with some parameters from the file
-	readContextBase(pubKeyFile, m, p, r, gens, ords);
-	FHEcontext context(m, p, r, gens, ords);
+	// // Initializes a context object with some parameters from the file
+	// readContextBase(pubKeyFile, m, p, r, gens, ords);
+	// FHEcontext context(m, p, r, gens, ords);
 	
-	// Reads the context itself
-	pubKeyFile >> context;
+	// // Reads the context itself
+	// pubKeyFile >> context;
 
-	FHEPubKey publicKey(context);
-	pubKeyFile >> publicKey;
+	// FHEPubKey publicKey(context);
+	// pubKeyFile >> publicKey;
 	
-	pubKeyFile.close();
+	// pubKeyFile.close();
+
+	const FHEPubKey& publicKey = *m_pPrivateKey;
 
 	Ctxt ctxt(publicKey); // Initialize ciphertext using publicKey
 	publicKey.Encrypt(ctxt, to_ZZX(x));
@@ -92,26 +95,37 @@ void he_handler::encrypt_and_store(long x, int id) {
     ciphertext.close();
 }
 
+string he_handler::encrypt_as_string(long x) {
+	Ctxt ctxt = encrypt(x);
+
+	std::stringstream ss;
+	ss << ctxt;
+
+	return ss.str();
+}
+
 int he_handler::decrypt() {
 
-	// Parameters needed to reconstruct the context
-	unsigned long m, p, r;
-	vector<long> gens, ords;
+	// // Parameters needed to reconstruct the context
+	// unsigned long m, p, r;
+	// vector<long> gens, ords;
 	
-	fstream pubKeyFile("pubkey.txt", fstream::in);
-	assert(pubKeyFile.is_open());
+	// fstream pubKeyFile("pubkey.txt", fstream::in);
+	// assert(pubKeyFile.is_open());
 	
-	// Initializes a context object with some parameters from the file
-	readContextBase(pubKeyFile, m, p, r, gens, ords);
-	FHEcontext context(m, p, r, gens, ords);
+	// // Initializes a context object with some parameters from the file
+	// readContextBase(pubKeyFile, m, p, r, gens, ords);
+	// FHEcontext context(m, p, r, gens, ords);
 	
-	// Reads the context itself
-	pubKeyFile >> context;
+	// // Reads the context itself
+	// pubKeyFile >> context;
 
-	FHEPubKey publicKey(*m_pContext);
-	pubKeyFile >> publicKey;
+	// FHEPubKey publicKey(*m_pContext);
+	// pubKeyFile >> publicKey;
 	
-	pubKeyFile.close();
+	// pubKeyFile.close();
+
+	const FHEPubKey& publicKey = *m_pPrivateKey;
 	
 	fstream ciphertextFile("ciphertextsum.txt", fstream::in);
 	assert(ciphertextFile.is_open());
@@ -129,19 +143,21 @@ int he_handler::decrypt() {
 
 ZZX he_handler::decrypt(Ctxt & ctxt) {
 	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
-	// Parameters used to reconstruct the context
-	unsigned long m, p, r;
-	vector<long> gens, ords;
+	// // Parameters used to reconstruct the context
+	// unsigned long m, p, r;
+	// vector<long> gens, ords;
 	
-	// Read the context to reconstruct the secret key
-	fstream secKeyFile("privkey.txt", fstream::in);
-	readContextBase(secKeyFile, m, p, r, gens, ords);
-	FHEcontext context(m, p, r, gens, ords);
-	secKeyFile >> context;
+	// // Read the context to reconstruct the secret key
+	// fstream secKeyFile("privkey.txt", fstream::in);
+	// readContextBase(secKeyFile, m, p, r, gens, ords);
+	// FHEcontext context(m, p, r, gens, ords);
+	// secKeyFile >> context;
 	
-	// Initializes the secret key object using the context and reads the key from the file
-	FHESecKey secretKey(*m_pContext);
-	secKeyFile >> secretKey;
+	// // Initializes the secret key object using the context and reads the key from the file
+	// FHESecKey secretKey(*m_pContext);
+	// secKeyFile >> secretKey;
+
+	FHESecKey secretKey = *m_pPrivateKey;
 
 	secretKey.Decrypt(ptxt, ctxt);
 	//m_pPrivateKey->Decrypt(ptxt, *ctxt);
@@ -222,17 +238,17 @@ void he_handler::generate_keys() {
     std::cout << "Generating keys... " << std::flush;
 
 	// Files that will contain the public and secret keys
-	fstream secKeyFile("privkey.txt", fstream::out|fstream::trunc);
-	fstream pubKeyFile("pubkey.txt", fstream::out|fstream::trunc);
-	assert(secKeyFile.is_open());
-	assert(pubKeyFile.is_open());
+	//fstream secKeyFile("privkey.txt", fstream::out|fstream::trunc);
+	//fstream pubKeyFile("pubkey.txt", fstream::out|fstream::trunc);
+	//assert(secKeyFile.is_open());
+	//assert(pubKeyFile.is_open());
 
 	// Write the context to the files that will contain the keys
 	// The context information is used to recreate the keys later
-	writeContextBase(secKeyFile, *m_pContext);
-	writeContextBase(pubKeyFile, *m_pContext);
-	secKeyFile << *m_pContext << std::endl;
-	pubKeyFile << *m_pContext << std::endl;
+	//writeContextBase(secKeyFile, *m_pContext);
+	//writeContextBase(pubKeyFile, *m_pContext);
+	//secKeyFile << *m_pContext << std::endl;
+	//pubKeyFile << *m_pContext << std::endl;
 
     m_pPrivateKey = new FHESecKey(* m_pContext); // Construct a secret key structure
     //m_pPublicKey = new FHEPubKey(* m_pPrivateKey); // An "upcast": FHESecKey is a subclass of FHEPubKey
@@ -241,10 +257,10 @@ void he_handler::generate_keys() {
 	addSome1DMatrices(*m_pPrivateKey);
 	
 	// Writes both the secret and the public keys to files
-	secKeyFile << *m_pPrivateKey << std::endl;
-	pubKeyFile << publicKey << std::endl;
+	//secKeyFile << *m_pPrivateKey << std::endl;
+	//pubKeyFile << publicKey << std::endl;
 
-	secKeyFile.close();
-	pubKeyFile.close();
+	//secKeyFile.close();
+	//pubKeyFile.close();
 	std::cout << "OK!" << std::endl;
 }
