@@ -34,9 +34,14 @@ link_directories(${HOMEBREW_LIB})
 include_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/lib)
 
+## include libhcs from third-party
+include_directories(${CMAKE_SOURCE_DIR}/third-party/libhcs/include)
+link_directories(${CMAKE_SOURCE_DIR}/third-party/libhcs/lib)
+
 set(SOURCE  src/main.cpp
             src/rest_handler.cpp
-            src/he_handler.cpp
+            src/fhe_handler.cpp
+            src/phe_handler.cpp
             src/he_controller.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
@@ -54,6 +59,7 @@ target_link_libraries(${PROJECT_NAME}
   	OpenSSL::SSL
     crypto
     fhe
+    hcs
     ntl
     gmp
     m

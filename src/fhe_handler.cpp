@@ -1,9 +1,10 @@
-#include "../include/he_handler.h"
+#include "../include/fhe_handler.h"
 #include <sstream>
 
 using namespace std;
 
-he_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s)
+fhe_handler::fhe_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s) :
+	he_handler()
 {
     m_m = m;                   // Specific modulus
 	m_p = p;                // Plaintext base [default=2], should be a prime number
@@ -19,10 +20,9 @@ he_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, l
 
     m_pContext = 0;
     m_pPrivateKey = 0;
-	m_pController = 0;
 }
 
-/* he_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s){
+/* fhe_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s){
 	long m = 0;                   // Specific modulus
 	long p = 1021;257;                // Plaintext base [default=2], should be a prime number
 	long r = 1;                   // Lifting [default=1]
@@ -34,17 +34,13 @@ he_handler::he_handler(long m, long p, long r, long L, long c, long w, long d, l
     long s = 0;                   // Minimum number of slots [default=0]
 } */
 
-he_handler::~he_handler() {
+fhe_handler::~fhe_handler() {
     // destructor
 
 }
 
-void he_handler::setController(he_controller * controller) {
-	m_pController = controller;
-}
 
-
-void he_handler::initialize() {
+void fhe_handler::initialize() {
 
     initialize_m();
 
@@ -58,7 +54,7 @@ void he_handler::initialize() {
 }
 
 
-Ctxt he_handler::encrypt(long x) {
+Ctxt fhe_handler::encrypt(long x) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 
 	Ctxt ctxt(publicKey); // Initialize ciphertext using publicKey
@@ -67,7 +63,7 @@ Ctxt he_handler::encrypt(long x) {
 	return ctxt;
 }
 
-void he_handler::encrypt_and_store(long x, int id) {
+void fhe_handler::encrypt_and_store(long x, int id) {
 	Ctxt ctxt = encrypt(x);
 
 	std::fstream ciphertext("ciphertext" + to_string(id) + ".txt", fstream::out|fstream::trunc);
@@ -76,7 +72,7 @@ void he_handler::encrypt_and_store(long x, int id) {
     ciphertext.close();
 }
 
-string he_handler::encrypt_as_string(long x) {
+string fhe_handler::encrypt_as_string(long x) {
 	Ctxt ctxt = encrypt(x);
 
 	std::stringstream ss;
@@ -85,7 +81,7 @@ string he_handler::encrypt_as_string(long x) {
 	return ss.str();
 }
 
-int he_handler::decrypt() {
+int fhe_handler::decrypt() {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	
 	fstream ciphertextFile("ciphertextsum.txt", fstream::in);
@@ -102,7 +98,7 @@ int he_handler::decrypt() {
 	return sum;
 }
 
-ZZX he_handler::decrypt(Ctxt & ctxt) {
+ZZX fhe_handler::decrypt(Ctxt & ctxt) {
 	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
 	FHESecKey secretKey = *m_pPrivateKey;
 
@@ -112,7 +108,7 @@ ZZX he_handler::decrypt(Ctxt & ctxt) {
 	return ptxt;
 }
 
-int he_handler::decrypt(std::string & ctxt) {
+int fhe_handler::decrypt(std::string & ctxt) {
 	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt ctsum = Ctxt(publicKey);
@@ -129,7 +125,7 @@ int he_handler::decrypt(std::string & ctxt) {
 	return sum;
 }
 
-void he_handler::aggregate(int count)
+void fhe_handler::aggregate(int count)
  {
 	// Parameters needed to reconstruct the context
 	unsigned long m, p, r;
@@ -176,7 +172,7 @@ void he_handler::aggregate(int count)
 
 
 
-void he_handler::add(std::string & ctxt) {
+void fhe_handler::add(std::string & ctxt) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt * ct = new Ctxt(publicKey);
 
@@ -192,7 +188,7 @@ void he_handler::add(std::string & ctxt) {
 	}
 }
 
-int he_handler::getSum() {
+int fhe_handler::getSum() {
 	if (m_pPartSum == 0)
 		return 0;
 
@@ -209,14 +205,14 @@ int he_handler::getSum() {
 }
 
 
-void he_handler::initialize_m() {
+void fhe_handler::initialize_m() {
 
 	std::cout << "Finding m... " << std::flush;
 	m_m = FindM(m_k, m_L, m_c, m_p, m_d, m_s, 0); // Find a value for m given the specified values
 	std::cout << "m = " << m_m << std::endl;
 }
 
-void he_handler::initialize_context() {
+void fhe_handler::initialize_context() {
 
 	std::cout << "Initializing context... " << std::flush;
 	m_pContext = new FHEcontext(m_m, m_p, m_r); // Initialize context
@@ -224,14 +220,14 @@ void he_handler::initialize_context() {
 	std::cout << "OK!" << std::endl;
 }
 
-void he_handler::initialize_polinomial() {
+void fhe_handler::initialize_polinomial() {
 
 	std::cout << "Creating polynomial... " << std::flush;
 	ZZX G =  m_pContext->alMod.getFactorsOverZZ()[0]; // Creates the polynomial used to encrypt the data
 	std::cout << "OK!" << std::endl;
 }
 
-void he_handler::generate_keys() {
+void fhe_handler::generate_keys() {
 
     std::cout << "Generating keys... " << std::flush;
 

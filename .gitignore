@@ -1,6 +1,7 @@
 *.txt
 !CMakeList.txt
 **/build/
+**/.vscode/
 
 # OS generated files #
 ######################

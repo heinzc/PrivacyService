@@ -1,6 +1,7 @@
 #include "../include/stdafx.h"
 #include "../include/rest_handler.h"
-#include "../include/he_handler.h"
+#include "../include/fhe_handler.h"
+#include "../include/phe_handler.h"
 #include "../include/he_controller.h"
 
 #include <cassert>
@@ -38,31 +39,12 @@ void on_shutdown()
 int main()
 {	
     he_controller controller = he_controller();
-	he_handler * he = new he_handler();
+	he_handler * he = (he_handler*) (new phe_handler());
 	he->initialize();
     controller.setHE_handler(he);
 
-/*     Ctxt ctx1 = he->encrypt(24);
-    std::fstream ciphertext1("ciphertext1.txt", fstream::out|fstream::trunc);
-    assert(ciphertext1.is_open());
-    ciphertext1 << ctx1;
-    ciphertext1.close();
-
-	Ctxt ctx2 = he->encrypt(15);
-    std::fstream ciphertext2("ciphertext2.txt", fstream::out|fstream::trunc);
-    assert(ciphertext2.is_open());
-    ciphertext2 << ctx2;
-    ciphertext2.close();
-	
-
-	//Ctxt ctSum = ctx1;                   // Create a ciphertext to hold the sum and initialize it with Enc(2)
-	//ctSum += ctx2;                       // Perform Enc(2) + Enc(3)
-
-    Ctxt * ctSum = he->sum_up();
-
-    ZZX ptSum = he->decrypt(ctSum);
-
-	std::cout << "24 + 15 = " << ptSum[0] << std::endl; */
+    //debugging
+    std::cout << he->encrypt_as_string(0) << std::endl;
 
 	utility::string_t address = U("http://127.0.0.1:4242");
 

@@ -144,7 +144,7 @@ void rest_handler::handle_put(http_request message)
 void rest_handler::produce_ctxt(string pt) {
     int value = stoi(pt);
 
-    m_pController->getHE_handler()->encrypt_and_store(value, input_counter);
+    //m_pController->getHE_handler()->encrypt_and_store(value, input_counter);
 }
 
 string rest_handler::encrypt_ptxt(string pt) {

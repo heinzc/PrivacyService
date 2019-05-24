@@ -1,60 +1,37 @@
 #pragma once
 
 #include <iostream>
-
-#include <NTL/ZZ.h>
-#include <NTL/BasicThreadPool.h>
-#include "FHE.h"
-#include "timing.h"
-#include "EncryptedArray.h"
-#include <NTL/lzz_pXFactoring.h>
 #include "he_controller.h"
 
 class he_handler
 {
     public:
-        he_handler(long m = 0, long p = 257, long r = 1, long L = 16, long c = 2, long w = 64, long d = 1, long k = 20, long s = 0);
-        virtual ~he_handler();
+        he_handler() {
+            m_pController = 0;
+        };
 
-        void setController(he_controller * controller);
+        virtual ~he_handler() {
 
-        void initialize();
+        };
 
-        Ctxt encrypt(long x);
-        void encrypt_and_store(long x, int id);
-        std::string encrypt_as_string(long x);
+        void setController(he_controller * controller) {
+            m_pController = controller;
+        }
 
-        int decrypt();
-        ZZX decrypt(Ctxt & ctxt);
-        int decrypt(std::string & ctxt);
+        virtual void initialize() = 0;
 
-        void aggregate(int count);
-        void add(std::string & ctxt);
+        virtual std::string encrypt_as_string(long x) = 0;
 
-        int getSum();
+        virtual int decrypt() = 0;
+        virtual int decrypt(std::string & ctxt) = 0;
+
+        virtual void aggregate(int count) = 0;
+        virtual void add(std::string & ctxt) = 0;
+
+        virtual int getSum() = 0;
 
     protected:
 
     private:
-        long m_m; // Specific modulus
-        long m_p; // Plaintext base [default=2], should be a prime number
-        long m_r; // Lifting [default=1]
-        long m_L; // Number of levels in the modulus chain [default=heuristic]
-        long m_c; // Number of columns in key-switching matrix [default=2]
-        long m_w; // Hamming weight of secret key
-        long m_d; // Degree of the field extension [default=1]
-        long m_k; // Security parameter [default=80] 
-        long m_s; // Minimum number of slots [default=0]
-
-        Ctxt * m_pPartSum;
-
-        FHEcontext * m_pContext;
-        FHESecKey * m_pPrivateKey;
-
-        void initialize_m();
-        void initialize_context();
-        void initialize_polinomial();
-        void generate_keys();
-
         he_controller * m_pController;
 };
