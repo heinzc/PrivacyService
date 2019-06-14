@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 #include "he_controller.h"
 
 class he_handler
@@ -26,6 +27,7 @@ class he_handler
         virtual int decrypt(std::string & ctxt) = 0;
 
         virtual void aggregate(int count) = 0;
+        virtual std::string aggregate(std::vector<std::string> & input) = 0;
         virtual void add(std::string & ctxt) = 0;
 
         virtual int getSum() = 0;

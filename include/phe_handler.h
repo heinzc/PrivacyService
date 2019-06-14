@@ -1,9 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 #include "he_handler.h"
 
-#include <gmp.h>    // gmp is included implicitly
+#include <gmpxx.h>    // gmp is included implicitly
 #include <libhcs.h> // master header includes everything
 
 #include "he_controller.h"
@@ -22,6 +23,7 @@ class phe_handler : he_handler
         int decrypt(std::string & ctxt);
 
         void aggregate(int count);
+        std::string aggregate(std::vector<std::string> & input);
         void add(std::string & ctxt);
 
         int getSum();
@@ -32,4 +34,6 @@ class phe_handler : he_handler
         pcs_public_key * pk = 0;
         pcs_private_key * sk = 0;
         hcs_random * hr = 0;
+
+        mpz_t sum;
 };

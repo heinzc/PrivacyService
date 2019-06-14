@@ -7,7 +7,12 @@ using namespace std;
 phe_handler::phe_handler() :
 	he_handler()
 {
+	pk = 0;
+	sk = 0;
+	hr = 0;
 
+	mpz_inits(sum, NULL);
+	mpz_set_ui(sum, 0);
 }
 
 
@@ -27,6 +32,7 @@ void phe_handler::initialize() {
 
     // Generate a key pair with modulus of size 2048 bits
     pcs_generate_key_pair(pk, sk, hr, 2048);
+	pcs_encrypt(pk, hr, sum, sum);
     cout << "*** END INITIALIZATION ***" << endl;
 }
 
@@ -46,43 +52,54 @@ string phe_handler::encrypt_as_string(long x) {
 }
 
 int phe_handler::decrypt() {
+	mpz_t cleartxt;
+	mpz_inits(cleartxt, NULL);
+	pcs_decrypt(sk, cleartxt, sum);
 
-	return 0;
+	return mpz_get_ui(cleartxt);
 }
 
 
 int phe_handler::decrypt(std::string & ctxt) {
+	mpz_class value(ctxt);
 
-	return 0;
+	mpz_t cleartxt;
+	mpz_inits(cleartxt, NULL);
+	pcs_decrypt(sk, cleartxt, value.get_mpz_t());
+
+	return mpz_get_ui(cleartxt);
 }
+
 
 void phe_handler::aggregate(int count) {
 
 	return;
 }
 
+std::string phe_handler::aggregate(std::vector<std::string> & input) {
+	mpz_t thissum;
+	mpz_inits(thissum, NULL);
+	mpz_set_ui(thissum, 0);
+	pcs_encrypt(pk, hr, thissum, thissum);
+
+	for (auto it = input.begin(); it != input.end(); ++it) {
+			mpz_class value(*it);
+
+			pcs_ee_add(pk, thissum, thissum, value.get_mpz_t());
+	}
+
+	mpz_class stringsum(thissum);
+	return stringsum.get_str();
+}
 
 
 void phe_handler::add(std::string & ctxt) {
+	mpz_class value(ctxt);
 
-
-
-    mpz_t a, b, c;
-    mpz_inits(a, b, c, NULL);
-
-    mpz_set_ui(a, 50);
-    mpz_set_ui(b, 76);
-
-    pcs_encrypt(pk, hr, a, a);  // Encrypt a (= 50) and store back into a
-    pcs_encrypt(pk, hr, b, b);  // Encrypt b (= 76) and store back into b
-    gmp_printf("a = %Zd\nb = %Zd\n", a, b); // can use all gmp functions still
-
-    pcs_ee_add(pk, c, a, b);    // Add encrypted a and b values together into c
-    pcs_decrypt(sk, c, c);      // Decrypt c back into c using private key
-    gmp_printf("%Zd\n", c);     // output: c = 126
-
+    pcs_ee_add(pk, sum, sum, value.get_mpz_t());    // Add encrypted values into partsum
 	return;
 }
+
 
 int phe_handler::getSum() {
 

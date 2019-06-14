@@ -44,7 +44,17 @@ int main()
     controller.setHE_handler(he);
 
     //debugging
-    std::cout << he->encrypt_as_string(0) << std::endl;
+    std::string value;
+    value = he->encrypt_as_string(42);
+    std::vector<std::string> valuesvec;
+    valuesvec.push_back(value);
+    valuesvec.push_back(value);
+
+    std::string result = he->aggregate(valuesvec);
+
+    int intval = he->decrypt(result);
+
+    std::cout << intval << std::endl;
 
 	utility::string_t address = U("http://127.0.0.1:4242");
 
