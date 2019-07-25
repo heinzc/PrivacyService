@@ -56,8 +56,9 @@ target_link_libraries(${PROJECT_NAME}
   	Boost::atomic
   	Boost::date_time
   	Boost::regex
-  	OpenSSL::SSL
-    crypto
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    #crypto
     fhe
     hcs
     ntl

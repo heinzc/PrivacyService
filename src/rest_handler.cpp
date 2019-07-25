@@ -1,7 +1,10 @@
 #include "../include/rest_handler.h"
 
-#include "FHE.h"
+//#include "FHE.h"
 #include "../include/he_handler.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 
 rest_handler::rest_handler()
@@ -110,6 +113,19 @@ void rest_handler::handle_post(http_request message) {
 
         m_pController->getHE_handler()->add(stvalue);
         message.reply(status_codes::OK,"läuft!");
+    }
+    else if(std::find(paths.begin(), paths.end(), "aggregate") != paths.end()) {
+        json::object request_json = message.extract_json().get().as_object();
+        json::array values = request_json.at("values").as_array();
+        std::vector<std::string> vec;
+        for(auto it = values.begin(); it != values.end(); ++it) {
+            std::cout << it->as_string() << std::endl;
+            vec.push_back(it->as_string());
+        }
+        //string stvalue = message.extract_string().get();
+
+        std::string result = m_pController->getHE_handler()->aggregate(vec);
+        message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(result));
     }
 
     message.reply(status_codes::NotFound,"WAT?!");
