@@ -170,6 +170,25 @@ void fhe_handler::aggregate(int count)
     ciphertext.close();
 }
 
+std::string fhe_handler::aggregate(std::vector<std::string> & input) {
+	const FHEPubKey& publicKey = *m_pPrivateKey;
+	Ctxt sum = encrypt(0);
+
+	for(auto it = input.begin(); it != input.end(); ++it){
+		Ctxt * ctxt = new Ctxt(publicKey);
+		std::stringstream ss (*it);
+		ss >> *ctxt;
+
+		sum += *ctxt;
+		delete ctxt;
+	}
+
+	std::stringstream ss;
+	ss << sum;
+
+	return ss.str();
+}
+
 
 
 void fhe_handler::add(std::string & ctxt) {

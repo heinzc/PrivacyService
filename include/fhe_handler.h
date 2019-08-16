@@ -26,6 +26,7 @@ class fhe_handler : he_handler
         int decrypt(std::string & ctxt);
 
         void aggregate(int count);
+        std::string aggregate(std::vector<std::string> & input);
         void add(std::string & ctxt);
 
         int getSum();
