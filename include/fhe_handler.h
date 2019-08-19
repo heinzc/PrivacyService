@@ -55,5 +55,5 @@ class fhe_handler : he_handler
         void generate_keys();
 
         Ctxt encrypt(long x);
-        ZZX decrypt(Ctxt & ctxt);
+        NTL::ZZX decrypt(Ctxt & ctxt);
 };

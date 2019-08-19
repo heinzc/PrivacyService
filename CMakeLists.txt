@@ -5,8 +5,6 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ## Use -std=c++11 as default.
 set(CMAKE_CXX_STANDARD 11)
 
-#find_path(CPPREST_INCLUDE cpprest)
-
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
@@ -15,7 +13,6 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-set(OPENSSL_ROOT_DIR /usr/local/opt/openssl)
 find_package(OPENSSL  REQUIRED COMPONENTS  crypto)
 if(OPENSSL_FOUND)
     message(STATUS "OPENSSL_INCLUDE_DIRS: ${OPENSSL_INCLUDE_DIR}")
@@ -31,7 +28,7 @@ include_directories(${HOMEBREW_INCLUDE})
 link_directories(${HOMEBREW_LIB})
 
 ## include FHElib from third-party
-include_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/include)
+include_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/src)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/lib)
 
 ## include libhcs from third-party
@@ -59,7 +56,7 @@ target_link_libraries(${PROJECT_NAME}
     OpenSSL::SSL
     OpenSSL::Crypto
     #crypto
-    fhe
+    helib
     hcs
     ntl
     gmp

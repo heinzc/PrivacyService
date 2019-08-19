@@ -2,6 +2,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace NTL;
 
 fhe_handler::fhe_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s) :
 	he_handler()
@@ -98,7 +99,7 @@ int fhe_handler::decrypt() {
 	return sum;
 }
 
-ZZX fhe_handler::decrypt(Ctxt & ctxt) {
+NTL::ZZX fhe_handler::decrypt(Ctxt & ctxt) {
 	ZZX ptxt;                            //	Create a plaintext to hold the plaintext of the sum
 	FHESecKey secretKey = *m_pPrivateKey;
 
