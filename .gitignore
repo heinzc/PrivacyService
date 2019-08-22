@@ -15,10 +15,12 @@ Thumbs.db
 
 # Ignore all cmake files
 CMakeCache.txt
-CMakeFiles
+**/CMakeFiles/*
 cmake_install.cmake
 CTestTestfile.cmake
 install_manifest.txt
 
 # Ignore binary and build files
 **/Makefile*
+**/lib/*
+**/bin/*

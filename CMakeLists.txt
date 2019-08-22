@@ -27,13 +27,9 @@ set(HOMEBREW_LIB /usr/local/lib)
 include_directories(${HOMEBREW_INCLUDE})
 link_directories(${HOMEBREW_LIB})
 
-## include FHElib from third-party
-include_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/src)
-link_directories(${CMAKE_SOURCE_DIR}/third-party/HElib/lib)
-
-## include libhcs from third-party
-include_directories(${CMAKE_SOURCE_DIR}/third-party/libhcs/include)
-link_directories(${CMAKE_SOURCE_DIR}/third-party/libhcs/lib)
+## include third-parties
+include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
+link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
 
 set(SOURCE  src/main.cpp
             src/rest_handler.cpp
@@ -56,11 +52,10 @@ target_link_libraries(${PROJECT_NAME}
     OpenSSL::SSL
     OpenSSL::Crypto
     #crypto
+    #ssl
     helib
     hcs
     ntl
     gmp
     m
 )
-
-##target_link_libraries(${PROJECT_NAME} fhe ntl gmp m)
