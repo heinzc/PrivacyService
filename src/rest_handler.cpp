@@ -134,6 +134,11 @@ void rest_handler::handle_post(http_request message) {
             std::string result = m_pController->getHE_handler()->aggregate(vec);
             message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(result));
         }
+        else if(std::find(paths.begin(), paths.end(), "decrypt") != paths.end()) {
+            string stvalue = message.extract_string().get();
+
+            message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(stvalue));
+        }
 
         message.reply(status_codes::NotFound,"WAT?!");
     }
