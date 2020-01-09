@@ -5,11 +5,12 @@
 
 #include <NTL/ZZ.h>
 #include <NTL/BasicThreadPool.h>
-#include "helib/FHE.h"
+#include "helib/helib.h"
 #include "helib/timing.h"
-#include "helib/EncryptedArray.h"
 #include <NTL/lzz_pXFactoring.h>
 #include "he_controller.h"
+
+using namespace helib;
 
 class fhe_handler : he_handler
 {
@@ -44,10 +45,10 @@ class fhe_handler : he_handler
         long m_k; // Security parameter [default=80] 
         long m_s; // Minimum number of slots [default=0]
 
-        Ctxt * m_pPartSum;
+        Ctxt * m_pPartSum = 0;
 
-        FHEcontext * m_pContext;
-        FHESecKey * m_pPrivateKey;
+        FHEcontext * m_pContext = 0;
+        FHESecKey * m_pPrivateKey = 0;
 
         void initialize_m();
         void initialize_context();

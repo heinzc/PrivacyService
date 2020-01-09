@@ -1,9 +1,16 @@
-cmake_minimum_required(VERSION 3.0)
-project(HE-test)
+cmake_minimum_required(VERSION 3.5)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ## Use -std=c++11 as default.
 set(CMAKE_CXX_STANDARD 11)
+## Disable C++ extensions
+set(CMAKE_CXX_EXTENSIONS OFF)
+## Require full C++ standard
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+project(HE-test LANGUAGES CXX)
+
+set(Boost_NO_BOOST_CMAKE ON)
 
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 if(Boost_FOUND)
@@ -30,6 +37,9 @@ link_directories(${HOMEBREW_LIB})
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
+
+set(helib_DIR ${CMAKE_SOURCE_DIR}/third-party/share/cmake/helib)
+find_package(helib 1.0.0 EXACT REQUIRED)
 
 set(SOURCE  src/main.cpp
             src/rest_handler.cpp
