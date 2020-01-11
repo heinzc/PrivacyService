@@ -279,3 +279,11 @@ void fhe_handler::generate_keys() {
 	//pubKeyFile.close();
 	std::cout << "OK!" << std::endl;
 }
+
+string fhe_handler::getPublicKey() {
+    return "TODO";
+}
+
+void fhe_handler::setPublicKey(std::string & n, std::string & g, std::string & n2) {
+    //TODO
+}

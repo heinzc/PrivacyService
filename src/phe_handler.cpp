@@ -105,3 +105,17 @@ int phe_handler::getSum() {
 
 	return 0;
 }
+
+//pcs_public_key consits of parts n, g, n2
+std::string phe_handler::getPublicKey() {
+    //char * tmp = mpz_get_str(NULL,10,pk->n);
+    std::string Str = string("{\n\"Key\": [") + string(mpz_get_str(NULL,10,pk->n)) + string (", ") + string(mpz_get_str(NULL,10,pk->g)) + string(", ") + string(mpz_get_str(NULL,10,pk->n2)) + string("]\n}");
+    return Str;
+}
+
+//maybe switch to const strings instead 
+void phe_handler::setPublicKey(std::string & n, std::string & g, std::string & n2) {
+    mpz_set_str (pk->n, n.c_str(), 10);
+    mpz_set_str (pk->g, g.c_str(), 10);
+    mpz_set_str (pk->n2, n2.c_str(), 10);
+}

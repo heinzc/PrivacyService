@@ -65,6 +65,16 @@ void rest_handler::handle_get(http_request message) {
             int sum = m_pController->getHE_handler()->getSum();
             message.reply(status_codes::OK, to_string(sum));
             return;
+        }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) {
+            message.reply(status_codes::OK, m_pController->getHE_handler()->getPublicKey());
+            return;
+        } else if(std::find(paths.begin(), paths.end(), "TESTsetkey") != paths.end()) { //only for TESTING, to be REMOVED
+            std::string test1 = "1";
+            std::string test2 = "2";
+            std::string test3 = "3";
+            m_pController->getHE_handler()->setPublicKey(test1, test2, test3);
+            message.reply(status_codes::OK, string("DONE"));
+            return;
         }
 
         message.reply(status_codes::NotFound,"WAT?!");

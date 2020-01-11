@@ -27,6 +27,9 @@ class phe_handler : he_handler
         void add(std::string & ctxt);
 
         int getSum();
+        
+        std::string getPublicKey();
+        void setPublicKey(std::string & n, std::string & g, std::string & n2);
 
     protected:
 

@@ -56,7 +56,7 @@ int main()
 
     std::cout << intval << std::endl;
 
-	utility::string_t address = U("http://127.0.0.1:4242");
+	utility::string_t address = U("http://192.168.188.37:4242"); //127.0.0.1
 
     //on_initialize(address);
     uri_builder uri(address);
