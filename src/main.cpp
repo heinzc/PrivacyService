@@ -3,6 +3,7 @@
 #include "../include/fhe_handler.h"
 #include "../include/phe_handler.h"
 #include "../include/he_controller.h"
+#include "../include/phe_db_access.h"
 
 #include <cassert>
 #include <iostream>
@@ -38,6 +39,13 @@ void on_shutdown()
 
 int main()
 {	
+    //TEST
+    db_access * db = (db_access*) (new phe_db_access("test.db"));
+    //TEST
+    
+    
+    
+    
     he_controller controller = he_controller();
 	he_handler * he = (he_handler*) (new phe_handler());
 	he->initialize();

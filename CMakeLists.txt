@@ -37,6 +37,8 @@ link_directories(${HOMEBREW_LIB})
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
+## include sqlite
+include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
 
 set(helib_DIR ${CMAKE_SOURCE_DIR}/third-party/share/cmake/helib)
 find_package(helib 1.0.0 EXACT REQUIRED)
@@ -45,7 +47,10 @@ set(SOURCE  src/main.cpp
             src/rest_handler.cpp
             src/fhe_handler.cpp
             src/phe_handler.cpp
-            src/he_controller.cpp)
+            src/he_controller.cpp
+            src/phe_db_access.cpp
+            third-party/sqlite/shell.c
+            third-party/sqlite/sqlite3.c)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} 
@@ -68,4 +73,5 @@ target_link_libraries(${PROJECT_NAME}
     ntl
     gmp
     m
+    sqlite3
 )
