@@ -33,7 +33,7 @@ class fhe_handler : he_handler
         int getSum();
         
         std::string getPublicKey();
-        void setPublicKey(std::string & n, std::string & g, std::string & n2);
+        void setPublicKey(const char* json); //(std::string & n, std::string & g, std::string & n2);
 
     protected:
 

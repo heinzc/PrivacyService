@@ -3,9 +3,9 @@
 #include "../include/fhe_handler.h"
 #include "../include/phe_handler.h"
 #include "../include/he_controller.h"
-#include "../include/phe_db_access.h"
+#include "../include/db_access.h"
 
-#include <cassert>
+//#include <cassert>
 #include <iostream>
 
 using namespace std;
@@ -40,7 +40,8 @@ void on_shutdown()
 int main()
 {	
     //TEST
-    db_access * db = (db_access*) (new phe_db_access("test.db"));
+    db_access * db = new db_access("test.db");
+    //db->insert_public_key(1, "ke22eeye");
     //TEST
     
     

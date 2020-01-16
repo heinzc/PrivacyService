@@ -33,7 +33,7 @@ class he_handler
         virtual int getSum() = 0;
         
         virtual std::string getPublicKey() = 0;
-        virtual void setPublicKey(std::string & n, std::string & g, std::string & n2) = 0;
+        virtual void setPublicKey(const char* json) = 0;
 
     protected:
 

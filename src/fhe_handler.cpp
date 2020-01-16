@@ -284,6 +284,6 @@ string fhe_handler::getPublicKey() {
     return "TODO";
 }
 
-void fhe_handler::setPublicKey(std::string & n, std::string & g, std::string & n2) {
+void fhe_handler::setPublicKey(const char* json) { //(std::string & n, std::string & g, std::string & n2) {
     //TODO
 }

@@ -1,25 +1,22 @@
 #include "../third-party/sqlite/sqlite3.h"
 #include <stdio.h>
+#include <string>
 
 class db_access
 {
 	public:
         //constructor connects to database
         //if there is no such database, create it
-        db_access() {
-            
-        } ;
+        db_access(const char* database);
 
         //destructor
-        virtual ~db_access() {
-            
-        };
+        ~db_access();
 
         //insert public key
-        virtual bool insert_public_key(const char* table, int id, int data) = 0;
+        bool insert_public_key(int id, const char* key);
 
         //get public key
-        virtual int get_public_key(const char* table, int id) = 0;
+        int get_public_key(int id);
 
         //prints returned values of database //www.sqlite.org/quickstart.html
         static int callback(void* data, int argc, char** argv, char** azColName) {

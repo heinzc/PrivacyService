@@ -108,14 +108,12 @@ int phe_handler::getSum() {
 
 //pcs_public_key consits of parts n, g, n2
 std::string phe_handler::getPublicKey() {
-    //char * tmp = mpz_get_str(NULL,10,pk->n);
-    std::string Str = string("{\n\"Key\": [") + string(mpz_get_str(NULL,10,pk->n)) + string (", ") + string(mpz_get_str(NULL,10,pk->g)) + string(", ") + string(mpz_get_str(NULL,10,pk->n2)) + string("]\n}");
-    return Str;
+    return pcs_export_public_key(pk);
 }
 
 //maybe switch to const strings instead 
-void phe_handler::setPublicKey(std::string & n, std::string & g, std::string & n2) {
-    mpz_set_str (pk->n, n.c_str(), 10);
-    mpz_set_str (pk->g, g.c_str(), 10);
-    mpz_set_str (pk->n2, n2.c_str(), 10);
+void phe_handler::setPublicKey(const char* json) {
+    if(pcs_import_public_key(pk, json) == 0) {
+        printf("\nError setting public key\n");
+    }
 }

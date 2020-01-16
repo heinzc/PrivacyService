@@ -69,10 +69,7 @@ void rest_handler::handle_get(http_request message) {
             message.reply(status_codes::OK, m_pController->getHE_handler()->getPublicKey());
             return;
         } else if(std::find(paths.begin(), paths.end(), "TESTsetkey") != paths.end()) { //only for TESTING, to be REMOVED
-            std::string test1 = "1";
-            std::string test2 = "2";
-            std::string test3 = "3";
-            m_pController->getHE_handler()->setPublicKey(test1, test2, test3);
+            m_pController->getHE_handler()->setPublicKey("{\"n\":\"1yfw1AlQtvC2C88VariPBtPTc52rY5Ivw6EcTqdUkoxBJk9xo6OAgh8o8amcj58hvKtHfFE2TqeVzk0muT0H8HEbJG6vByglxGyXY5H0orgKPXGdOnUi6CI8DRmsB1M741DKjIMLfejSrLXQ5gcfq98f4AYuIbBjvsmvZtXG1XQZub7hizOUNJ44Z10Rci8SVKRAGm08PCljqPak767ZpQ0SSEdXIn39FndUOWG1OaM92B5fiIoSICF1GS7GNRCtyqpaix4ESqhcsXgWAZ5zB3mW5CMT8sZKQBXu4N8CWR78tbt0CsaE66IGIFheJH0lxPJx7pUSYGgIB7uikJJI1bAq9\"}");
             message.reply(status_codes::OK, string("DONE"));
             return;
         }

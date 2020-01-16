@@ -48,7 +48,7 @@ set(SOURCE  src/main.cpp
             src/fhe_handler.cpp
             src/phe_handler.cpp
             src/he_controller.cpp
-            src/phe_db_access.cpp
+            src/db_access.cpp
             third-party/sqlite/shell.c
             third-party/sqlite/sqlite3.c)
 add_executable(${PROJECT_NAME} ${SOURCE})
