@@ -27,16 +27,18 @@ class he_handler
         virtual int decrypt(std::string & ctxt) = 0;
 
         virtual void aggregate(int count) = 0;
-        virtual std::string aggregate(std::vector<std::string> & input) = 0;
-        virtual void add(std::string & ctxt) = 0;
+        virtual std::string aggregate(std::vector<std::string> & input, const char* publickey) = 0;
+        virtual void add(std::string & ctxt, const char* publickey) = 0;
 
         virtual int getSum() = 0;
         
         virtual std::string getPublicKey() = 0;
-        virtual void setPublicKey(const char* json) = 0;
 
     protected:
 
     private:
         he_controller * m_pController;
+        
+        virtual void setPublicKey(const char* json) = 0;
+        virtual void setPrivateKey(const char* json) = 0;
 };

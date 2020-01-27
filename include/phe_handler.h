@@ -23,13 +23,12 @@ class phe_handler : he_handler
         int decrypt(std::string & ctxt);
 
         void aggregate(int count);
-        std::string aggregate(std::vector<std::string> & input);
-        void add(std::string & ctxt);
+        std::string aggregate(std::vector<std::string> & input, const char* publickey);
+        void add(std::string & ctxt, const char* publickey);
 
         int getSum();
         
         std::string getPublicKey();
-        void setPublicKey(const char* json);
 
     protected:
 
@@ -39,4 +38,7 @@ class phe_handler : he_handler
         hcs_random * hr = 0;
 
         mpz_t sum;
+        
+        void setPublicKey(const char* json);
+        void setPrivateKey(const char* json);
 };

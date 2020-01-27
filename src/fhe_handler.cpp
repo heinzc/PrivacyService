@@ -172,7 +172,7 @@ void fhe_handler::aggregate(int count)
     ciphertext.close();
 }
 
-std::string fhe_handler::aggregate(std::vector<std::string> & input) {
+std::string fhe_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt sum = encrypt(0);
 
@@ -193,7 +193,7 @@ std::string fhe_handler::aggregate(std::vector<std::string> & input) {
 
 
 
-void fhe_handler::add(std::string & ctxt) {
+void fhe_handler::add(std::string & ctxt, const char* publickey) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt * ct = new Ctxt(publicKey);
 
@@ -285,5 +285,9 @@ string fhe_handler::getPublicKey() {
 }
 
 void fhe_handler::setPublicKey(const char* json) { //(std::string & n, std::string & g, std::string & n2) {
+    //TODO
+}
+
+void fhe_handler::setPrivateKey(const char* json) {
     //TODO
 }

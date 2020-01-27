@@ -3,13 +3,13 @@
 #include <iostream>
 #include "stdafx.h"
 #include "he_controller.h"
+#include "db_access.h"
 
 using namespace std;
 using namespace web;
 using namespace http;
 using namespace utility;
 using namespace http::experimental::listener;
-
 
 class rest_handler
 {
@@ -22,6 +22,9 @@ class rest_handler
 
         pplx::task<void>open(){return m_listener.open();}
         pplx::task<void>close(){return m_listener.close();}
+        
+        //get pulic key, gets the key if it is not in database
+        std::string get_public_key(const char* id, http_request message);
 
     protected:
 
@@ -40,4 +43,8 @@ class rest_handler
         he_controller * m_pController;
 
         int input_counter;
+        
+        std::string id;
+        
+        db_access * db;
 };

@@ -8,6 +8,10 @@
 
 #include <exception>
 
+#include <cpprest/http_client.h>
+
+using namespace web::http;
+using namespace web::http::client; 
 
 rest_handler::rest_handler()
 {
@@ -21,6 +25,9 @@ rest_handler::rest_handler(utility::string_t url):m_listener(url)
     m_listener.support(methods::DEL, std::bind(&rest_handler::handle_delete, this, std::placeholders::_1));
 
     input_counter = 0;
+    
+    id = "TESTID";
+    db = new db_access("test.db");
 }
 rest_handler::~rest_handler()
 {
@@ -52,7 +59,7 @@ void rest_handler::handle_get(http_request message) {
     try {
         auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
-        if(std::find(paths.begin(), paths.end(), "aggregation") != paths.end()) {
+        if(std::find(paths.begin(), paths.end(), "aggregation") != paths.end()) { //DEPRECATED
             if(input_counter < 3) {
                 message.reply(status_codes::Forbidden, "not enough inputs provided");
                 return;
@@ -61,15 +68,27 @@ void rest_handler::handle_get(http_request message) {
                 message.reply(status_codes::OK, "OK");
                 return;
             }
-        } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) {
+        } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) { //DEPRECATED
             int sum = m_pController->getHE_handler()->getSum();
             message.reply(status_codes::OK, to_string(sum));
             return;
         }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) {
-            message.reply(status_codes::OK, m_pController->getHE_handler()->getPublicKey());
+            http_response response(status_codes::OK);
+            response.headers().add(U("ID"), U("TESTID123"));
+            response.set_body(m_pController->getHE_handler()->getPublicKey());            
+            
+            message.reply(response).then([](pplx::task<void> t) {});
+            
+            //message.reply(status_codes::OK, m_pController->getHE_handler()->getPublicKey());
             return;
         } else if(std::find(paths.begin(), paths.end(), "TESTsetkey") != paths.end()) { //only for TESTING, to be REMOVED
-            m_pController->getHE_handler()->setPublicKey("{\"n\":\"1yfw1AlQtvC2C88VariPBtPTc52rY5Ivw6EcTqdUkoxBJk9xo6OAgh8o8amcj58hvKtHfFE2TqeVzk0muT0H8HEbJG6vByglxGyXY5H0orgKPXGdOnUi6CI8DRmsB1M741DKjIMLfejSrLXQ5gcfq98f4AYuIbBjvsmvZtXG1XQZub7hizOUNJ44Z10Rci8SVKRAGm08PCljqPak767ZpQ0SSEdXIn39FndUOWG1OaM92B5fiIoSICF1GS7GNRCtyqpaix4ESqhcsXgWAZ5zB3mW5CMT8sZKQBXu4N8CWR78tbt0CsaE66IGIFheJH0lxPJx7pUSYGgIB7uikJJI1bAq9\"}");
+            //m_pController->getHE_handler()->setPublicKey("{\"n\":\"1yfw1AlQtvC2C88VariPBtPTc52rY5Ivw6EcTqdUkoxBJk9xo6OAgh8o8amcj58hvKtHfFE2TqeVzk0muT0H8HEbJG6vByglxGyXY5H0orgKPXGdOnUi6CI8DRmsB1M741DKjIMLfejSrLXQ5gcfq98f4AYuIbBjvsmvZtXG1XQZub7hizOUNJ44Z10Rci8SVKRAGm08PCljqPak767ZpQ0SSEdXIn39FndUOWG1OaM92B5fiIoSICF1GS7GNRCtyqpaix4ESqhcsXgWAZ5zB3mW5CMT8sZKQBXu4N8CWR78tbt0CsaE66IGIFheJH0lxPJx7pUSYGgIB7uikJJI1bAq9\"}");
+            message.reply(status_codes::OK, string("DONE"));
+            return;
+        } else if(std::find(paths.begin(), paths.end(), "TESTgetforeignkey") != paths.end()) { //only for TESTING, to be REMOVED
+            std::string x = get_public_key("44", message);
+            std::cout << "KEY IS: " << "\n";
+            std::cout << x.c_str() << "\n";
             message.reply(status_codes::OK, string("DONE"));
             return;
         }
@@ -111,7 +130,7 @@ void rest_handler::handle_post(http_request message) {
     try{
         auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
-        if(std::find(paths.begin(), paths.end(), "produce") != paths.end()) {
+        if(std::find(paths.begin(), paths.end(), "produce") != paths.end()) { //DEPRECATED
             string stvalue = message.extract_string().get();
             produce_ctxt(stvalue);
             message.reply(status_codes::OK,message.to_string());
@@ -124,27 +143,45 @@ void rest_handler::handle_post(http_request message) {
         }
         else if(std::find(paths.begin(), paths.end(), "add") != paths.end()) {
             string stvalue = message.extract_string().get();
-
-            m_pController->getHE_handler()->add(stvalue);
-            message.reply(status_codes::OK,"läuft!");
+            if(message.headers().has(U("ID"))) {
+                std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("ID")));
+                m_pController->getHE_handler()->add(stvalue, get_public_key(header_id.c_str(), message).c_str());
+                message.reply(status_codes::OK,"läuft!");
+                return;
+            }
+            message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
         else if(std::find(paths.begin(), paths.end(), "aggregate") != paths.end()) {
-            json::object request_json = message.extract_json().get().as_object();
-            json::array values = request_json.at("values").as_array();
-            std::vector<std::string> vec;
-            for(auto it = values.begin(); it != values.end(); ++it) {
-                std::cout << it->as_string() << std::endl;
-                vec.push_back(it->as_string());
+            if(message.headers().has(U("ID"))) {
+                std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("ID")));
+                json::object request_json = message.extract_json().get().as_object();
+                json::array values = request_json.at("values").as_array();
+                std::vector<std::string> vec;
+                for(auto it = values.begin(); it != values.end(); ++it) {
+                    std::cout << it->as_string() << std::endl;
+                    vec.push_back(it->as_string());
+                }
+                //string stvalue = message.extract_string().get();
+                
+                std::string result = m_pController->getHE_handler()->aggregate(vec, get_public_key(header_id.c_str(), message).c_str());
+                message.reply(status_codes::OK, result); //m_pController->getHE_handler()->decrypt(result));
             }
-            //string stvalue = message.extract_string().get();
-
-            std::string result = m_pController->getHE_handler()->aggregate(vec);
-            message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(result));
+            message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
         else if(std::find(paths.begin(), paths.end(), "decrypt") != paths.end()) {
             string stvalue = message.extract_string().get();
 
             message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(stvalue));
+        }
+        else if(std::find(paths.begin(), paths.end(), "sendpublickey") != paths.end()) {
+            string stvalue = message.extract_string().get(); //key
+            //TODO check if key is correct?
+            if(message.headers().has(U("ID"))) { //is there the id header?
+                std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("ID"))); //id
+                db->insert_public_key(header_id.c_str(), stvalue.c_str());
+                message.reply(status_codes::OK, "ok");
+            }
+            message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
 
         message.reply(status_codes::NotFound,"WAT?!");
@@ -190,4 +227,29 @@ string rest_handler::encrypt_ptxt(string pt) {
     int value = stoi(pt);
 
     return m_pController->getHE_handler()->encrypt_as_string(value);
+}
+
+
+
+//
+// get pulic key, gets the key if it is not in database
+//
+std::string rest_handler::get_public_key(const char* id, http_request message) {
+    //cout << message.remote_address() << endl;
+    ////cout << message.absolute_uri().port() << endl;
+    
+    std::string key = db->get_public_key(id);
+    if(key == "") { //key not in database -> get key
+        std::string address = "http://";
+        address.append(message.remote_address());
+        address.append(":4242"); //TODO is there a way to get the port of the incoming message?
+        
+        http_client client(address.c_str());
+        http_response response = client.request(methods::GET, "/publickey").get();
+        std::string output = response.extract_string().get();
+        db->insert_public_key(id, output.c_str()); //insert retrieved key into database
+        return output;
+    } else { //key was already in database
+        return key;
+    }
 }

@@ -3,7 +3,7 @@
 #include "../include/fhe_handler.h"
 #include "../include/phe_handler.h"
 #include "../include/he_controller.h"
-#include "../include/db_access.h"
+//#include "../include/db_access.h"
 
 //#include <cassert>
 #include <iostream>
@@ -39,11 +39,19 @@ void on_shutdown()
 
 int main()
 {	
+    /*
     //TEST
     db_access * db = new db_access("test.db");
-    //db->insert_public_key(1, "ke22eeye");
+    //db->insert_public_key("1", "ke22eeye");
+    printf("HERE");
+    std::string x = db->get_public_key(13);
+    if (x != "") { //x ist nicht leer
+        printf("XXXXXXXXXXXXXXXXXXX");
+        std::cout << x.c_str() << std::endl;
+    }
+    printf("WAS");
     //TEST
-    
+    */
     
     
     
@@ -59,13 +67,13 @@ int main()
     valuesvec.push_back(value);
     valuesvec.push_back(value);
 
-    std::string result = he->aggregate(valuesvec);
+    std::string result = he->aggregate(valuesvec, "{\"n\":\"1HiP143yvityFFDc0IqCOz7GzHgyyJkVkv0C3wZHKc6Hf0bDUzdOGLXuJzspQT76rdo051RhWtjRatwQ65YDK19O0uRMFeN78yo4qDvm6z4xqgNffmqTt6vU8uJZM1dyEA6dHxpsGUrJm6FT0EiwoVEvvAinXbNlrrlgJpGjIeGw16jJtPEbCR4yMr2SX7Qyeq4q5jwPz2AwFId7bNNPOKlkN6p82hwqIwWSV4dAM22XrDF7OA5SBHXtSQzTSKChK2oMTmabSukCYu0grRy6zvKYZDxL7Ffq1sxeY6HM5yWwQVPDBM29vfQM6LOWW8U4XFwqbOTMnJUBa3zjBYfQld38X\"}");
 
     int intval = he->decrypt(result);
 
     std::cout << intval << std::endl;
 
-	utility::string_t address = U("http://192.168.188.37:4242"); //127.0.0.1
+	utility::string_t address = U("http://127.0.0.1:4242"); //127.0.0.1    192.168.188.37
 
     //on_initialize(address);
     uri_builder uri(address);

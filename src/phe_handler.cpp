@@ -2,6 +2,8 @@
 #include "gmpxx.h"
 #include <sstream>
 
+#include "../include/db_access.h"
+
 using namespace std;
 
 phe_handler::phe_handler() :
@@ -24,16 +26,35 @@ phe_handler::~phe_handler() {
 }
 
 
-void phe_handler::initialize() {
-	// initialize data structures
+void phe_handler::initialize() {  
+    db_access * db = new db_access("test.db");
+    // initialize data structures
+    hr = hcs_init_random();
     pk = pcs_init_public_key();
     sk = pcs_init_private_key();
-    hr = hcs_init_random();
-
+    
     // Generate a key pair with modulus of size 2048 bits
     pcs_generate_key_pair(pk, sk, hr, 2048);
-	pcs_encrypt(pk, hr, sum, sum);
-    cout << "*** END INITIALIZATION ***" << endl;
+    pcs_encrypt(pk, hr, sum, sum);
+    
+    if(db->get_own_key("PK") == "" || db->get_own_key("SK") == "") { //own keys missing in the database
+        //save above generated keys in database
+        cout << "No own keys yet in database. Generated new keys." << endl;        
+        db->insert_own_key("PK", pcs_export_public_key(pk));
+        db->insert_own_key("SK", pcs_export_private_key(sk));
+    } else { //set keys to the values saved in the database
+        setPublicKey(db->get_own_key("PK").c_str());
+        setPrivateKey(db->get_own_key("SK").c_str());
+    }
+    
+    /*
+    cout << "SK" << endl;
+    cout << pcs_export_private_key(sk) << endl;
+    cout << db->get_own_key("SK") << endl;
+    cout << "PK" << endl;
+    cout << pcs_export_public_key(pk) << endl;
+    cout << db->get_own_key("PK") << endl;
+    */
 }
 
 
@@ -76,16 +97,19 @@ void phe_handler::aggregate(int count) {
 	return;
 }
 
-std::string phe_handler::aggregate(std::vector<std::string> & input) {
+std::string phe_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
+    pcs_public_key * passed_pk = pk;
+    //pcs_import_public_key(passed_pk, publickey);
+    
 	mpz_t thissum;
 	mpz_inits(thissum, NULL);
 	mpz_set_ui(thissum, 0);
-	pcs_encrypt(pk, hr, thissum, thissum);
+	pcs_encrypt(passed_pk, hr, thissum, thissum);
 
 	for (auto it = input.begin(); it != input.end(); ++it) {
 			mpz_class value(*it);
 
-			pcs_ee_add(pk, thissum, thissum, value.get_mpz_t());
+			pcs_ee_add(passed_pk, thissum, thissum, value.get_mpz_t());
 	}
 
 	mpz_class stringsum(thissum);
@@ -93,10 +117,11 @@ std::string phe_handler::aggregate(std::vector<std::string> & input) {
 }
 
 
-void phe_handler::add(std::string & ctxt) {
+void phe_handler::add(std::string & ctxt, const char* publickey) {
 	mpz_class value(ctxt);
-
-    pcs_ee_add(pk, sum, sum, value.get_mpz_t());    // Add encrypted values into partsum
+    pcs_public_key * passed_pk = pk;
+    //pcs_import_public_key(passed_pk, publickey);
+    pcs_ee_add(passed_pk, sum, sum, value.get_mpz_t());    // Add encrypted values into partsum
 	return;
 }
 
@@ -111,9 +136,16 @@ std::string phe_handler::getPublicKey() {
     return pcs_export_public_key(pk);
 }
 
-//maybe switch to const strings instead 
 void phe_handler::setPublicKey(const char* json) {
     if(pcs_import_public_key(pk, json) == 0) {
-        printf("\nError setting public key\n");
+        cout << "Error setting public key" << endl;
     }
+    else cout << "Public key set" << endl;
+}
+
+void phe_handler::setPrivateKey(const char* json) {
+    if(pcs_import_private_key(sk, json) == 0) {
+        cout << "Error setting private key" << endl;
+    }
+    else cout << "Private key set" << endl;
 }

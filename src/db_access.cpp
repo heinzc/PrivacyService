@@ -17,17 +17,22 @@ db_access::db_access(const char* database)
 
     if (rc)
     {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        cout << "Can't open database: ";
+        cout << sqlite3_errmsg(db) << endl;
+        //fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     }
     else {
         fprintf(stderr, "Opened database successfully\n");
     }
 
-    const char* sql = "CREATE TABLE PUBLIC_KEYS(ID INT PRIMARY KEY, PUBLICKEY TEXT NOT NULL);";
+    const char* sql = "CREATE TABLE PUBLIC_KEYS(ID TEXT PRIMARY KEY, PUBLICKEY TEXT NOT NULL);";
+    const char* sql2 = "CREATE TABLE OWN_KEYS(KEYTYPE TEXT PRIMARY KEY, VALUE TEXT NOT NULL)";
     
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
+    cout << zErrMsg << endl;
     
-    printf(zErrMsg);
+    rc = sqlite3_exec(db, sql2, callback, 0, &zErrMsg);
+    cout << zErrMsg << endl;
 }
 
 //destructor
@@ -36,39 +41,85 @@ db_access::~db_access()
     sqlite3_close(db);
 }
 
-//insert public key
-bool db_access::insert_public_key(int id, const char* key)
-{    
-    string sql = "INSERT OR REPLACE INTO PUBLIC_KEYS";
-    sql.append(" (ID,PUBLICKEY) VALUES (");
-    sql.append(to_string(id));
-    sql.append(",\'");
-    sql.append(key);
+//to save own keys (public and private key) in database
+bool db_access:: insert_own_key(const char* keytype, const char* value)
+{
+    string sql = "INSERT OR REPLACE INTO OWN_KEYS";
+    sql.append(" (KEYTYPE,VALUE) VALUES (\'");
+    sql.append(keytype);
+    sql.append("\',\'");
+    sql.append(value);
     sql.append("\');");
 
     rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
     printf(zErrMsg);
-    printf("values posted\n");
+    cout << "Values posted" << endl;
     
 	return true;
 }
 
-//get public key
-int db_access::get_public_key(int id)
+//used to retrieve own keys (including private key) from the database
+std::string db_access::get_own_key(const char* keytype)
 {
-    string sql = "select DATA from PUBLIC_KEYS where ID = ";
-    sql.append(to_string(id));
+    string sql = "select VALUE from OWN_KEYS where KEYTYPE = \'";
+    sql.append(keytype);
+    sql.append("\'");
     
     char** results = NULL;
     int rows, columns;
     char* error;
     sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-    int sum = 0;
+    std::string value = "";
     if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
         for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-            sum += atoi(results[i]);
+            value = results[i];
         }
     }
+    if (rows * columns == 0) { //key not in database
+        cout << "Keytype not found in database" << endl;
+        return "";
+    }
+    return value;
+}
 
-    return sum;
+//insert public key
+bool db_access::insert_public_key(const char* id, const char* key)
+{    
+    string sql = "INSERT OR REPLACE INTO PUBLIC_KEYS";
+    sql.append(" (ID,PUBLICKEY) VALUES (\'");
+    sql.append(id);
+    sql.append("\',\'");
+    sql.append(key);
+    sql.append("\');");
+
+    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+    printf(zErrMsg);
+    cout << "Values posted" << endl;
+    
+	return true;
+}
+
+//get public key, returns empty string if key is not in database!
+std::string db_access::get_public_key(const char * id)
+{
+    string sql = "select PUBLICKEY from PUBLIC_KEYS where ID = \'";
+    sql.append(id);
+    sql.append("\'");
+    
+    char** results = NULL;
+    int rows, columns;
+    char* error;
+    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
+    std::string key = "";
+    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
+        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
+            key = results[i];
+        }
+        //key = "TEST";
+    }
+    if (rows * columns == 0) { //key not in database
+        cout << "ID not found in database" << endl;
+        return "";
+    }
+    return key;
 }
