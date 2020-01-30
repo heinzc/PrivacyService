@@ -3,6 +3,7 @@
 #include <iostream>
 #include "stdafx.h"
 #include "he_controller.h"
+
 #include "db_access.h"
 
 using namespace std;
@@ -15,7 +16,7 @@ class rest_handler
 {
     public:
         rest_handler();
-        rest_handler(utility::string_t url);
+        rest_handler(utility::string_t url, db_access * database);
         virtual ~rest_handler();
 
         void setController(he_controller * controller);

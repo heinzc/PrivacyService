@@ -4,11 +4,14 @@
 #include <vector>
 #include "he_controller.h"
 
+#include "db_access.h"
+
 class he_handler
 {
     public:
-        he_handler() {
+        he_handler(db_access * database) {
             m_pController = 0;
+            db = database;
         };
 
         virtual ~he_handler() {
@@ -33,6 +36,8 @@ class he_handler
         virtual int getSum() = 0;
         
         virtual std::string getPublicKey() = 0;
+        
+        db_access * db;
 
     protected:
 

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../third-party/sqlite/sqlite3.h"
 #include <stdio.h>
 #include <string>

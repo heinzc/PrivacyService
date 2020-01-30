@@ -15,7 +15,7 @@ using namespace helib;
 class fhe_handler : he_handler
 {
     public:
-        fhe_handler(long m = 0, long p = 257, long r = 1, long L = 16, long c = 2, long w = 64, long d = 1, long k = 20, long s = 0);
+        fhe_handler(db_access * database, long m = 0, long p = 257, long r = 1, long L = 16, long c = 2, long w = 64, long d = 1, long k = 20, long s = 0);
         ~fhe_handler();
 
         void initialize();

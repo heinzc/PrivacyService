@@ -53,13 +53,12 @@ int main()
     //TEST
     */
     
-    
-    
+    db_access * db = new db_access("test.db");
+
     he_controller controller = he_controller();
-	he_handler * he = (he_handler*) (new phe_handler());
+	he_handler * he = (he_handler*) (new phe_handler(db));
 	he->initialize();
     controller.setHE_handler(he);
-
     //debugging
     std::string value;
     value = he->encrypt_as_string(42);
@@ -80,7 +79,7 @@ int main()
   
     auto addr = uri.to_uri().to_string();
     //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    g_httpHandler = new rest_handler(addr);
+    g_httpHandler = new rest_handler(addr, db);
     controller.setREST_handler(g_httpHandler);
     g_httpHandler->open().wait();
 

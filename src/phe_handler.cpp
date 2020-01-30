@@ -2,12 +2,10 @@
 #include "gmpxx.h"
 #include <sstream>
 
-#include "../include/db_access.h"
-
 using namespace std;
 
-phe_handler::phe_handler() :
-	he_handler()
+phe_handler::phe_handler(db_access * database) :
+	he_handler(database)
 {
 	pk = 0;
 	sk = 0;
@@ -27,14 +25,14 @@ phe_handler::~phe_handler() {
 
 
 void phe_handler::initialize() {  
-    db_access * db = new db_access("test.db");
     // initialize data structures
     hr = hcs_init_random();
     pk = pcs_init_public_key();
     sk = pcs_init_private_key();
     
+    
     // Generate a key pair with modulus of size 2048 bits
-    pcs_generate_key_pair(pk, sk, hr, 2048);
+    pcs_generate_key_pair(pk, sk, hr, 2048);    
     pcs_encrypt(pk, hr, sum, sum);
     
     if(db->get_own_key("PK") == "" || db->get_own_key("SK") == "") { //own keys missing in the database

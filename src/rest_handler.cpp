@@ -17,7 +17,7 @@ rest_handler::rest_handler()
 {
     //ctor
 }
-rest_handler::rest_handler(utility::string_t url):m_listener(url)
+rest_handler::rest_handler(utility::string_t url, db_access * database):m_listener(url)
 {
     m_listener.support(methods::GET, std::bind(&rest_handler::handle_get, this, std::placeholders::_1));
     m_listener.support(methods::PUT, std::bind(&rest_handler::handle_put, this, std::placeholders::_1));
@@ -27,7 +27,7 @@ rest_handler::rest_handler(utility::string_t url):m_listener(url)
     input_counter = 0;
     
     id = "TESTID";
-    db = new db_access("test.db");
+    db = database;
 }
 rest_handler::~rest_handler()
 {

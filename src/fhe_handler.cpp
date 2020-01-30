@@ -5,8 +5,8 @@
 using namespace std;
 using namespace NTL;
 
-fhe_handler::fhe_handler(long m, long p, long r, long L, long c, long w, long d, long k, long s) :
-	he_handler()
+fhe_handler::fhe_handler(db_access * database, long m, long p, long r, long L, long c, long w, long d, long k, long s) :
+	he_handler(database)
 {
     m_m = m;                   // Specific modulus
 	m_p = p;                // Plaintext base [default=2], should be a prime number

@@ -12,7 +12,7 @@
 class phe_handler : he_handler
 {
     public:
-        phe_handler();
+        phe_handler(db_access * database);
         ~phe_handler();
 
         void initialize();
