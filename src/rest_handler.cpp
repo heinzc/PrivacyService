@@ -26,7 +26,7 @@ rest_handler::rest_handler(utility::string_t url, db_access * database):m_listen
 
     input_counter = 0;
     
-    id = "TESTID";
+    identifier = "123TESTID123";
     db = database;
 }
 rest_handler::~rest_handler()
@@ -74,7 +74,7 @@ void rest_handler::handle_get(http_request message) {
             return;
         }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) {
             http_response response(status_codes::OK);
-            response.headers().add(U("ID"), U("TESTID123"));
+            response.headers().add(U("ID"), U(identifier.c_str())); //add own id to the headers
             response.set_body(m_pController->getHE_handler()->getPublicKey());            
             
             message.reply(response).then([](pplx::task<void> t) {});
@@ -232,11 +232,11 @@ string rest_handler::encrypt_ptxt(string pt) {
 
 
 //
-// get pulic key, gets the key if it is not in database
+// get pulic key, requests the key if it is not in database
 //
 std::string rest_handler::get_public_key(const char* id, http_request message) {
     //cout << message.remote_address() << endl;
-    ////cout << message.absolute_uri().port() << endl;
+    //cout << message.absolute_uri().port() << endl;
     
     std::string key = db->get_public_key(id);
     if(key == "") { //key not in database -> get key

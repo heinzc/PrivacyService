@@ -24,7 +24,7 @@ class rest_handler
         pplx::task<void>open(){return m_listener.open();}
         pplx::task<void>close(){return m_listener.close();}
         
-        //get pulic key, gets the key if it is not in database
+        //get pulic key, requests the key if it is not in database
         std::string get_public_key(const char* id, http_request message);
 
     protected:
@@ -45,7 +45,7 @@ class rest_handler
 
         int input_counter;
         
-        std::string id;
+        std::string identifier;
         
         db_access * db;
 };

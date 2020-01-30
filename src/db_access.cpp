@@ -27,12 +27,12 @@ db_access::db_access(const char* database)
 
     const char* sql = "CREATE TABLE PUBLIC_KEYS(ID TEXT PRIMARY KEY, PUBLICKEY TEXT NOT NULL);";
     const char* sql2 = "CREATE TABLE OWN_KEYS(KEYTYPE TEXT PRIMARY KEY, VALUE TEXT NOT NULL)";
-    
+
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    cout << zErrMsg << endl;
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
     
     rc = sqlite3_exec(db, sql2, callback, 0, &zErrMsg);
-    cout << zErrMsg << endl;
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
 }
 
 //destructor

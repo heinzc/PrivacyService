@@ -5,7 +5,6 @@
 #include "../include/he_controller.h"
 //#include "../include/db_access.h"
 
-//#include <cassert>
 #include <iostream>
 
 using namespace std;
@@ -39,22 +38,8 @@ void on_shutdown()
 
 int main()
 {	
-    /*
-    //TEST
     db_access * db = new db_access("test.db");
-    //db->insert_public_key("1", "ke22eeye");
-    printf("HERE");
-    std::string x = db->get_public_key(13);
-    if (x != "") { //x ist nicht leer
-        printf("XXXXXXXXXXXXXXXXXXX");
-        std::cout << x.c_str() << std::endl;
-    }
-    printf("WAS");
-    //TEST
-    */
     
-    db_access * db = new db_access("test.db");
-
     he_controller controller = he_controller();
 	he_handler * he = (he_handler*) (new phe_handler(db));
 	he->initialize();
@@ -66,8 +51,8 @@ int main()
     valuesvec.push_back(value);
     valuesvec.push_back(value);
 
-    std::string result = he->aggregate(valuesvec, "{\"n\":\"1HiP143yvityFFDc0IqCOz7GzHgyyJkVkv0C3wZHKc6Hf0bDUzdOGLXuJzspQT76rdo051RhWtjRatwQ65YDK19O0uRMFeN78yo4qDvm6z4xqgNffmqTt6vU8uJZM1dyEA6dHxpsGUrJm6FT0EiwoVEvvAinXbNlrrlgJpGjIeGw16jJtPEbCR4yMr2SX7Qyeq4q5jwPz2AwFId7bNNPOKlkN6p82hwqIwWSV4dAM22XrDF7OA5SBHXtSQzTSKChK2oMTmabSukCYu0grRy6zvKYZDxL7Ffq1sxeY6HM5yWwQVPDBM29vfQM6LOWW8U4XFwqbOTMnJUBa3zjBYfQld38X\"}");
-
+    std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
+    
     int intval = he->decrypt(result);
 
     std::cout << intval << std::endl;

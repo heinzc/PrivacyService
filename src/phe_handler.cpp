@@ -29,8 +29,7 @@ void phe_handler::initialize() {
     hr = hcs_init_random();
     pk = pcs_init_public_key();
     sk = pcs_init_private_key();
-    
-    
+//     
     // Generate a key pair with modulus of size 2048 bits
     pcs_generate_key_pair(pk, sk, hr, 2048);    
     pcs_encrypt(pk, hr, sum, sum);
@@ -96,8 +95,10 @@ void phe_handler::aggregate(int count) {
 }
 
 std::string phe_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
-    pcs_public_key * passed_pk = pk;
-    //pcs_import_public_key(passed_pk, publickey);
+    pcs_public_key * passed_pk = pk; //if import would work, initializtation wouldn't be needed
+    //passed_pk = pcs_init_public_key();
+    //int x = pcs_import_public_key(passed_pk, publickey);
+    //cout << to_string(x) << endl; //TODO returns 0 -> ERROR!
     
 	mpz_t thissum;
 	mpz_inits(thissum, NULL);
@@ -117,8 +118,11 @@ std::string phe_handler::aggregate(std::vector<std::string> & input, const char*
 
 void phe_handler::add(std::string & ctxt, const char* publickey) {
 	mpz_class value(ctxt);
-    pcs_public_key * passed_pk = pk;
-    //pcs_import_public_key(passed_pk, publickey);
+    pcs_public_key * passed_pk = pk; //if import would work, initializtation wouldn't be needed
+    //passed_pk = pcs_init_public_key();
+    //int x = pcs_import_public_key(passed_pk, publickey);
+    //cout << to_string(x) << endl; //TODO returns 0 -> ERROR!
+    
     pcs_ee_add(passed_pk, sum, sum, value.get_mpz_t());    // Add encrypted values into partsum
 	return;
 }
