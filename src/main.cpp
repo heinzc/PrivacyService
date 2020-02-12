@@ -2,6 +2,7 @@
 #include "../include/rest_handler.h"
 #include "../include/fhe_handler.h"
 #include "../include/phe_handler.h"
+#include "../include/seal_he_handler.h"
 #include "../include/he_controller.h"
 
 #include <cassert>
@@ -39,22 +40,31 @@ void on_shutdown()
 int main()
 {	
     he_controller controller = he_controller();
-	he_handler * he = (he_handler*) (new phe_handler());
+	he_handler * he = (he_handler*) (new seal_he_handler());
 	he->initialize();
     controller.setHE_handler(he);
 
     //debugging
     std::string value;
-    value = he->encrypt_as_string(42);
+    std::string pubKey;
     std::vector<std::string> valuesvec;
+
+    value = he->encrypt_as_string(42);
+    pubKey = he->getPublicKey();
+    
     valuesvec.push_back(value);
+    
+    value = he->encrypt_as_string(42, pubKey);
+
     valuesvec.push_back(value);
 
     std::string result = he->aggregate(valuesvec);
 
     int intval = he->decrypt(result);
 
-    std::cout << intval << std::endl;
+    std::cout << "decrypted test result: " << intval << std::endl;
+
+    //std::cout << he->getPublicKey() << std::endl;
 
 	utility::string_t address = U("http://127.0.0.1:4242");
 

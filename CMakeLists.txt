@@ -8,9 +8,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Require full C++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party)
+
 project(HE-test LANGUAGES CXX)
 
 set(Boost_NO_BOOST_CMAKE ON)
+
+find_package(SEAL 3.4 REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 if(Boost_FOUND)
@@ -45,22 +49,24 @@ set(SOURCE  src/main.cpp
             src/rest_handler.cpp
             src/fhe_handler.cpp
             src/phe_handler.cpp
+            src/seal_he_handler.cpp
             src/he_controller.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} 
-	cpprest
-  	Boost::boost
-  	Boost::random
-  	Boost::system
-  	Boost::thread
-  	Boost::filesystem
-  	Boost::chrono
-  	Boost::atomic
-  	Boost::date_time
-  	Boost::regex
+    cpprest
+    Boost::boost
+    Boost::random
+    Boost::system
+    Boost::thread
+    Boost::filesystem
+    Boost::chrono
+    Boost::atomic
+    Boost::date_time
+    Boost::regex
     OpenSSL::SSL
     OpenSSL::Crypto
+    SEAL::seal
     #crypto
     #ssl
     helib

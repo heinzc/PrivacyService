@@ -2,6 +2,7 @@
 !CMakeList.txt
 **/build/
 **/.vscode/
+*.code-workspace
 
 # OS generated files #
 ######################

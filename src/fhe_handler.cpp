@@ -1,5 +1,6 @@
 #include "../include/fhe_handler.h"
 #include <sstream>
+#include <cassert>
 
 using namespace std;
 using namespace NTL;

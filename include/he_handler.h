@@ -21,7 +21,7 @@ class he_handler
 
         virtual void initialize() = 0;
 
-        virtual std::string encrypt_as_string(long x) = 0;
+        virtual std::string encrypt_as_string(long x, std::string pubkey = std::string() ) = 0;
 
         virtual int decrypt() = 0;
         virtual int decrypt(std::string & ctxt) = 0;
@@ -32,8 +32,13 @@ class he_handler
 
         virtual int getSum() = 0;
 
+        virtual std::string getPublicKey() = 0;
+
     protected:
 
     private:
         he_controller * m_pController;
+
+        //virtual void setPublicKey(const char* json) = 0;
+        //virtual void setPrivateKey(const char* json) = 0;
 };
