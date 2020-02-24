@@ -1,0 +1,17 @@
+{
+"adapters": [
+    {
+      "adapter-id": "health-adapter-test",
+      "endpoint": "http://localhost:5000/adapter"
+    },
+    {
+      "adapter-id": "adap2",
+      "endpoint": "http://localhost:6000/adapter"
+    },
+    {
+      "adapter-id": "adap3",
+      "endpoint": "http://localhost:6060/adapter"
+    }
+    
+  ]
+ } 

@@ -1,0 +1,39 @@
+#pragma once
+
+#include <iostream>
+#include <vector>
+#include "he_controller.h"
+
+class he_handler
+{
+    public:
+        he_handler() {
+            m_pController = 0;
+        };
+
+        virtual ~he_handler() {
+
+        };
+
+        void setController(he_controller * controller) {
+            m_pController = controller;
+        }
+
+        virtual void initialize() = 0;
+
+        virtual std::string encrypt_as_string(long x) = 0;
+
+        virtual int decrypt() = 0;
+        virtual int decrypt(std::string & ctxt) = 0;
+
+        virtual void aggregate(int count) = 0;
+        virtual std::string aggregate(std::vector<std::string> & input) = 0;
+        virtual void add(std::string & ctxt) = 0;
+
+        virtual int getSum() = 0;
+
+    protected:
+
+    private:
+        he_controller * m_pController;
+};
