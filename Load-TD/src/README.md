@@ -43,10 +43,13 @@ To install nlohmann (MAC OS): refer --- https://github.com/nlohmann/homebrew-jso
 
 brew install nlohmann_json
 
+**Build folder**
+move the config file into build folder(Where load_TD binary will be created)
+
 **Load_TD.cpp : **
+Execute the adapters and then execute load_TD.cpp.
 
 It reads the config file to get the thing-description from adapter endpoints and then creates a new thing-description file for encrypted device. 
 Each time when it is executed it removes the newly created TD and loads the json objects from all adapter endpoints provided in the config file. 
 
-**Build folder**
-move the config file into build folder.
+
