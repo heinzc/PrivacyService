@@ -183,6 +183,15 @@ void rest_handler::handle_post(http_request message) {
             }
             message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
+        else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
+            string stvalue = message.extract_string().get(); //oid
+            if(db->hasAccess(stvalue.c_str())) {
+                message.reply(status_codes::OK, "true");
+            }
+            else {
+                message.reply(status_codes::OK, "false");
+            }
+        }
 
         message.reply(status_codes::NotFound,"WAT?!");
     }
