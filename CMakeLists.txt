@@ -14,8 +14,6 @@ project(HE-test LANGUAGES CXX)
 
 set(Boost_NO_BOOST_CMAKE ON)
 
-find_package(SEAL 3.4 REQUIRED)
-
 find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
@@ -42,18 +40,35 @@ link_directories(${HOMEBREW_LIB})
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
 
+find_package(SEAL 3.4 REQUIRED)
+
 set(helib_DIR ${CMAKE_SOURCE_DIR}/third-party/share/cmake/helib)
 find_package(helib 1.0.0 EXACT REQUIRED)
+
+# Typically you don't care so much for a third party library's tests to be
+# run from your own project's code.
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+# If you only include this third party in PRIVATE source files, you do not
+# need to install it when your main project gets installed.
+# set(JSON_Install OFF CACHE INTERNAL "")
+
+# Don't use include(nlohmann_json/CMakeLists.txt) since that carries with it
+# unintended consequences that will break the build.  It's generally
+# discouraged (although not necessarily well documented as such) to use
+# include(...) for pulling in other CMake projects anyways.
+add_subdirectory(${CMAKE_SOURCE_DIR}/third-party/nlohmann_json)
 
 set(SOURCE  src/main.cpp
             src/rest_handler.cpp
             src/fhe_handler.cpp
             src/phe_handler.cpp
             src/seal_he_handler.cpp
-            src/he_controller.cpp)
+            src/he_controller.cpp
+            src/vicinity_handler.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} 
+    nlohmann_json::nlohmann_json
     cpprest
     Boost::boost
     Boost::random

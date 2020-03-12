@@ -2,6 +2,7 @@
 
 //#include "FHE.h"
 #include "../include/he_handler.h"
+#include "../include/vicinity_handler.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -61,9 +62,8 @@ void rest_handler::handle_get(http_request message) {
                 message.reply(status_codes::OK, "OK");
                 return;
             }
-        } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) {
-            int sum = m_pController->getHE_handler()->getSum();
-            message.reply(status_codes::OK, to_string(sum));
+        } else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_GET_request(message, paths);
             return;
         }
 
@@ -179,8 +179,38 @@ void rest_handler::produce_ctxt(string pt) {
     //m_pController->getHE_handler()->encrypt_and_store(value, input_counter);
 }
 
+
 string rest_handler::encrypt_ptxt(string pt) {
     int value = stoi(pt);
 
     return m_pController->getHE_handler()->encrypt_as_string(value);
+}
+
+
+void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path) {
+    // check if request path has correct size
+    if(path.size() > 2) {
+        message.reply(status_codes::BadRequest, "What is it?");
+    }
+    // exactly two items. could be a request for objects... lets see...
+    else if(path.size() == 2) {
+        // check if Thing Description is requested
+        if(path.at(1) == "objects") {
+            // TD request
+            string td = m_pController->getVICINITY_handler()->generateThingDescription();
+            message.reply(status_codes::OK, td);
+        }
+        else {
+            message.reply(status_codes::BadRequest, "What is it?");
+        }
+    }
+    // handle requests for properties/actions
+    else {
+        // TODO!!!!
+        message.reply(status_codes::InternalError, "not implemented yet");
+    }
+    for(auto it=path.begin(); it != path.end(); ++it){
+        std::cout << *it << std::endl;
+    }
+
 }

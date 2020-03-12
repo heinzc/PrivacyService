@@ -4,6 +4,7 @@
 #include "../include/phe_handler.h"
 #include "../include/seal_he_handler.h"
 #include "../include/he_controller.h"
+#include "../include/vicinity_handler.h"
 
 #include <cassert>
 #include <iostream>
@@ -40,6 +41,10 @@ void on_shutdown()
 int main()
 {	
     he_controller controller = he_controller();
+
+    vicinity_handler * vicinity = new vicinity_handler();
+    controller.setVICINITY_handler(vicinity);
+
 	he_handler * he = (he_handler*) (new seal_he_handler());
 	he->initialize();
     controller.setHE_handler(he);
@@ -76,6 +81,8 @@ int main()
     g_httpHandler = new rest_handler(addr);
     controller.setREST_handler(g_httpHandler);
     g_httpHandler->open().wait();
+
+    vicinity->generateThingDescription();
 
     ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
     std::cout << "Press ENTER to exit." << std::endl;

@@ -1,0 +1,8 @@
+{
+    "adapters": [
+        {
+          "adapter-id": "debugging-adapter",
+          "endpoint": "http://localhost:5000"
+        }
+      ]
+}

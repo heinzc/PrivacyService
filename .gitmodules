@@ -7,3 +7,9 @@
 [submodule "third-party/SEAL"]
 	path = third-party/SEAL
 	url = https://github.com/microsoft/SEAL.git
+[submodule "third-party/json"]
+	path = third-party/json
+	url = https://github.com/nlohmann/json.git
+[submodule "third-party/nlohmann_json"]
+	path = third-party/nlohmann_json
+	url = https://github.com/nlohmann/json.git
