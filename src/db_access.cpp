@@ -27,11 +27,15 @@ db_access::db_access(const char* database)
 
     const char* sql = "CREATE TABLE PUBLIC_KEYS(ID TEXT PRIMARY KEY, PUBLICKEY TEXT NOT NULL);";
     const char* sql2 = "CREATE TABLE OWN_KEYS(KEYTYPE TEXT PRIMARY KEY, VALUE TEXT NOT NULL)";
-
+    const char* sql3 = "CREATE TABLE ACCESS(OID TEXT PRIMARY KEY)";
+    
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
     
     rc = sqlite3_exec(db, sql2, callback, 0, &zErrMsg);
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    
+    rc = sqlite3_exec(db, sql3, callback, 0, &zErrMsg);
     //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
 }
 
@@ -122,4 +126,22 @@ std::string db_access::get_public_key(const char * id)
         return "";
     }
     return key;
+}
+
+//check if id is in Access table (check if id has access to decrypt and data)
+bool db_access::hasAccess(const char* id)
+{
+    string sql = "select OID from ACCESS where OID = \'";
+    sql.append(id);
+    sql.append("\'");
+    
+    char** results = NULL;
+    int rows, columns;
+    char* error;
+    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
+    std::string key = "";
+    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
+        return true;
+    }
+    else return false;
 }

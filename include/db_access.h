@@ -25,6 +25,9 @@ class db_access
         
         //get public key, returns empty string if key is not in database!
         std::string get_public_key(const char* id);
+        
+        //check if id is in Access table (check if id has access to decrypt and data)
+        bool hasAccess(const char* id);
 
         //prints returned values of database //www.sqlite.org/quickstart.html
         static int callback(void* data, int argc, char** argv, char** azColName) {

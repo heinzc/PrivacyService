@@ -40,6 +40,11 @@ int main()
 {	
     db_access * db = new db_access("test.db");
     
+    /**/
+    std::cout << db->hasAccess("11");
+    
+    
+    
     he_controller controller = he_controller();
 	he_handler * he = (he_handler*) (new phe_handler(db));
 	he->initialize();
