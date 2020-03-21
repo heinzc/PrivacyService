@@ -91,7 +91,21 @@ void rest_handler::handle_get(http_request message) {
             std::cout << x.c_str() << "\n";
             message.reply(status_codes::OK, string("DONE"));
             return;
+        } else if(std::find(paths.begin(), paths.end(), "TESThasaccess") != paths.end()) { //only for TESTING, to be REMOVED
+            std::cout << "testhasaccess" << "\n";
+            message.reply(status_codes::OK, db->hasAccess("spc_serviceAAA"));
+            return;
         }
+/*      else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
+            if(message.headers().has(U("requester-id"))) { //is there the requester-id header?
+                std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("requester-id"))); //id
+
+            }
+            else {
+                message.reply(status_codes::OK, string("FALSE"));
+            }
+            return;
+        }*/
 
         message.reply(status_codes::NotFound,"WAT?!");
     }

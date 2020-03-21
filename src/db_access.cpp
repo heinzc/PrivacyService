@@ -145,3 +145,20 @@ bool db_access::hasAccess(const char* id)
     }
     else return false;
 }
+
+//check if id is found in ACCESS table
+bool db_access::hasAccess2(const char * id)
+{
+    string sql = "select OID from ACCESS where OID = \'";
+    sql.append(id);
+    sql.append("\'");
+    
+    char** results = NULL;
+    int rows, columns;
+    char* error;
+    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
+    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry //=> id found
+        return true;
+    }
+    return false;
+}

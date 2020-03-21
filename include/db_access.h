@@ -28,6 +28,9 @@ class db_access
         
         //check if id is in Access table (check if id has access to decrypt and data)
         bool hasAccess(const char* id);
+        
+        //check if id is found in ACCESS table
+        bool hasAccess2(const char * id);
 
         //prints returned values of database //www.sqlite.org/quickstart.html
         static int callback(void* data, int argc, char** argv, char** azColName) {
