@@ -1,12 +1,14 @@
 #include "../include/vicinity_handler.h"
 #include "../include/rest_handler.h"
+#include "../include/he_handler.h"
 
 #include <cpprest/http_client.h>
 #include <cpprest/json.h>
 
-#include <nlohmann/json.hpp>
-
 #include <sstream>
+#include <utility>
+#include <regex>
+
 
 using namespace std;
 using namespace utility;
@@ -25,14 +27,29 @@ vicinity_handler::~vicinity_handler()
     //dtor
 }
 
-string vicinity_handler::generateThingDescription() {
+void vicinity_handler::initialize(string configfile) {
     // for convenience
     using json = nlohmann::json;
 
     // read config. could be copied from agent or could be a separate one
-    ifstream in("config_adapters.json");  // hard coded in working folder for now. config parameter in the future
-    json config_file = json::parse(in);
-    
+    ifstream in(configfile);
+    m_configFile = json::parse(in);
+
+    in.close();
+
+    for (auto& adapter : m_configFile["adapters"]) {
+        // query the endpoint for /objects
+        string adapterid = adapter["adapter-id"].get<string>();
+        string endpoint = adapter["endpoint"].get<string>();
+
+        m_endpoints.emplace(make_pair(adapterid, endpoint));
+    }
+}
+
+string vicinity_handler::generateThingDescription() {
+    // for convenience
+    using json = nlohmann::json;
+
     //encrypted thing description structure to add json objects from adapters
     auto adapter_td = json::parse(R"(
         {
@@ -42,8 +59,9 @@ string vicinity_handler::generateThingDescription() {
     )");
 
     // iterate over all adapters in config file
-    for (auto& adapter : config_file["adapters"]) {
+    for (auto& adapter : m_configFile["adapters"]) {
         // query the endpoint for /objects
+        string adapterid = adapter["adapter-id"].get<string>();
         string endpoint = adapter["endpoint"].get<string>();
         http_client client(endpoint);
 
@@ -51,11 +69,22 @@ string vicinity_handler::generateThingDescription() {
         pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects")).to_string());
 
         web::http::http_response response = requestTask.get();
-        json objects = json::parse(response.extract_string().get());
+        string td = response.extract_string().get();
+        json objects = json::parse(td);
 
         for (auto& td : objects["thing-descriptions"]) {
-            td["oid"] = td["oid"].get<std::string>() + std::string("_enc");
+            td["oid"] = adapterid + std::string(":") + td["oid"].get<std::string>() + std::string("_enc");
             td["name"] = td["name"].get<std::string>() + std::string(" (encrypted)");
+
+            for (auto& prop : td["properties"]) {
+                prop["read_link"]["href"] = std::string("/objects/{oid}/properties/{pid}");
+                try {
+                    prop.erase("write_link");
+                }
+                catch(const std::exception& e) {
+                    cout << "info: remove write link failed" << endl;
+                }
+            }
 
             //json result = json_value["thing-descriptions"][0];
             // And use emplace_back+move to detach the object from `json_value`
@@ -104,8 +133,39 @@ string vicinity_handler::generateThingDescription() {
     return adapter_td.dump();
 }
 
-string vicinity_handler::readProperty(string endpoint) {
-    std::cout << endpoint << std::endl;
+string vicinity_handler::readProperty(string oid, string pid) {
+    // for convenience
+    using json = nlohmann::json;
+
+    // oid is compount of <adapterid>:<objectid>
+    string adapterid, objectid;
+    cout << oid << endl;
+    try {
+        std::regex re("(.+):(.+)");
+        std::smatch match;
+        if (std::regex_search(oid, match, re) && match.size() == 3) {
+            adapterid = match.str(1);
+            objectid = match.str(2);
+
+            string adapterendpoint = m_endpoints[adapterid];
+            http_client client(adapterendpoint);
+
+            pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects/" + objectid + "/properties/" + pid)).to_string());
+
+            web::http::http_response response = requestTask.get();
+            string rawresult = response.extract_string().get();
+
+            json result = json::parse(rawresult);
+
+            string encValue = m_pController->getHE_handler()->encrypt_as_string(result["value"].get<long>());
+
+            return encValue;
+        } else {
+            cout << "no match: " << match.size() << endl;
+        }
+    } catch (std::regex_error& e) {
+    // Syntax error in the regular expression
+    }
 
     return std::string();
 }

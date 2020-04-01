@@ -8,6 +8,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <exception>
+#include <regex>
 
 
 rest_handler::rest_handler()
@@ -189,11 +190,8 @@ string rest_handler::encrypt_ptxt(string pt) {
 
 void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path) {
     // check if request path has correct size
-    if(path.size() > 2) {
-        message.reply(status_codes::BadRequest, "What is it?");
-    }
     // exactly two items. could be a request for objects... lets see...
-    else if(path.size() == 2) {
+    if(path.size() == 2) {
         // check if Thing Description is requested
         if(path.at(1) == "objects") {
             // TD request
@@ -204,13 +202,37 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
             message.reply(status_codes::BadRequest, "What is it?");
         }
     }
-    // handle requests for properties/actions
+    // more than two arguments? most likely read property
+    else if(path.size() > 2) {
+        // TODO: sanitycheck for properties
+//        try {
+//        std::regex re("/vicinity/objects/(.+)/properties/(.+)");
+//        std::smatch match;
+//        if (std::regex_search(subject, match, re) && match.size() == 2) {
+//            oid = match.str(1);
+//            pid = match.str(2);
+//        } else {
+//            cout << "no match: " << match.size() << endl;
+//        }
+//        } catch (std::regex_error& e) {
+//        // Syntax error in the regular expression
+//        }
+
+        string oid = path[2];
+        string pid = path[4];
+
+        string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
+
+        message.reply(status_codes::OK, payload);
+
+    }
+    // otherwise not enough arguments
     else {
-        // TODO!!!!
-        message.reply(status_codes::InternalError, "not implemented yet");
+        message.reply(status_codes::BadRequest, "not enough arguments");
     }
-    for(auto it=path.begin(); it != path.end(); ++it){
-        std::cout << *it << std::endl;
-    }
+
+//    for(auto it=path.begin(); it != path.end(); ++it){
+//        std::cout << *it << std::endl;
+//    }
 
 }

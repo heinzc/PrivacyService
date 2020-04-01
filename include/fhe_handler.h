@@ -5,7 +5,7 @@
 
 #include <NTL/ZZ.h>
 #include <NTL/BasicThreadPool.h>
-#include "helib/helib.h"
+#include "helib/FHE.h"
 #include "helib/timing.h"
 #include <NTL/lzz_pXFactoring.h>
 #include "he_controller.h"

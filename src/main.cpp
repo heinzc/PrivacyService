@@ -43,6 +43,7 @@ int main()
     he_controller controller = he_controller();
 
     vicinity_handler * vicinity = new vicinity_handler();
+    vicinity->initialize("config_adapters.json");
     controller.setVICINITY_handler(vicinity);
 
 	he_handler * he = (he_handler*) (new seal_he_handler());

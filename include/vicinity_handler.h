@@ -1,8 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <map>
 
 #include "stdafx.h"
+
+#include <nlohmann/json.hpp>
 
 #include "he_controller.h"
 
@@ -18,14 +21,17 @@ class vicinity_handler
             m_pController = controller;
         }
 
+        void initialize(std::string configfile);
+
         std::string generateThingDescription();
 
-        std::string readProperty(std::string endpoint);
+        std::string readProperty(std::string oid, std::string pid);
 
 
     protected:
 
     private:
         he_controller * m_pController;
-
+        nlohmann::json m_configFile;
+        std::map<std::string, std::string> m_endpoints;
 };
