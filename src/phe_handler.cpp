@@ -4,8 +4,8 @@
 
 using namespace std;
 
-phe_handler::phe_handler(db_access * database) :
-	he_handler(database)
+phe_handler::phe_handler() :
+	he_handler()
 {
 	pk = 0;
 	sk = 0;
@@ -34,14 +34,14 @@ void phe_handler::initialize() {
     pcs_generate_key_pair(pk, sk, hr, 2048);    
     pcs_encrypt(pk, hr, sum, sum);
     
-    if(db->get_own_key("PK") == "" || db->get_own_key("SK") == "") { //own keys missing in the database
+    if(m_pController->getDB_access()->get_own_key("PK") == "" || m_pController->getDB_access()->get_own_key("SK") == "") { //own keys missing in the database
         //save above generated keys in database
         cout << "No own keys yet in database. Generated new keys." << endl;        
-        db->insert_own_key("PK", pcs_export_public_key(pk));
-        db->insert_own_key("SK", pcs_export_private_key(sk));
+        m_pController->getDB_access()->insert_own_key("PK", pcs_export_public_key(pk));
+        m_pController->getDB_access()->insert_own_key("SK", pcs_export_private_key(sk));
     } else { //set keys to the values saved in the database
-        setPublicKey(db->get_own_key("PK").c_str());
-        setPrivateKey(db->get_own_key("SK").c_str());
+        setPublicKey(m_pController->getDB_access()->get_own_key("PK").c_str());
+        setPrivateKey(m_pController->getDB_access()->get_own_key("SK").c_str());
     }
     
     /*

@@ -6,6 +6,7 @@ using namespace std;
 
 class he_handler;
 class rest_handler;
+class db_access;
 
 class he_controller
 {
@@ -18,11 +19,15 @@ class he_controller
 
         void setREST_handler(rest_handler *  handler);
         rest_handler * getREST_handler();
+        
+        void setDB_access(db_access *  dba);
+        db_access * getDB_access();
 
     protected:
 
     private:
         he_handler * m_pHE_handler;
         rest_handler * m_pREST_handler;
+        db_access * m_pDB_access;
 
 };

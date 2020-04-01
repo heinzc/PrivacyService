@@ -16,7 +16,7 @@ class rest_handler
 {
     public:
         rest_handler();
-        rest_handler(utility::string_t url, db_access * database);
+        rest_handler(utility::string_t url);
         virtual ~rest_handler();
 
         void setController(he_controller * controller);
@@ -46,6 +46,4 @@ class rest_handler
         int input_counter;
         
         std::string identifier;
-        
-        db_access * db;
 };

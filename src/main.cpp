@@ -37,15 +37,13 @@ void on_shutdown()
 
 
 int main()
-{	
-    db_access * db = new db_access("test.db");
-    //std::cout << db->hasAccess("11");
-      
-    
+{	    
     he_controller controller = he_controller();
-	he_handler * he = (he_handler*) (new phe_handler(db));
-	he->initialize();
+    db_access * db = new db_access("test.db");
+    controller.setDB_access(db);
+	he_handler * he = (he_handler*) (new phe_handler());
     controller.setHE_handler(he);
+    he->initialize(); //must be after setting he handler to be able to access database
     //debugging
     std::string value;
     value = he->encrypt_as_string(42);
@@ -66,7 +64,7 @@ int main()
   
     auto addr = uri.to_uri().to_string();
     //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    g_httpHandler = new rest_handler(addr, db);
+    g_httpHandler = new rest_handler(addr);
     controller.setREST_handler(g_httpHandler);
     g_httpHandler->open().wait();
 

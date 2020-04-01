@@ -9,9 +9,8 @@
 class he_handler
 {
     public:
-        he_handler(db_access * database) {
+        he_handler() {
             m_pController = 0;
-            db = database;
         };
 
         virtual ~he_handler() {
@@ -36,14 +35,11 @@ class he_handler
         virtual int getSum() = 0;
         
         virtual std::string getPublicKey() = 0;
-        
-        db_access * db;
 
     protected:
-
-    private:
         he_controller * m_pController;
         
+    private:        
         virtual void setPublicKey(const char* json) = 0;
         virtual void setPrivateKey(const char* json) = 0;
 };

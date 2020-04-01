@@ -17,7 +17,7 @@ rest_handler::rest_handler()
 {
     //ctor
 }
-rest_handler::rest_handler(utility::string_t url, db_access * database):m_listener(url)
+rest_handler::rest_handler(utility::string_t url):m_listener(url)
 {
     m_listener.support(methods::GET, std::bind(&rest_handler::handle_get, this, std::placeholders::_1));
     m_listener.support(methods::PUT, std::bind(&rest_handler::handle_put, this, std::placeholders::_1));
@@ -27,7 +27,6 @@ rest_handler::rest_handler(utility::string_t url, db_access * database):m_listen
     input_counter = 0;
     
     identifier = "123TESTID123";
-    db = database;
 }
 rest_handler::~rest_handler()
 {
@@ -93,7 +92,7 @@ void rest_handler::handle_get(http_request message) {
             return;
         } else if(std::find(paths.begin(), paths.end(), "TESThasaccess") != paths.end()) { //only for TESTING, to be REMOVED
             std::cout << "testhasaccess" << "\n";
-            message.reply(status_codes::OK, db->hasAccess("spc_serviceAAA"));
+            message.reply(status_codes::OK, m_pController->getDB_access()->hasAccess("spc_serviceAAA"));
             return;
         }
 /*      else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
@@ -192,14 +191,14 @@ void rest_handler::handle_post(http_request message) {
             //TODO check if key is correct?
             if(message.headers().has(U("ID"))) { //is there the id header?
                 std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("ID"))); //id
-                db->insert_public_key(header_id.c_str(), stvalue.c_str());
+                m_pController->getDB_access()->insert_public_key(header_id.c_str(), stvalue.c_str());
                 message.reply(status_codes::OK, "ok");
             }
             message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
         else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
             string stvalue = message.extract_string().get(); //oid
-            if(db->hasAccess(stvalue.c_str())) {
+            if(m_pController->getDB_access()->hasAccess(stvalue.c_str())) {
                 message.reply(status_codes::OK, "true");
             }
             else {
@@ -261,7 +260,7 @@ std::string rest_handler::get_public_key(const char* id, http_request message) {
     //cout << message.remote_address() << endl;
     //cout << message.absolute_uri().port() << endl;
     
-    std::string key = db->get_public_key(id);
+    std::string key = m_pController->getDB_access()->get_public_key(id);
     if(key == "") { //key not in database -> get key
         std::string address = "http://";
         address.append(message.remote_address());
@@ -270,7 +269,7 @@ std::string rest_handler::get_public_key(const char* id, http_request message) {
         http_client client(address.c_str());
         http_response response = client.request(methods::GET, "/publickey").get();
         std::string output = response.extract_string().get();
-        db->insert_public_key(id, output.c_str()); //insert retrieved key into database
+        m_pController->getDB_access()->insert_public_key(id, output.c_str()); //insert retrieved key into database
         return output;
     } else { //key was already in database
         return key;
