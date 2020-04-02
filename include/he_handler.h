@@ -23,7 +23,7 @@ class he_handler
 
         virtual void initialize() = 0;
 
-        virtual std::string encrypt_as_string(long x) = 0;
+        virtual std::string encrypt_as_string(long x, std::string pubkey = std::string() ) = 0;
 
         virtual int decrypt() = 0;
         virtual int decrypt(std::string & ctxt) = 0;

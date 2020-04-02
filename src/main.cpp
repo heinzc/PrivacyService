@@ -2,8 +2,10 @@
 #include "../include/rest_handler.h"
 #include "../include/fhe_handler.h"
 #include "../include/phe_handler.h"
+#include "../include/seal_he_handler.h"
 #include "../include/he_controller.h"
 //#include "../include/db_access.h"
+#include "../include/vicinity_handler.h"
 
 #include <iostream>
 
@@ -41,21 +43,34 @@ int main()
     he_controller controller = he_controller();
     db_access * db = new db_access("test.db");
     controller.setDB_access(db);
-	he_handler * he = (he_handler*) (new phe_handler());
+    vicinity_handler * vicinity = new vicinity_handler();
+    vicinity->initialize("config_adapters.json");
+    controller.setVICINITY_handler(vicinity);
+	//he_handler * he = (he_handler*) (new phe_handler());
+	he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
     //debugging
     std::string value;
-    value = he->encrypt_as_string(42);
+    std::string pubKey;
     std::vector<std::string> valuesvec;
+
+    value = he->encrypt_as_string(42);
+    pubKey = he->getPublicKey();
+    
     valuesvec.push_back(value);
+    
+    value = he->encrypt_as_string(42, pubKey);
+
     valuesvec.push_back(value);
 
     std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
     
     int intval = he->decrypt(result);
 
-    std::cout << intval << std::endl;
+    std::cout << "decrypted test result: " << intval << std::endl;
+
+    //std::cout << he->getPublicKey() << std::endl;
 
 	utility::string_t address = U("http://127.0.0.1:4242"); //127.0.0.1    192.168.188.37
 
@@ -67,6 +82,8 @@ int main()
     g_httpHandler = new rest_handler(addr);
     controller.setREST_handler(g_httpHandler);
     g_httpHandler->open().wait();
+
+    vicinity->generateThingDescription();
 
     ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
     std::cout << "Press ENTER to exit." << std::endl;

@@ -5,7 +5,7 @@
 
 #include <NTL/ZZ.h>
 #include <NTL/BasicThreadPool.h>
-#include "helib/helib.h"
+#include "helib/FHE.h"
 #include "helib/timing.h"
 #include <NTL/lzz_pXFactoring.h>
 #include "he_controller.h"
@@ -21,7 +21,7 @@ class fhe_handler : he_handler
         void initialize();
 
         void encrypt_and_store(long x, int id);
-        std::string encrypt_as_string(long x);
+        std::string encrypt_as_string(long x, std::string pubkey = std::string());
 
         int decrypt();
         int decrypt(std::string & ctxt);

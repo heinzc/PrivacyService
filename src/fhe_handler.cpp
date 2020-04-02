@@ -74,7 +74,7 @@ void fhe_handler::encrypt_and_store(long x, int id) {
     ciphertext.close();
 }
 
-string fhe_handler::encrypt_as_string(long x) {
+string fhe_handler::encrypt_as_string(long x, std::string pubKey) {
 	Ctxt ctxt = encrypt(x);
 
 	std::stringstream ss;

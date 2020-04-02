@@ -17,7 +17,7 @@ class phe_handler : he_handler
 
         void initialize();
 
-        std::string encrypt_as_string(long x);
+        std::string encrypt_as_string(long x, std::string pubkey = std::string());
 
         int decrypt();
         int decrypt(std::string & ctxt);

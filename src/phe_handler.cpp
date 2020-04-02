@@ -55,7 +55,7 @@ void phe_handler::initialize() {
 }
 
 
-string phe_handler::encrypt_as_string(long x) {
+string phe_handler::encrypt_as_string(long x, std::string pubKey) {
     // libhcs works directly with gmp mpz_t types, so initialize some
 	mpz_t value;
 	mpz_class ctxt;

@@ -2,11 +2,13 @@
 
 //#include "FHE.h"
 #include "../include/he_handler.h"
+#include "../include/vicinity_handler.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
 #include <exception>
+#include <regex>
 
 #include <cpprest/http_client.h>
 
@@ -70,6 +72,8 @@ void rest_handler::handle_get(http_request message) {
         } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) { //DEPRECATED
             int sum = m_pController->getHE_handler()->getSum();
             message.reply(status_codes::OK, to_string(sum));
+        } else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_GET_request(message, paths);
             return;
         }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) {
             http_response response(status_codes::OK);
@@ -245,12 +249,12 @@ void rest_handler::produce_ctxt(string pt) {
     //m_pController->getHE_handler()->encrypt_and_store(value, input_counter);
 }
 
+
 string rest_handler::encrypt_ptxt(string pt) {
     int value = stoi(pt);
 
     return m_pController->getHE_handler()->encrypt_as_string(value);
 }
-
 
 
 //
@@ -274,4 +278,54 @@ std::string rest_handler::get_public_key(const char* id, http_request message) {
     } else { //key was already in database
         return key;
     }
+}
+
+
+void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path) {
+    // check if request path has correct size
+    // exactly two items. could be a request for objects... lets see...
+    if(path.size() == 2) {
+        // check if Thing Description is requested
+        if(path.at(1) == "objects") {
+            // TD request
+            string td = m_pController->getVICINITY_handler()->generateThingDescription();
+            message.reply(status_codes::OK, td);
+        }
+        else {
+            message.reply(status_codes::BadRequest, "What is it?");
+        }
+    }
+    // more than two arguments? most likely read property
+    else if(path.size() > 2) {
+        // TODO: sanitycheck for properties
+//        try {
+//        std::regex re("/vicinity/objects/(.+)/properties/(.+)");
+//        std::smatch match;
+//        if (std::regex_search(subject, match, re) && match.size() == 2) {
+//            oid = match.str(1);
+//            pid = match.str(2);
+//        } else {
+//            cout << "no match: " << match.size() << endl;
+//        }
+//        } catch (std::regex_error& e) {
+//        // Syntax error in the regular expression
+//        }
+
+        string oid = path[2];
+        string pid = path[4];
+
+        string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
+
+        message.reply(status_codes::OK, payload);
+
+    }
+    // otherwise not enough arguments
+    else {
+        message.reply(status_codes::BadRequest, "not enough arguments");
+    }
+
+//    for(auto it=path.begin(); it != path.end(); ++it){
+//        std::cout << *it << std::endl;
+//    }
+
 }
