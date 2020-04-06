@@ -64,7 +64,8 @@ set(SOURCE  src/main.cpp
             src/phe_handler.cpp
             src/seal_he_handler.cpp
             src/he_controller.cpp
-            src/vicinity_handler.cpp)
+            src/vicinity_handler.cpp
+            src/base64.cpp)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} 

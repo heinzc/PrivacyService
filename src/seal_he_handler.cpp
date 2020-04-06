@@ -1,6 +1,7 @@
 #include "../include/seal_he_handler.h"
 #include <sstream>
 #include <cassert>
+#include "../include/base64.h"
 
 using namespace std;
 
@@ -44,7 +45,7 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
         useKey = m_PublicKey;
         std::cout << "using existing key" << std::endl;
     } else {
-        std::stringstream ss(pubKey);
+        std::stringstream ss(base64_decode(pubKey));
         useKey.load(m_pContext, ss);
         std::cout << "using given key" << std::endl;
     }
@@ -58,7 +59,9 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
     std::stringstream ss;
 	x_encrypted.save(ss);
 
-    return ss.str();
+    const std::string& s = ss.str();   
+
+    return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
 int seal_he_handler::decrypt() {
@@ -68,7 +71,7 @@ int seal_he_handler::decrypt() {
 int seal_he_handler::decrypt(std::string & ctxt) {
     Decryptor decryptor(m_pContext, m_SecretKey);
 
-    std::stringstream ss (ctxt);
+    std::stringstream ss (base64_decode(ctxt));
     Ciphertext val;
     Plaintext plain;
 
@@ -94,7 +97,7 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input) {
     encryptor.encrypt(zero_plain, sum);
 
     for(auto it = input.begin(); it != input.end(); ++it) {
-        std::stringstream ss (*it);
+        std::stringstream ss (base64_decode(*it));
         Ciphertext val;
 
         val.load(m_pContext, ss);
@@ -105,7 +108,9 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input) {
     std::stringstream ss;
 	sum.save(ss);
 
-    return ss.str();
+    const std::string& s = ss.str();   
+
+    return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
 
@@ -123,7 +128,9 @@ std::string seal_he_handler::getPublicKey() {
     std::stringstream ss;
     m_PublicKey.save(ss);
 
-    return ss.str();
+    const std::string& s = ss.str();   
+
+    return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
 

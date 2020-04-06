@@ -157,9 +157,10 @@ string vicinity_handler::readProperty(string oid, string pid) {
 
             json result = json::parse(rawresult);
 
-            string encValue = m_pController->getHE_handler()->encrypt_as_string(result["value"].get<long>());
+            result["value"] = m_pController->getHE_handler()->encrypt_as_string(result["value"].get<long>());
+            result["encrypted"] = "True";
 
-            return encValue;
+            return result.dump();
         } else {
             cout << "no match: " << match.size() << endl;
         }
