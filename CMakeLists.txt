@@ -69,6 +69,7 @@ set(SOURCE  src/main.cpp
             src/seal_he_handler.cpp
             src/he_controller.cpp
             src/vicinity_handler.cpp
+            src/base64.cpp
             third-party/sqlite/shell.c
             third-party/sqlite/sqlite3.c)
 add_executable(${PROJECT_NAME} ${SOURCE})
