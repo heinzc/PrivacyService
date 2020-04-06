@@ -30,6 +30,21 @@ void seal_he_handler::initialize() {
     //print_parameters(m_pContext);
 
     generate_keys();
+    
+    //try to get saved keys from database. if there are none, use newly generated ones
+    if(m_pController->getDB_access()->get_own_key("PK") == "" || m_pController->getDB_access()->get_own_key("SK") == "") { //own keys missing in the database
+        //save above generated keys in database
+        cout << "No own keys yet in database. Generated new keys." << endl;   
+        std::string pk = getPublicKey();
+        std::string sk = getSecretKey();
+        m_pController->getDB_access()->insert_own_key("PK", pk);
+        m_pController->getDB_access()->insert_own_key("SK", sk);
+    } else { //set keys to the values saved in the database
+        setPublicKey(m_pController->getDB_access()->get_own_key("PK").c_str());
+        setPrivateKey(m_pController->getDB_access()->get_own_key("SK").c_str());
+    }
+    
+    
 	
     cout << "*** END INITIALIZATION ***" << endl;
 }
@@ -122,6 +137,13 @@ int seal_he_handler::getSum() {
 std::string seal_he_handler::getPublicKey() {
     std::stringstream ss;
     m_PublicKey.save(ss);
+
+    return ss.str();
+}
+
+std::string seal_he_handler::getSecretKey() {
+    std::stringstream ss;
+    m_SecretKey.save(ss);
 
     return ss.str();
 }

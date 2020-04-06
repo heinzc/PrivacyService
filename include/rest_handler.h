@@ -40,6 +40,8 @@ class rest_handler
         string encrypt_ptxt(string pt);
         
         void handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path);
+        void handle_VICINITY_POST_request(http_request message, std::vector<utility::string_t> path);
+        void handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path);
 
         http_listener m_listener;
 

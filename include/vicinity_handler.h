@@ -26,6 +26,10 @@ class vicinity_handler
         std::string generateThingDescription();
 
         std::string readProperty(std::string oid, std::string pid);
+        std::string writeProperty(std::string oid, std::string aid, std::string payload);
+        std::string postAction(std::string oid, std::string aid, std::string payload, std::string sender);
+        
+        std::string getOwnOid();
 
 
     protected:

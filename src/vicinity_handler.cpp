@@ -96,6 +96,16 @@ string vicinity_handler::generateThingDescription() {
         }
     }
 
+    //read and add thing description file for the he value added service
+    ifstream in2("ThingDescription.json");
+    json thing_description = json::parse(in2);
+    //place first thing description at the end of this function's output
+    //std::cout << thing_description["thing-descriptions"] << std::endl;
+    adapter_td["thing-descriptions"].emplace_back(std::move(thing_description["thing-descriptions"][0]));
+    std::cout << adapter_td << std::endl;
+    in2.close();
+    //adapter_td["thing-descriptions"].emplace_back();
+
 // TODO: handle adapters asynchronously
         // ... and handle the responses when the arrive.
 /*        .then([=](http_response response) {
@@ -170,4 +180,64 @@ string vicinity_handler::readProperty(string oid, string pid) {
     }
 
     return std::string();
+}
+
+string vicinity_handler::postAction(string oid, string aid, string payload, string sender) {
+    //currently, there are only actions for this he service
+    getOwnOid();
+    if(oid == getOwnOid()) { //he service
+        //which action?
+        if(aid == "decrypt") {
+            //check, if sender is owner of this service (saved in database)
+            
+            //decrypt
+            
+            //return decrypted value
+            
+        }
+        else if(aid == "randomshare") {
+            //check if sender is participant
+        }
+        else if(aid == "aggregate") {
+            //check if owner is sender
+            //extract participants from payload
+            
+            //do checks -> as in python....
+            
+            //send random shares
+            //wait for all shares maybe better check if all were received in /randomshare
+            //idk yet
+        }
+        return "";
+    }
+}
+
+string vicinity_handler::writeProperty(string oid, string pid, string payload) {
+    using json = nlohmann::json; // for convenience
+
+    getOwnOid();
+    if(oid == getOwnOid()) { //he service
+        //which property?
+        if(pid == "hasaccess") {
+            //get requester id from payload
+            std::cout << "payloadXX: " + payload << std::endl;
+            json content = json::parse(payload);
+            std::cout << "payloadXX: " + std::string(content["requester-id"]) << std::endl;
+            //ask db, if requester has access and send result back
+            if(m_pController->getDB_access()->hasAccessToData(std::string(content["requester-id"]).c_str(), std::string(content["destination-id"]).c_str())) {
+                return "{\"granted\":true}";
+            }
+            return "{\"granted\":false}";
+        }
+        return "";
+    }
+}
+
+string vicinity_handler::getOwnOid() {
+    // for convenience
+    using json = nlohmann::json;
+    ifstream in("ThingDescription.json");
+    json thing_description = json::parse(in);
+    in.close();
+    return thing_description["thing-descriptions"][0]["oid"];
 }

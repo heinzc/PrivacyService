@@ -30,6 +30,8 @@ class seal_he_handler : he_handler
         int getSum();
 
         std::string getPublicKey();
+        
+        std::string getSecretKey();
 
     protected:
 

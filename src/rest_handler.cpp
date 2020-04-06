@@ -96,7 +96,7 @@ void rest_handler::handle_get(http_request message) {
             return;
         } else if(std::find(paths.begin(), paths.end(), "TESThasaccess") != paths.end()) { //only for TESTING, to be REMOVED
             std::cout << "testhasaccess" << "\n";
-            message.reply(status_codes::OK, m_pController->getDB_access()->hasAccess("spc_serviceAAA"));
+            message.reply(status_codes::OK, "nicht fertig");//m_pController->getDB_access()->hasAccess("spc_serviceAAA"));
             return;
         }
 /*      else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
@@ -144,6 +144,7 @@ void rest_handler::handle_get(http_request message) {
 // A POST request
 //
 void rest_handler::handle_post(http_request message) {
+    std::cout << "POST!" << std::endl;
     try{
         auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
@@ -186,6 +187,7 @@ void rest_handler::handle_post(http_request message) {
             message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
         else if(std::find(paths.begin(), paths.end(), "decrypt") != paths.end()) {
+            std::cout << "DECRYYPPT!!!!" << std::endl;
             string stvalue = message.extract_string().get();
 
             message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(stvalue));
@@ -202,14 +204,18 @@ void rest_handler::handle_post(http_request message) {
         }
         else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
             string stvalue = message.extract_string().get(); //oid
-            if(m_pController->getDB_access()->hasAccess(stvalue.c_str())) {
+            if(true) { //TODO aktualisieren!!! //m_pController->getDB_access()->hasAccess(stvalue.c_str())) {
                 message.reply(status_codes::OK, "true");
             }
             else {
                 message.reply(status_codes::OK, "false");
             }
         }
-
+        else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_POST_request(message, paths);
+            message.reply(status_codes::OK, ""); //TODO "" ok?
+            return;
+        }
         message.reply(status_codes::NotFound,"WAT?!");
     }
     catch(exception& e) {
@@ -236,9 +242,18 @@ void rest_handler::handle_delete(http_request message)
 //
 void rest_handler::handle_put(http_request message)
 {
-    ucout <<  message.to_string() << endl;
-     string rep = U("WRITE YOUR OWN PUT OPERATION");
-     message.reply(status_codes::OK,rep);
+    try{
+        auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
+
+        if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_PUT_request(message, paths);
+            return;
+        }
+        message.reply(status_codes::NotFound,"WAT?!");
+    }
+    catch(exception& e) {
+        message.reply(status_codes::BadRequest, e.what());
+    }
     return;
 }
 
@@ -309,13 +324,11 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 //        }
 //        } catch (std::regex_error& e) {
 //        // Syntax error in the regular expression
-//        }
-
+//        }        
+        
         string oid = path[2];
         string pid = path[4];
-
         string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
-
         message.reply(status_codes::OK, payload);
 
     }
@@ -328,4 +341,71 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 //        std::cout << *it << std::endl;
 //    }
 
+}
+
+
+void rest_handler::handle_VICINITY_POST_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "ACTION!!!!" << std::endl;
+    std::cout << "ACTION REC PYLD : " + message.extract_string().get() << std::endl;
+    std::cout << "REQUEST: " + message.to_string() << std::endl; //korrekt!
+            std::cout << "ABS URI: " + message.absolute_uri().to_string() << std::endl;
+            std::cout << "REL URI: " + message.relative_uri().to_string() << std::endl;
+            std::cout << "REQ URI: " + message.request_uri().to_string() << std::endl;
+            
+    if(path.size() < 3) {
+        message.reply(status_codes::BadRequest, "not enough arguments");
+    }
+    else {
+        if(path.at(1) == "objects" && path.at(3) == "actions") { //is it an action?
+            string oid = path[2];
+            string aid = path[4];
+            std::cout << "ACTION CALLED : " + oid + " " + aid << std::endl; //korrekt!
+            string payload = message.extract_string().get();
+            std::cout << "ACTION REC PYLD : " + payload << std::endl;
+            
+            std::cout << "XX: " + message.remote_address() << std::endl;
+            
+            std::cout << "REQUEST: " + message.to_string() << std::endl; //korrekt!
+            std::cout << "ABS URI: " + message.absolute_uri().to_string() << std::endl;
+            std::cout << "REL URI: " + message.relative_uri().to_string() << std::endl;
+            std::cout << "REQ URI: " + message.request_uri().to_string() << std::endl;
+            string sender = "SENDER"; //TODO
+            m_pController->getVICINITY_handler()->postAction(oid, aid, payload, sender);
+            message.reply(status_codes::OK, ""); //there is always a task id returned, no need for us to return sth.
+        }
+        else if(path.at(1) == "decrypt") { //decrypt action called
+            std::cout << "REQUEST: " + message.to_string() << std::endl; //korrekt!
+            std::cout << "ABS URI: " + message.absolute_uri().to_string() << std::endl;
+            std::cout << "REL URI: " + message.relative_uri().to_string() << std::endl;
+            std::cout << "REQ URI: " + message.request_uri().to_string() << std::endl;
+            
+            string oid = path[2];
+            string payload = message.extract_string().get();
+            string sender = "SENDER"; //TODO muesste hier direkt in den params/args dabei sein!!! wie auslesen????
+            //m_pController->getVICINITY_handler()->decrypt(oid, sender, payload) TODO
+        }
+        else if(path.at(1) == "objects" && path.at(3) == "properties") { //is it a property? (needed for actions) TODO is this needed? where to get source id?
+            string oid = path[2];
+            string pid = path[4];
+            std::cout << "POST ACTION PROP : " + pid << std::endl;
+        }
+    }
+}
+
+
+void rest_handler::handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "ACTION!!!!" << std::endl;
+    if(path.size() < 3) {
+        message.reply(status_codes::BadRequest, "not enough arguments");
+    }
+    else {
+        if(path.at(1) == "objects" && path.at(3) == "properties") { //prop?
+            string oid = path[2];
+            string pid = path[4];
+            string payload = message.extract_string().get();
+            
+            string payload2 = m_pController->getVICINITY_handler()->writeProperty(oid, pid, payload);
+            message.reply(status_codes::OK, payload2); //there is always a task id returned, no need for us to return sth.
+        }
+    }
 }
