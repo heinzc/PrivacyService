@@ -45,7 +45,26 @@ class db_access
         
         //get the corresponding privacy service oid of input oid
         std::string getPrivacyService(const char * id);
+        
+        //clears the table
+        void resetAggregationComputation();
+        
+        //has to be called after finished or aborted computation with the requester id (source oid)
+        void deleteSourceAggregationComputation(const char * sourceOid);
+        
+        //update (insert) share
+        void updateShareAggregationComputation(const char * sourceOid, const char * participant, int value);
+        
+        //returns true if all shares received
+        bool allSharesReceived(const char * sourceOid);
+        
+        //if oid trusts thisb service (-> would send share in aggregation)
+        bool trustsMe(const char * oid);
 
+        //to insert a participant for a new aggregation
+        //participants can be inserted multiple times, will only be saves once in database (for this aggregation)
+        void insertParticipantAggregateComputation(const char * sourceOid, const char * participant);
+        
         //prints returned values of database //www.sqlite.org/quickstart.html
         static int callback(void* data, int argc, char** argv, char** azColName) {
             int i;

@@ -30,7 +30,17 @@ class vicinity_handler
         std::string postAction(std::string oid, std::string aid, std::string payload, std::string sender);
         
         std::string getOwnOid();
+        std::string getAdapterId();
+        std::string getAgentPort();
+        std::string getOwnPort();
 
+        std::string decrypt(std::string oid, std::string sourceOid, std::string payload);
+        std::string enterAggregation(std::string oid, std::string sourceOid, std::string payload);
+        std::string sendShareAction(std::string oid, std::string sourceOid, std::string payload);
+        
+        std::string getPublicKey(std::string oid);
+        
+        //std::string sendShare(std::string destinationOid, int shareValue);
 
     protected:
 
@@ -38,4 +48,11 @@ class vicinity_handler
         he_controller * m_pController;
         nlohmann::json m_configFile;
         std::map<std::string, std::string> m_endpoints;
+        
+        bool updateTaskStatus(std::string aid, std::string status, std::string payload);
+        
+        std::string port;
+        std::string agentPort;
+        std::string ownOid;
+        std::string adapterId;
 };

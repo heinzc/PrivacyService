@@ -41,10 +41,12 @@ void on_shutdown()
 int main()
 {	    
     he_controller controller = he_controller();
-    db_access * db = new db_access("test.db");
+    db_access * db = new db_access("service.db");
     controller.setDB_access(db);
     vicinity_handler * vicinity = new vicinity_handler();
+    std::cout << "INITNINITTJTT" << std::endl;
     vicinity->initialize("config_adapters.json");
+    std::cout << "INITNINITTJTT" << std::endl;
     controller.setVICINITY_handler(vicinity);
 	//he_handler * he = (he_handler*) (new phe_handler());
 	he_handler * he = (he_handler*) (new seal_he_handler());
@@ -109,7 +111,7 @@ int main()
 
     //std::cout << he->getPublicKey() << std::endl;
 
-	utility::string_t address = U("http://127.0.0.1:4242"); //127.0.0.1    192.168.188.37
+	utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
 
     //on_initialize(address);
     uri_builder uri(address);

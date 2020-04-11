@@ -1,8 +1,8 @@
 {
     "adapters": [
         {
-          "adapter-id": "debugging-adapter",
-          "endpoint": "http://localhost:5000"
+          "adapter-id": "SPC-HRM-adapter",
+          "endpoint": "http://localhost:5003"
         }
       ]
 }

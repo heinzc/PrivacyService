@@ -30,8 +30,6 @@ class seal_he_handler : he_handler
         int getSum();
 
         std::string getPublicKey();
-        
-        std::string getSecretKey();
 
     protected:
 
@@ -50,4 +48,6 @@ class seal_he_handler : he_handler
         
         void setPublicKey(const char* json);
         void setPrivateKey(const char* json);
+        
+        std::string getSecretKey();
 };

@@ -44,6 +44,15 @@ void vicinity_handler::initialize(string configfile) {
 
         m_endpoints.emplace(make_pair(adapterid, endpoint));
     }
+    
+    //load parameters
+    ifstream in2("ServiceThingDescription.json");
+    json thing_description = json::parse(in2);
+    in2.close();
+    ownOid = thing_description["thing-descriptions"][0]["oid"];
+    port = thing_description["port"];
+    agentPort = thing_description["agent-port"];
+    adapterId = thing_description["adapter-id"];
 }
 
 string vicinity_handler::generateThingDescription() {
@@ -53,7 +62,7 @@ string vicinity_handler::generateThingDescription() {
     //encrypted thing description structure to add json objects from adapters
     auto adapter_td = json::parse(R"(
         {
-            "adapter-id": "encryption_adapter",
+            "adapter-id": ")" + adapterId + R"(",
             "thing-descriptions": []
         }
     )");
@@ -97,7 +106,7 @@ string vicinity_handler::generateThingDescription() {
     }
 
     //read and add thing description file for the he value added service
-    ifstream in2("ThingDescription.json");
+    ifstream in2("ServiceThingDescription.json");
     json thing_description = json::parse(in2);
     //place first thing description at the end of this function's output
     //std::cout << thing_description["thing-descriptions"] << std::endl;
@@ -149,6 +158,14 @@ string vicinity_handler::readProperty(string oid, string pid) {
     // for convenience
     using json = nlohmann::json;
 
+    if(oid == ownOid) { //read property of the service itself
+        if(pid == "publickey") {
+            std::cout << "Publickey requested and returned" << std::endl;
+            return std::string("{\"publickey\":\"testpublickey\"}");
+            //return std::string("{\"publickey\":\"" + m_pController->getHE_handler()->getPublicKey() + "\"}");
+        }
+    }
+    
     // oid is compount of <adapterid>:<objectid>
     string adapterid, objectid;
     cout << oid << endl;
@@ -183,10 +200,10 @@ string vicinity_handler::readProperty(string oid, string pid) {
     return std::string();
 }
 
+//TODO this can propably be removed, right?
 string vicinity_handler::postAction(string oid, string aid, string payload, string sender) {
     //currently, there are only actions for this he service
-    getOwnOid();
-    if(oid == getOwnOid()) { //he service
+    if(oid == ownOid) { //he service
         //which action?
         if(aid == "decrypt") {
             //check, if sender is owner of this service (saved in database)
@@ -216,8 +233,7 @@ string vicinity_handler::postAction(string oid, string aid, string payload, stri
 string vicinity_handler::writeProperty(string oid, string pid, string payload) {
     using json = nlohmann::json; // for convenience
 
-    getOwnOid();
-    if(oid == getOwnOid()) { //he service
+    if(oid == ownOid) { //he service
         //which property?
         if(pid == "hasaccess") {
             //get requester id from payload
@@ -235,10 +251,113 @@ string vicinity_handler::writeProperty(string oid, string pid, string payload) {
 }
 
 string vicinity_handler::getOwnOid() {
-    // for convenience
-    using json = nlohmann::json;
-    ifstream in("ThingDescription.json");
-    json thing_description = json::parse(in);
-    in.close();
-    return thing_description["thing-descriptions"][0]["oid"];
+    return ownOid;
+}
+
+string vicinity_handler::getAdapterId() {
+    return adapterId;
+}
+
+string vicinity_handler::getAgentPort() {
+    return agentPort;
+}
+
+string vicinity_handler::getOwnPort() {
+    return port;
+}
+
+string vicinity_handler::decrypt(string oid, string sourceOid, string payload) { //TODO doesn't need to return something, right?
+    using json = nlohmann::json; // for convenience
+    
+    if(ownOid == oid) { //is the action for this service?
+        if(m_pController->getDB_access()->hasAccessToDecrypt(sourceOid.c_str())) { //is own device or we permitted decryption
+            //everything ok, let's get value and decrypt it
+            json content = json::parse(payload);
+            std::string value = string(content["value"]);
+            int decryptedValue = m_pController->getHE_handler()->decrypt(value); //TODO might get stuck here, when input is wrong!
+            std::cout << "DECRYPT VIC HANDL: " + std::to_string(decryptedValue) << std::endl;           
+            updateTaskStatus(string("decrypt"), string("finished"), string("{\"value\": " + std::to_string(decryptedValue) + "}"));
+            //return std::to_string(decryptedValue);
+            return "";
+        }
+    }
+    
+    //update status again: finished or failed?
+    updateTaskStatus(string("decrypt"), string("failed"), string("{\"value\":0}"));
+    return "";
+}
+
+string vicinity_handler::enterAggregation(string oid, string sourceOid, string payload) { //TODO doesn't need to return something, right?
+    //check if oid is he oid
+    return "";
+}
+
+string vicinity_handler::sendShareAction(string oid, string sourceOid, string payload) { //TODO doesn't need to return something, right?
+    //check if oid is he oid
+    return "";
+}
+
+//takes action id, status (failed, running or finished)
+bool vicinity_handler::updateTaskStatus(string aid, string status, string payload) {
+    std::string address = "http://127.0.0.1:" + agentPort + "/agent/actions/" + aid;
+        
+    http_client client(address.c_str());
+    //client.request(methods::PUT, "", status);
+
+    http_request request(methods::PUT);
+    //request.headers().add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+    request.headers().add("adapter-id", adapterId);
+    request.headers().add("infrastructure-id", ownOid);
+    request.headers().add("status", status.c_str());
+    request.set_body(payload.c_str());
+    //std::cout << request.to_string() << std::endl;
+    //std::cout << request.absolute_uri().to_string() << std::endl;
+    
+    client.request(request);
+    
+    std::cout << "sent status update" << std::endl;
+    
+    //std::string output = response.extract_string().get();
+    return true;
+}
+
+//passed object id can be the one of a he service or the oid of a data source (encrypted device)
+//TODO test this method!!!
+string vicinity_handler::getPublicKey(string oid) {
+    using json = nlohmann::json; // for convenience
+    //get corresponding he service oid
+    std::string heOid = m_pController->getDB_access()->getPrivacyService(oid.c_str());
+    std::string key = m_pController->getDB_access()->get_public_key(heOid.c_str());
+    if(key == "") { //if key empty -> key of he service is not in database yet
+        //request public key from heOid
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + heOid + "/properties/publickey";
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        http_client client(address.c_str());
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        http_request request(methods::GET);
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        request.headers().add("adapter-id", adapterId);
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        request.headers().add("infrastructure-id", ownOid);
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        http_response response = client.request(request).get();
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        std::string output = response.extract_string().get();
+        std::cout << "output: " + output << std::endl;
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        json jOutput = json::parse(output);
+        std::cout << "9999999999999999999999999999999999"<< std::endl;
+        std::string receivedKey = jOutput["publickey"];
+        std::cout << "9999999999999999999999999999999999"<< std::endl; //hier kommts nicht hin!!
+        
+        std::cout << "Received KEY: " + receivedKey << std::endl;
+        
+        //put key in database
+        m_pController->getDB_access()->insert_public_key(heOid.c_str(), receivedKey.c_str()); //insert retrieved key into database
+        //return new key
+        return receivedKey;
+    } else {
+        return key;
+    }
 }

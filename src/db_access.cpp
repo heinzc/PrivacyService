@@ -31,8 +31,9 @@ db_access::db_access(const char* database)
     const char* sql4 = "CREATE TABLE OWN_DEVICES(OID TEXT PRIMARY KEY)";
     const char* sql5 = "CREATE TABLE FOREIGN_DEVICES_ACCESS_DECRYPT(OID TEXT PRIMARY KEY)";
     const char* sql6 = "CREATE TABLE PRIVACY_SERVICE(DEVICE_OID TEXT PRIMARY KEY, HE_SERVICE_OID TEXT)"; //is this really needed? TODO
-    //const char* sql7 = "CREATE TABLE AGGREGATE_TRUSTED_PARTIES(OID TEXT PRIMARY KEY)";
-    //const char* sql8 = "CREATE TABLE AGGREGATE_PARTIES_WHO_TRUST_US(OID TEXT PRIMARY KEY)";
+    const char* sql7 = "CREATE TABLE AGGREGATION_TRUSTED_PARTIES(OID TEXT PRIMARY KEY)";
+    const char* sql8 = "CREATE TABLE AGGREGATION_PARTIES_WHO_TRUST_ME(OID TEXT PRIMARY KEY)"; //do not insert own oid!
+    const char* sql9 = "CREATE TABLE AGGREGATION_COMPUTATION(SOURCE_OID TEXT, PARTICIPANT_OID TEXT, RECEIVED INTEGER, SHARE INTEGER, PRIMARY KEY(SOURCE_OID, PARTICIPANT_OID))";
     
     rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
     //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
@@ -51,6 +52,25 @@ db_access::db_access(const char* database)
     
     rc = sqlite3_exec(db, sql6, callback, 0, &zErrMsg);
     //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    
+    rc = sqlite3_exec(db, sql7, callback, 0, &zErrMsg);
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    
+    rc = sqlite3_exec(db, sql8, callback, 0, &zErrMsg);
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    
+    rc = sqlite3_exec(db, sql9, callback, 0, &zErrMsg);
+    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    
+    //resetAggregationComputation(); //TODO decomment!
+    updateShareAggregationComputation("oid 1", "oid 2", 13373);
+    if(trustsMe("oid 1")) {
+        std::cout << "YEAAH" << std::endl;
+    }
+    std::cout << "YEAAH22" << std::endl;
+    
+    
+    insertParticipantAggregateComputation("SOURZ", "PARTIZ");
 }
 
 //destructor
@@ -322,3 +342,59 @@ std::string db_access::getPrivacyService(const char * id)
     return service;
 }
 
+//clears the table
+void db_access::resetAggregationComputation() {
+    string sql = "delete from AGGREGATION_COMPUTATION";
+    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+}
+
+//has to be called after finished or aborted computation with the requester id (source oid)
+void db_access::deleteSourceAggregationComputation(const char * sourceOid) {
+    string sql = "delete from AGGREGATION_COMPUTATION where SOURCE_OID = \'";
+    sql.append(sourceOid);
+    sql.append("\'");
+    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+}
+
+//update (insert) share
+void db_access::updateShareAggregationComputation(const char * sourceOid, const char * participantOid, int value) {
+    string sql = string("UPDATE AGGREGATION_COMPUTATION SET RECEIVED = 1, SHARE = ") + std::to_string(value) + string(" WHERE SOURCE_OID = '") + sourceOid + string("' AND PARTICIPANT_OID = '") + participantOid + string("'");
+    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+}
+
+//returns true if all shares received
+bool db_access::allSharesReceived(const char * sourceOid) {
+    string sql = "select PARTICIPANT_OID from AGGREGATION_COMPUTATION where RECEIVED = 0";
+    
+    char** results = NULL;
+    int rows, columns;
+    char* error;
+    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
+    if (rows == 0) { //0 means, we received all shares of this aggregation
+        return true;
+    }
+    return false;
+}
+
+//if oid trusts thisb service (-> would send share in aggregation
+bool db_access::trustsMe(const char * oid) {
+    string sql = string("select OID from AGGREGATION_PARTIES_WHO_TRUST_ME where OID = '") + oid + string("'");
+    
+    char** results = NULL;
+    int rows, columns;
+    char* error;
+    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
+    if (rows == 0) { //0 means, this party does not trust us
+        return false;
+    }
+    return true;
+}
+
+//insert participants of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
+//participants can be inserted multiple times, will only be saves once in database (for this aggregation)
+void db_access::insertParticipantAggregateComputation(const char * sourceOid, const char * participant) {
+    if(trustsMe(participant)) { //only participants who trust me send a share; in the trust me table, the own oid musn't be inserted!        
+        string sql = string("INSERT OR REPLACE INTO AGGREGATION_COMPUTATION (SOURCE_OID, PARTICIPANT_OID, RECEIVED, SHARE) VALUES (\'") + sourceOid + string("\',\'") + participant + string("\',0,0)");
+        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+    }
+}

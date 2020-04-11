@@ -75,7 +75,7 @@ void rest_handler::handle_get(http_request message) {
         } else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
             handle_VICINITY_GET_request(message, paths);
             return;
-        }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) {
+        }else if(std::find(paths.begin(), paths.end(), "publickey") != paths.end()) { //old
             http_response response(status_codes::OK);
             response.headers().add(U("ID"), U(identifier.c_str())); //add own id to the headers
             response.set_body(m_pController->getHE_handler()->getPublicKey());            
@@ -169,7 +169,80 @@ void rest_handler::handle_post(http_request message) {
             }
             message.reply(status_codes::NotFound, "error, header \"id\" missing");
         }
+        else if(std::find(paths.begin(), paths.end(), "distributedAggregation") != paths.end()) {
+            //TODO 
+            //has to get oids of devices and their corresponding he service as well as property
+            std::cout << "DISTRIBUTED AGGREGATION" << std::endl;
+            //get payload and preprocess it
+            json::object request_json = message.extract_json().get().as_object();
+            json::array participants = request_json.at("participants").as_array(); //or maybe better sth. like: [[1,2,3],[1,2,3]]
+            json::array devices = request_json.at("devices").as_array();
+            json::array properties = request_json.at("properties").as_array();
+            std::vector<std::string> participantsVec;
+            std::vector<std::string> devicesVec;
+            std::vector<std::string> propertiesVec;
+            for(auto it = participants.begin(); it != participants.end(); ++it) {
+                std::cout << it->as_string() << std::endl;
+                participantsVec.push_back(it->as_string());
+            }
+            for(auto it = devices.begin(); it != devices.end(); ++it) {
+                std::cout << it->as_string() << std::endl;
+                devicesVec.push_back(it->as_string());
+            }
+            for(auto it = properties.begin(); it != properties.end(); ++it) {
+                std::cout << it->as_string() << std::endl;
+                propertiesVec.push_back(it->as_string());
+            }
+            //check if length of the three vectors are equally TODO
+            
+            //get list of trusted parties
+            
+            //intersection (maybe) or for loop over the vector
+            
+            //to all trusted participants: send share
+            
+            //wait until all shares received
+            
+            //calculate blinded measurement
+            
+            //reply result
+            return;
+        }
         else if(std::find(paths.begin(), paths.end(), "aggregate") != paths.end()) {
+            std::cout << "LOCALLY AGGREGATE" << std::endl;
+            //string stvalue = message.extract_string().get();
+            //std::cout << "BODY: " + stvalue << std::endl;
+            json::object request_json = message.extract_json().get().as_object();
+            std::cout << "X1" << std::endl;
+            json::array values = request_json.at("values").as_array();
+            std::cout << "X1" << std::endl;
+            std::vector<std::string> vec;
+            std::cout << "X1" << std::endl;
+            for(auto it = values.begin(); it != values.end(); ++it) {
+                //std::cout << it->as_string() << std::endl;
+                vec.push_back(it->as_string());
+            }
+            std::cout << "X1" << std::endl;
+            std::string sourceOid = "";
+            if(message.headers().has(U("sourceOid"))) { //does not need to be provided
+                sourceOid = ::utility::conversions::to_utf8string(message.headers().operator[](U("sourceOid")));
+            }
+            //m_pController->getHE_handler()->aggregate(stvalue, get_public_key(header_id.c_str(), message).c_str());
+            //seal_he_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
+            std::string result = "";
+            std::cout << "HEREEEE" << std::endl;
+            if(sourceOid == "") {
+                std::cout << "HEREEEE1111" << std::endl;
+                result = m_pController->getHE_handler()->aggregate(vec, ""); //use own key
+            } else {
+                std::cout << "HEREEEE2222" << std::endl;
+                result = m_pController->getHE_handler()->aggregate(vec, (m_pController->getVICINITY_handler()->getPublicKey(sourceOid)).c_str()).c_str();
+            }
+            std::cout << "RESULT OF AGG: " + result << std::endl;
+            message.reply(status_codes::OK, result.c_str());
+            return;
+        }
+        else if(std::find(paths.begin(), paths.end(), "aggregateOld") != paths.end()) {
             if(message.headers().has(U("ID"))) {
                 std::string header_id = ::utility::conversions::to_utf8string(message.headers().operator[](U("ID")));
                 json::object request_json = message.extract_json().get().as_object();
@@ -185,7 +258,7 @@ void rest_handler::handle_post(http_request message) {
                 message.reply(status_codes::OK, result); //m_pController->getHE_handler()->decrypt(result));
             }
             message.reply(status_codes::NotFound, "error, header \"id\" missing");
-        }
+        }        
         else if(std::find(paths.begin(), paths.end(), "decrypt") != paths.end()) {
             std::cout << "DECRYYPPT!!!!" << std::endl;
             string stvalue = message.extract_string().get();
@@ -213,7 +286,6 @@ void rest_handler::handle_post(http_request message) {
         }
         else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
             handle_VICINITY_POST_request(message, paths);
-            message.reply(status_codes::OK, ""); //TODO "" ok?
             return;
         }
         message.reply(status_codes::NotFound,"WAT?!");
@@ -272,7 +344,7 @@ string rest_handler::encrypt_ptxt(string pt) {
 }
 
 
-//
+// TODO old, can be removed, propably. new one in vicinity handler
 // get pulic key, requests the key if it is not in database
 //
 std::string rest_handler::get_public_key(const char* id, http_request message) {
@@ -329,6 +401,7 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
         string oid = path[2];
         string pid = path[4];
         string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
+        std::cout << "Read Property. Sending answer back." << std::endl;
         message.reply(status_codes::OK, payload);
 
     }
@@ -346,7 +419,7 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 
 void rest_handler::handle_VICINITY_POST_request(http_request message, std::vector<utility::string_t> path) {
     std::cout << "ACTION!!!!" << std::endl;
-    std::cout << "ACTION REC PYLD : " + message.extract_string().get() << std::endl;
+    //std::cout << "ACTION REC PYLD : " + message.extract_string().get() << std::endl;
     std::cout << "REQUEST: " + message.to_string() << std::endl; //korrekt!
             std::cout << "ABS URI: " + message.absolute_uri().to_string() << std::endl;
             std::cout << "REL URI: " + message.relative_uri().to_string() << std::endl;
@@ -356,6 +429,7 @@ void rest_handler::handle_VICINITY_POST_request(http_request message, std::vecto
         message.reply(status_codes::BadRequest, "not enough arguments");
     }
     else {
+        /* propably to delete
         if(path.at(1) == "objects" && path.at(3) == "actions") { //is it an action?
             string oid = path[2];
             string aid = path[4];
@@ -373,28 +447,84 @@ void rest_handler::handle_VICINITY_POST_request(http_request message, std::vecto
             m_pController->getVICINITY_handler()->postAction(oid, aid, payload, sender);
             message.reply(status_codes::OK, ""); //there is always a task id returned, no need for us to return sth.
         }
-        else if(path.at(1) == "decrypt") { //decrypt action called
-            std::cout << "REQUEST: " + message.to_string() << std::endl; //korrekt!
-            std::cout << "ABS URI: " + message.absolute_uri().to_string() << std::endl;
-            std::cout << "REL URI: " + message.relative_uri().to_string() << std::endl;
-            std::cout << "REQ URI: " + message.request_uri().to_string() << std::endl;
+        */
+        //actions are checked here, because there is no standard for how to receive action requests
+        if(path.at(1) == "decryptaction") { //decrypt action called
+            string sourceOid = message.absolute_uri().query();
+            //remove "sourceOid=" from sourceOid
+            string toRemove = "sourceOid=";
+            std::string::size_type i = sourceOid.find(toRemove);
+            if (i != std::string::npos)
+            sourceOid.erase(i, toRemove.length());
+            
+            std::cout << "decryptaction: " + sourceOid << std::endl;
             
             string oid = path[2];
-            string payload = message.extract_string().get();
-            string sender = "SENDER"; //TODO muesste hier direkt in den params/args dabei sein!!! wie auslesen????
-            //m_pController->getVICINITY_handler()->decrypt(oid, sender, payload) TODO
+            string payload = message.extract_string().get(); //can only be extracted once!
+            string decryptedValue = m_pController->getVICINITY_handler()->decrypt(oid, sourceOid, payload);
+            
+            //message.headers().add(U("status"), U("running"));
+            message.reply(status_codes::OK, "{\"status\":\"running\"}");
+            
+            /*
+            http_response response(status_codes::OK);
+            response.headers().add(U("status"), U("running"));
+            response.set_body("");            
+            message.reply(response).then([](pplx::task<void> t) {});
+            */
+            /*
+            if(decryptedValue == "") { //something went wrong, e.g. no access to decrypt
+                message.reply(status_codes::BadRequest, "No access to decrypt or payload was wrong.");
+            } else {
+                //put decrypted value in json and send it back
+                message.reply(status_codes::OK, "");
+            }
+            */
         }
+        else if(path.at(1) == "aggregationaction") {
+            string sourceOid = message.absolute_uri().query();
+            //remove "sourceOid=" from sourceOid
+            string toRemove = "sourceOid=";
+            std::string::size_type i = sourceOid.find(toRemove);
+            if (i != std::string::npos)
+            sourceOid.erase(i, toRemove.length());
+            //only has to be called from owner devices (check sourceOid)
+            if(m_pController->getDB_access()->isOwnDevice(sourceOid.c_str())) {
+                string oid = path[2];
+                string payload = message.extract_string().get(); //can only be extracted once!
+                string decryptedValue = m_pController->getVICINITY_handler()->enterAggregation(oid, sourceOid, payload); //TODO variable needed?
+                message.reply(status_codes::OK, "{\"status\":\"running\"}");
+            }
+            else {
+                message.reply(status_codes::OK, "{\"status\":\"failed\"}");
+            }
+        }
+        else if(path.at(1) == "randomshareaction") {
+            string sourceOid = message.absolute_uri().query();
+            //remove "sourceOid=" from sourceOid
+            string toRemove = "sourceOid=";
+            std::string::size_type i = sourceOid.find(toRemove);
+            if (i != std::string::npos)
+            sourceOid.erase(i, toRemove.length());
+            string oid = path[2];
+            string payload = message.extract_string().get(); //can only be extracted once!
+            string decryptedValue = m_pController->getVICINITY_handler()->sendShareAction(oid, sourceOid, payload); //TODO variable needed?
+            message.reply(status_codes::OK, "{\"status\":\"running\"}");
+        }
+        /*
         else if(path.at(1) == "objects" && path.at(3) == "properties") { //is it a property? (needed for actions) TODO is this needed? where to get source id?
             string oid = path[2];
             string pid = path[4];
             std::cout << "POST ACTION PROP : " + pid << std::endl;
+            //TODO reply...
         }
+        */
     }
 }
 
 
 void rest_handler::handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path) {
-    std::cout << "ACTION!!!!" << std::endl;
+    std::cout << "PUT REQUEST!!!!" << std::endl;
     if(path.size() < 3) {
         message.reply(status_codes::BadRequest, "not enough arguments");
     }
@@ -405,7 +535,7 @@ void rest_handler::handle_VICINITY_PUT_request(http_request message, std::vector
             string payload = message.extract_string().get();
             
             string payload2 = m_pController->getVICINITY_handler()->writeProperty(oid, pid, payload);
-            message.reply(status_codes::OK, payload2); //there is always a task id returned, no need for us to return sth.
+            message.reply(status_codes::OK, payload2);
         }
     }
 }

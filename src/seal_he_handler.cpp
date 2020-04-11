@@ -31,7 +31,7 @@ void seal_he_handler::initialize() {
     //print_parameters(m_pContext);
 
     generate_keys();
-    
+    cout << "TESTESTESTET" << endl;  
     //try to get saved keys from database. if there are none, use newly generated ones
     if(m_pController->getDB_access()->get_own_key("PK") == "" || m_pController->getDB_access()->get_own_key("SK") == "") { //own keys missing in the database
         //save above generated keys in database
@@ -41,6 +41,7 @@ void seal_he_handler::initialize() {
         m_pController->getDB_access()->insert_own_key("PK", pk);
         m_pController->getDB_access()->insert_own_key("SK", sk);
     } else { //set keys to the values saved in the database
+        cout << "Found own keys in database. Use them." << endl;  
         setPublicKey(m_pController->getDB_access()->get_own_key("PK").c_str());
         setPrivateKey(m_pController->getDB_access()->get_own_key("SK").c_str());
     }
@@ -103,7 +104,17 @@ void seal_he_handler::aggregate(int count)
 }
 
 std::string seal_he_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
-    Encryptor encryptor(m_pContext, m_PublicKey);
+    PublicKey useKey;
+    if (publickey == "") {
+        useKey = m_PublicKey;
+        std::cout << "using existing key" << std::endl;
+    } else {
+        std::stringstream ss(base64_decode(std::string(publickey)));
+        useKey.load(m_pContext, ss);
+        std::cout << "using given key" << std::endl;
+    }
+    
+    Encryptor encryptor(m_pContext, useKey);
     Evaluator evaluator(m_pContext);
 
     Plaintext zero_plain(to_string(0));
@@ -123,7 +134,7 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     std::stringstream ss;
 	sum.save(ss);
 
-    const std::string& s = ss.str();   
+    const std::string& s = ss.str();
 
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
@@ -152,7 +163,9 @@ std::string seal_he_handler::getSecretKey() {
     std::stringstream ss;
     m_SecretKey.save(ss);
 
-    return ss.str();
+    const std::string& s = ss.str();   
+
+    return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
 
@@ -169,10 +182,18 @@ void seal_he_handler::generate_keys() {
 
 
 void seal_he_handler::setPublicKey(const char* json) {
-
+    std::cout << "OK!!!!" << std::endl;
+    std::stringstream ss(base64_decode(json));
+    std::cout << "OK!!!!!" << std::endl;
+    m_PublicKey.load(m_pContext, ss);
+    std::cout << "OK!!!!!" << std::endl;
 }
 
 
 void seal_he_handler::setPrivateKey(const char* json) {
-
+    std::cout << "OK!" << std::endl;
+    std::stringstream ss(base64_decode(json));
+    std::cout << "OK!" << std::endl;
+    m_SecretKey.load(m_pContext, ss);
+    std::cout << "OK!" << std::endl;
 }
