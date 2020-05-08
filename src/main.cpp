@@ -95,12 +95,15 @@ int main()
     std::string pubKey;
     std::vector<std::string> valuesvec;
 
-    value = he->encrypt_as_string(71);//42);
+    value = he->encrypt_as_string(71);
     pubKey = he->getPublicKey();
+    
     std::cout << "summand 1: " << he->decrypt(value) << std::endl; //TESTING
-    valuesvec.push_back(value);
 
-    value = he->encrypt_as_string(71, pubKey);//42, pubKey);
+    valuesvec.push_back(value);
+    
+    value = he->encrypt_as_string(71, pubKey);
+
     std::cout << "summand 2: " << he->decrypt(value) << std::endl; //TESTING
     valuesvec.push_back(value);
 

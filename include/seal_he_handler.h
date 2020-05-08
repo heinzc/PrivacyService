@@ -43,6 +43,9 @@ class seal_he_handler : he_handler
 
         void generate_keys();
 
+        template <class T>
+        std::string to_hexstring(T t, ios_base & (*f)(ios_base&));
+
         //Ctxt encrypt(long x);
         //NTL::ZZX decrypt(Ctxt & ctxt);
         

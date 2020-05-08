@@ -66,15 +66,15 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
     }
     
     Encryptor encryptor(m_pContext, useKey);
-    Plaintext x_plain(to_string(x));
-    std::cout << "TEST222: " + x_plain.to_string() << std::endl; //TESTING
+    Plaintext x_plain(to_hexstring<long>(x, hex));
+
     Ciphertext x_encrypted;
     encryptor.encrypt(x_plain, x_encrypted);
 
     std::stringstream ss;
 	x_encrypted.save(ss);
 
-    const std::string& s = ss.str();       
+    const std::string& s = ss.str();
 
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
@@ -93,8 +93,10 @@ int seal_he_handler::decrypt(std::string & ctxt) {
     val.load(m_pContext, ss);
 
     decryptor.decrypt(val, plain);
-    std::cout << "TEST TO STRING PLAIN: " + plain.to_string() << std::endl; //TESTING
-    return std::stoi(plain.to_string());
+
+    std::cout << "TEST TO STRING PLAIN: " << plain.to_string() << std::endl;
+
+    return std::stoi(plain.to_string(), nullptr, 16);
 }
 
 void seal_he_handler::aggregate(int count)
@@ -118,13 +120,8 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     Encryptor encryptor(m_pContext, useKey);
     Evaluator evaluator(m_pContext);
     */
-    
-    ////
-    
     Encryptor encryptor(m_pContext, m_PublicKey);
     Evaluator evaluator(m_pContext);
-    
-    ////
     
     Plaintext zero_plain(to_string(0));
     
@@ -183,7 +180,6 @@ void seal_he_handler::generate_keys() {
 	std::cout << "OK!" << std::endl;
 }
 
-
 void seal_he_handler::setPublicKey(const char* json) {
     std::cout << "Setting public key... " << std::flush;
     
@@ -201,4 +197,12 @@ void seal_he_handler::setPrivateKey(const char* json) {
     m_SecretKey.load(m_pContext, ss);
     
     std::cout << "OK!" << std::endl;
+}
+
+template <class T>
+string seal_he_handler::to_hexstring(T t, ios_base & (*f)(ios_base&))
+{
+  ostringstream oss;
+  oss << f << t;
+  return oss.str();
 }
