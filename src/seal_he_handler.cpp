@@ -31,7 +31,7 @@ void seal_he_handler::initialize() {
     //print_parameters(m_pContext);
 
     generate_keys();
-    cout << "TESTESTESTET" << endl;  
+    
     //try to get saved keys from database. if there are none, use newly generated ones
     if(m_pController->getDB_access()->get_own_key("PK") == "" || m_pController->getDB_access()->get_own_key("SK") == "") { //own keys missing in the database
         //save above generated keys in database
@@ -45,8 +45,6 @@ void seal_he_handler::initialize() {
         setPublicKey(m_pController->getDB_access()->get_own_key("PK").c_str());
         setPrivateKey(m_pController->getDB_access()->get_own_key("SK").c_str());
     }
-    
-    
 	
     cout << "*** END INITIALIZATION ***" << endl;
 }
@@ -56,6 +54,7 @@ void seal_he_handler::encrypt_and_store(long x, int id) {
 }
 
 string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
+    std::cout << "TEST: " + std::to_string(x) << std::endl; //TESTING
     PublicKey useKey;
     if ( pubKey.empty() ) {
         useKey = m_PublicKey;
@@ -68,14 +67,14 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
     
     Encryptor encryptor(m_pContext, useKey);
     Plaintext x_plain(to_string(x));
-
+    std::cout << "TEST222: " + x_plain.to_string() << std::endl; //TESTING
     Ciphertext x_encrypted;
     encryptor.encrypt(x_plain, x_encrypted);
 
     std::stringstream ss;
 	x_encrypted.save(ss);
 
-    const std::string& s = ss.str();   
+    const std::string& s = ss.str();       
 
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
@@ -94,7 +93,7 @@ int seal_he_handler::decrypt(std::string & ctxt) {
     val.load(m_pContext, ss);
 
     decryptor.decrypt(val, plain);
-
+    std::cout << "TEST TO STRING PLAIN: " + plain.to_string() << std::endl; //TESTING
     return std::stoi(plain.to_string());
 }
 
@@ -104,38 +103,43 @@ void seal_he_handler::aggregate(int count)
 }
 
 std::string seal_he_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
+    /*
+    std::cout << "he handler aggregate" << std::endl;
     PublicKey useKey;
-    if (publickey == "") {
-        useKey = m_PublicKey;
+    //std::cout << std::string("pk: ") + publickey << std::endl;
+    if (std::string(publickey) == std::string("")) {
         std::cout << "using existing key" << std::endl;
+        useKey = m_PublicKey;
     } else {
+        std::cout << "using given key" << std::endl;
         std::stringstream ss(base64_decode(std::string(publickey)));
         useKey.load(m_pContext, ss);
-        std::cout << "using given key" << std::endl;
     }
-    
     Encryptor encryptor(m_pContext, useKey);
     Evaluator evaluator(m_pContext);
-
+    */
+    
+    ////
+    
+    Encryptor encryptor(m_pContext, m_PublicKey);
+    Evaluator evaluator(m_pContext);
+    
+    ////
+    
     Plaintext zero_plain(to_string(0));
+    
     Ciphertext sum;
-
     encryptor.encrypt(zero_plain, sum);
-
+    
     for(auto it = input.begin(); it != input.end(); ++it) {
         std::stringstream ss (base64_decode(*it));
         Ciphertext val;
-
         val.load(m_pContext, ss);
-
         evaluator.add_inplace(sum, val);
     }
-
     std::stringstream ss;
 	sum.save(ss);
-
     const std::string& s = ss.str();
-
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
@@ -170,7 +174,6 @@ std::string seal_he_handler::getSecretKey() {
 
 
 void seal_he_handler::generate_keys() {
-
     std::cout << "Generating keys... " << std::flush;
 
     KeyGenerator keygen(m_pContext);
@@ -182,18 +185,20 @@ void seal_he_handler::generate_keys() {
 
 
 void seal_he_handler::setPublicKey(const char* json) {
-    std::cout << "OK!!!!" << std::endl;
+    std::cout << "Setting public key... " << std::flush;
+    
     std::stringstream ss(base64_decode(json));
-    std::cout << "OK!!!!!" << std::endl;
     m_PublicKey.load(m_pContext, ss);
-    std::cout << "OK!!!!!" << std::endl;
+    
+    std::cout << "OK!" << std::endl;
 }
 
 
 void seal_he_handler::setPrivateKey(const char* json) {
-    std::cout << "OK!" << std::endl;
+    std::cout << "Setting private key... " << std::flush;
+    
     std::stringstream ss(base64_decode(json));
-    std::cout << "OK!" << std::endl;
     m_SecretKey.load(m_pContext, ss);
+    
     std::cout << "OK!" << std::endl;
 }

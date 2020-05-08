@@ -89,22 +89,23 @@ int main()
     std::cout << "GG: " + db->getPrivacyService("oid11") << std::endl;
     std::cout << "GG: " + db->getPrivacyService("oid121") << std::endl;
     
+    vicinity->readProperty(std::string("he_service"), std::string("trustedparties"));
     
     std::string value;
     std::string pubKey;
     std::vector<std::string> valuesvec;
 
-    value = he->encrypt_as_string(42);
+    value = he->encrypt_as_string(71);//42);
     pubKey = he->getPublicKey();
-    
+    std::cout << "summand 1: " << he->decrypt(value) << std::endl; //TESTING
     valuesvec.push_back(value);
-    
-    value = he->encrypt_as_string(42, pubKey);
 
+    value = he->encrypt_as_string(71, pubKey);//42, pubKey);
+    std::cout << "summand 2: " << he->decrypt(value) << std::endl; //TESTING
     valuesvec.push_back(value);
 
     std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
-    
+    std::cout << "after aggregating" << std::endl; //TESTING
     int intval = he->decrypt(result);
 
     std::cout << "decrypted test result: " << intval << std::endl;
