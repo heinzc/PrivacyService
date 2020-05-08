@@ -51,7 +51,7 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
     }
     
     Encryptor encryptor(m_pContext, useKey);
-    Plaintext x_plain(to_string(x));
+    Plaintext x_plain(to_hexstring<long>(x, hex));
 
     Ciphertext x_encrypted;
     encryptor.encrypt(x_plain, x_encrypted);
@@ -79,7 +79,9 @@ int seal_he_handler::decrypt(std::string & ctxt) {
 
     decryptor.decrypt(val, plain);
 
-    return std::stoi(plain.to_string());
+    std::cout << "TEST TO STRING PLAIN: " << plain.to_string() << std::endl;
+
+    return std::stoi(plain.to_string(), nullptr, 16);
 }
 
 void seal_he_handler::aggregate(int count)
@@ -143,4 +145,12 @@ void seal_he_handler::generate_keys() {
     m_SecretKey = keygen.secret_key();
 
 	std::cout << "OK!" << std::endl;
+}
+
+template <class T>
+string seal_he_handler::to_hexstring(T t, ios_base & (*f)(ios_base&))
+{
+  ostringstream oss;
+  oss << f << t;
+  return oss.str();
 }

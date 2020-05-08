@@ -55,12 +55,12 @@ int main()
     std::string pubKey;
     std::vector<std::string> valuesvec;
 
-    value = he->encrypt_as_string(42);
+    value = he->encrypt_as_string(71);
     pubKey = he->getPublicKey();
     
     valuesvec.push_back(value);
     
-    value = he->encrypt_as_string(42, pubKey);
+    value = he->encrypt_as_string(71, pubKey);
 
     valuesvec.push_back(value);
 
