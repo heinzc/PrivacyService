@@ -77,7 +77,11 @@ db_access::db_access(const char* database)
     resetRandomShares(); //TODO decomment!
     resetBlindedMeasurements(); //TODO decomment!
     
-    std::cout << std::string("THREADSAFE?: ") + std::to_string(sqlite3_threadsafe());
+    std::cout << std::string("Sqlite threadsafe?: ") + std::to_string(sqlite3_threadsafe()) << std::endl;
+    if(!sqlite3_threadsafe()) {
+        std::cout << "WARNING! Sqlite installation is not threadsafe!" << std::endl;
+    }
+        
     //if(sqlite3_db_mutex(sqlite3*) == NULL) {
         //std::cout << "NUUUUULLLL" << std::endl;
     //}

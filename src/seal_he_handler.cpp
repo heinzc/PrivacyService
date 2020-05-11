@@ -11,6 +11,8 @@ seal_he_handler::seal_he_handler(size_t poly_modulus_degree) :
     m_poly_modulus_degree = poly_modulus_degree;
 
     m_pContext = 0;
+    
+    m_pParms = EncryptionParameters (scheme_type::BFV);
 }
 
 seal_he_handler::~seal_he_handler() {
@@ -21,12 +23,11 @@ seal_he_handler::~seal_he_handler() {
 
 void seal_he_handler::initialize() {
     
-    EncryptionParameters parms(scheme_type::BFV);
-    parms.set_poly_modulus_degree(m_poly_modulus_degree);
-    parms.set_coeff_modulus(CoeffModulus::BFVDefault(m_poly_modulus_degree));
-    parms.set_plain_modulus(1024);
+    m_pParms.set_poly_modulus_degree(m_poly_modulus_degree);
+    m_pParms.set_coeff_modulus(CoeffModulus::BFVDefault(m_poly_modulus_degree));
+    m_pParms.set_plain_modulus(1024);
 
-    m_pContext = SEALContext::Create(parms);
+    m_pContext = SEALContext::Create(m_pParms);
 
     //print_parameters(m_pContext);
 
@@ -105,7 +106,7 @@ void seal_he_handler::aggregate(int count)
 }
 
 std::string seal_he_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
-    /*
+    
     std::cout << "he handler aggregate" << std::endl;
     PublicKey useKey;
     //std::cout << std::string("pk: ") + publickey << std::endl;
@@ -119,9 +120,9 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     }
     Encryptor encryptor(m_pContext, useKey);
     Evaluator evaluator(m_pContext);
-    */
-    Encryptor encryptor(m_pContext, m_PublicKey);
-    Evaluator evaluator(m_pContext);
+    
+    //Encryptor encryptor(m_pContext, m_PublicKey);
+    //Evaluator evaluator(m_pContext);
     
     Plaintext zero_plain(to_string(0));
     
@@ -139,8 +140,6 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     const std::string& s = ss.str();
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
-
-
 
 void seal_he_handler::add(std::string & ctxt, const char* publickey) {
 	return;
@@ -169,6 +168,16 @@ std::string seal_he_handler::getSecretKey() {
     return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
 }
 
+//returns the encryption parameters. is also shared, when sharing a public key.
+std::string seal_he_handler::getEncryptionParameters() {
+    std::stringstream ss;
+    //m_pContext->last_context_data()->parms().save(ss);
+    m_pParms.save(ss);
+
+    const std::string& s = ss.str();   
+
+    return base64_encode(reinterpret_cast<const unsigned char*>(s.c_str()), s.length());
+}
 
 void seal_he_handler::generate_keys() {
     std::cout << "Generating keys... " << std::flush;
@@ -188,7 +197,6 @@ void seal_he_handler::setPublicKey(const char* json) {
     
     std::cout << "OK!" << std::endl;
 }
-
 
 void seal_he_handler::setPrivateKey(const char* json) {
     std::cout << "Setting private key... " << std::flush;

@@ -37,6 +37,8 @@ class seal_he_handler : he_handler
         size_t m_poly_modulus_degree; // Specific modulus
 
         std::shared_ptr<SEALContext> m_pContext = 0;
+        
+        EncryptionParameters m_pParms;
 
         PublicKey m_PublicKey;
         SecretKey m_SecretKey;
@@ -53,4 +55,5 @@ class seal_he_handler : he_handler
         void setPrivateKey(const char* json);
         
         std::string getSecretKey();
+        std::string getEncryptionParameters();
 };

@@ -159,7 +159,7 @@ void rest_handler::handle_post(http_request message) {
                 }
                 //std::cout << "Result of aggregation: " + result << std::endl;
                 std::cout << "Aggregate locally finished." << std::endl;
-                message.reply(status_codes::NotFound,"WAT?!");
+                message.reply(status_codes::OK, result);
                 return;
             }
         }

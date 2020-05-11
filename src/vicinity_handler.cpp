@@ -171,7 +171,7 @@ string vicinity_handler::generateThingDescription() {
 string vicinity_handler::readProperty(string oid, string pid) {
     // for convenience
     using json = nlohmann::json;
-    std::cout << "RP: " + oid + pid << std::endl;
+    std::cout << string("Read Property; Oid: ") + oid + string(", Pid: ") + pid << std::endl;
     if(oid == ownOid) { //read property of the service itself
         if(pid == "publickey") {
             std::cout << "Publickey requested and returned" << std::endl;
@@ -179,15 +179,15 @@ string vicinity_handler::readProperty(string oid, string pid) {
             return std::string("{\"publickey\":\"" + m_pController->getHE_handler()->getPublicKey() + "\"}");
         }
         else if(pid == "trustedparties") {
-            std::cout << "Trusted parties requested and returned" << std::endl;
             std::vector<std::string> trustedParties = m_pController->getDB_access()->getTrustedParties();
             json parties = json::parse("{\"parties\":[]}");
             for(std::string p : trustedParties) {
                 parties["parties"].push_back(p);
                 std::cout << p << '\n';
             }
-            std::cout << "TRUSTED PARTIES REQUESTED: " + parties.dump() << '\n';
+            //std::cout << "TRUSTED PARTIES REQUESTED: " + parties.dump() << '\n';
             //return std::string("{\"parties\":\"[\"hallo\",\"du\"]\"}");
+            std::cout << "Trusted parties requested and returned" << std::endl;
             return parties.dump();
         }
     }
