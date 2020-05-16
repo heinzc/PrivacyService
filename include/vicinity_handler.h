@@ -61,8 +61,6 @@ class vicinity_handler
         
         //deltes a task, returns true if successful, else false
         bool deleteTask(std::string destinationOid, std::string action, std::string taskId);
-        
-        //std::string sendShare(std::string destinationOid, int shareValue);
 
     protected:
 

@@ -4,7 +4,6 @@
 #include "../include/phe_handler.h"
 #include "../include/seal_he_handler.h"
 #include "../include/he_controller.h"
-//#include "../include/db_access.h"
 #include "../include/vicinity_handler.h"
 
 #include <iostream>
@@ -46,7 +45,6 @@ int main()
     vicinity_handler * vicinity = new vicinity_handler();
     vicinity->initialize("config_adapters.json");
     controller.setVICINITY_handler(vicinity);
-	//he_handler * he = (he_handler*) (new phe_handler());
 	he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
@@ -61,14 +59,11 @@ int main()
 
     value = he->encrypt_as_string(71);
     pubKey = he->getPublicKey();
-    
-    std::cout << "summand 1: " << he->decrypt(value) << std::endl; //TESTING
 
     valuesvec.push_back(value);
     
     value = he->encrypt_as_string(71, pubKey);
 
-    std::cout << "summand 2: " << he->decrypt(value) << std::endl; //TESTING
     valuesvec.push_back(value);
 
     std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());

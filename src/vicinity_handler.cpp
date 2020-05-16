@@ -11,6 +11,8 @@
 
 #include <unistd.h> //usleep
 
+#include <boost/chrono.hpp>
+
 using namespace std;
 using namespace utility;
 using namespace web::http;
@@ -56,17 +58,6 @@ void vicinity_handler::initialize(string configfile) {
     adapterId = thing_description["adapter-id"];
     
     srand (time(NULL)); //initialize random seed with current time
-    
-    //REMOVE TODO
-    /*
-    std::cout << "UZGUKZGUZIGKUZGUZGK" << std::endl;
-    
-    for(int i = 0; i < 10; i++) {
-        long share = rand() % 10000;
-        std::cout << std::string("random2: ") + std::to_string(share) << std::endl;
-    }
-    */
-    
 }
 
 string vicinity_handler::generateThingDescription() {
@@ -110,7 +101,7 @@ string vicinity_handler::generateThingDescription() {
                     cout << "info: remove write link failed" << endl;
                 }
             }
-
+            
             //json result = json_value["thing-descriptions"][0];
             // And use emplace_back+move to detach the object from `json_value`
             // and move it to the back of `td_file["b"]`.
@@ -175,8 +166,10 @@ string vicinity_handler::readProperty(string oid, string pid) {
     if(oid == ownOid) { //read property of the service itself
         if(pid == "publickey") {
             std::cout << "Publickey requested and returned" << std::endl;
-            //return std::string("{\"publickey\":\"testpublickey\"}");
-            return std::string("{\"publickey\":\"" + m_pController->getHE_handler()->getPublicKey() + "\"}");
+            json keyJson = json::parse(std::string("{}"));
+            keyJson["publickey"] = m_pController->getHE_handler()->getPublicKey();
+            //std::cout << std::string("My public key: ") + keyJson.dump() << std::endl;
+            return keyJson.dump();
         }
         else if(pid == "trustedparties") {
             std::vector<std::string> trustedParties = m_pController->getDB_access()->getTrustedParties();
@@ -185,8 +178,7 @@ string vicinity_handler::readProperty(string oid, string pid) {
                 parties["parties"].push_back(p);
                 std::cout << p << '\n';
             }
-            //std::cout << "TRUSTED PARTIES REQUESTED: " + parties.dump() << '\n';
-            //return std::string("{\"parties\":\"[\"hallo\",\"du\"]\"}");
+            //std::cout << "Trusted parties requested: " + parties.dump() << '\n';
             std::cout << "Trusted parties requested and returned" << std::endl;
             return parties.dump();
         }
@@ -295,11 +287,9 @@ string vicinity_handler::getOwnPort() {
 
 void vicinity_handler::decrypt(string oid, string sourceOid, string payload) {
     using json = nlohmann::json; // for convenience
-    std::cout << "DECRYPT START" << std::endl;
+    std::cout << "Decrypt start" << std::endl;
     if(ownOid == oid) { //is the action for this service?
-        std::cout << "888888" << std::endl;
         if(m_pController->getDB_access()->hasAccessToDecrypt(sourceOid.c_str())) { //is own device or we permitted decryption
-            std::cout << "888888" << std::endl;
             //everything ok, let's get value and decrypt it
             json content;
             std::string value;
@@ -311,15 +301,12 @@ void vicinity_handler::decrypt(string oid, string sourceOid, string payload) {
                 updateTaskStatus(string("decrypt"), string("failed"), string("{\"value\":0}"));
                 return;
             }
-            //std::cout << "VALUE TO DECRYPT: " + value << std::endl;
-            std::cout << "888888" << std::endl;
+            //std::cout << "Value to decrypt: " + value << std::endl;
             try {
-                int decryptedValue = m_pController->getHE_handler()->decrypt(value); //TODO might get stuck here, when input is wrong! ///////////////////////
-                std::cout << "888888" << std::endl;
-                std::cout << "DECRYPT VIC HANDL: " + std::to_string(decryptedValue) << std::endl; //TODO SHOW!!
-                std::cout << "payload update: " + string("{\"value\": " + std::to_string(decryptedValue) + "}") << std::endl;
+                int decryptedValue = m_pController->getHE_handler()->decrypt(value);
+                std::cout << "Decrypted value: " + std::to_string(decryptedValue) << std::endl;
+                //std::cout << "Payload update: " + string("{\"value\": " + std::to_string(decryptedValue) + "}") << std::endl;
                 updateTaskStatus(string("decrypt"), string("finished"), string("{\"value\": " + std::to_string(decryptedValue) + "}"));
-                std::cout << "888888" << std::endl;
                 return;
             }
             catch(...) {
@@ -327,25 +314,20 @@ void vicinity_handler::decrypt(string oid, string sourceOid, string payload) {
             }
         }
     }
-    std::cout << "777777" << std::endl;
-    //update status again: finished or failed?
-    std::cout << "DECRYPT UPDATE STATUS" << std::endl;
+    //update status
     updateTaskStatus(string("decrypt"), string("failed"), string("{\"value\":0}"));
-    std::cout << "DECRYPT END" << std::endl;
+    std::cout << "Decrypt end" << std::endl;
     return;
 }
 
 void vicinity_handler::startAggregation(string oid, string sourceOid, string payload) {
     using json = nlohmann::json; //for convenience
     
-    //TODO reset tables somewhere
     m_pController->getDB_access()->resetBlindedMeasurements();
-    
-    //TODO check if the requested devices are really mine
     
     if(ownOid == oid) { //is the action for this service?
         if(m_pController->getDB_access()->isOwnDevice(sourceOid.c_str())) { //only has to be called from owner devices (check sourceOid)
-            //get participant he services, devices and properties //TODO
+            //get participant he services, devices and properties
             std::cout << "Start Aggregation Payload: " + payload << std::endl;
             json jPayload;
             try {
@@ -361,17 +343,6 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                 auto participants = jPayload["participants"].get<std::vector<std::string>>();
                 //has every vector the same length?
                 if(static_cast<int>(devices.size()) == static_cast<int>(properties.size()) && static_cast<int>(properties.size()) == static_cast<int>(participants.size())) {
-                    /*
-                    for (auto i : devices)
-                    {
-                        std::cout << i << std::endl;
-                    }
-                    */
-                    /*
-                    for(int i = 0; i < devices.size(); i++) {
-                        std::cout << devices.at(i) << std::endl;
-                    }
-                    */
                     //are there at least three different he services? minimum for safe aggregation
                     std::set<std::string> participantsSet;
                     for (auto i : participants)
@@ -393,23 +364,18 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                             taskIds.push_back(taskId);
                             taskExecutors.push_back(p);
                         }
-                        //std::cout << "YYYbefore while loop" << std::endl;
                         //wait until all blined measurements were received. meanwhile, if any task failed -> return; timeout of 60 seconds
                         time_t startWaitingForTasks = time(NULL); //current time
+                        boost::chrono::system_clock::time_point startWaitingForTasks2 = boost::chrono::system_clock::now();
+                        int pollCount = 0;
                         while(static_cast<int>(taskIds.size()) > 0 && time(NULL) < startWaitingForTasks + 60) { //or while !allBlindedMeasurementsReceived()
-                            //std::cout << "YYYwhile loop" << std::endl;
-                            //taskIds and taskExecutor have the same size, however, we better check it
-                            //std::cout << "taskIDs: " + std::string(std::to_string(static_cast<int>(taskIds.size()))) << std::endl;
-                            //std::cout << "executors: " + std::string(std::to_string(static_cast<int>(taskExecutors.size()))) << std::endl;
-                            
+                            //taskIds and taskExecutor (should) have the same size, however, we better check it
                             if(static_cast<int>(taskIds.size()) == static_cast<int>(taskExecutors.size()) && static_cast<int>(taskIds.size()) > 0) {
-                                //std::cout << "YYYsame size" << std::endl;
                                 for(int i = 0; i < static_cast<int>(taskIds.size()); i++) {
-                                    //std::cout << "YYYfor loop" << std::endl;
                                     //get status of task i
+                                    pollCount++;
                                     std::string status = getStatusOfAction(taskExecutors.at(i), std::string("participateInAggregation"), taskIds.at(i));
                                     //std::cout << "Status of a task: " + status << std::endl;
-                                    //std::cout << "YYYafter status get" << std::endl;
                                     if(status == "failed") { //then, this task (aggregation itself) failed also
                                         std::cout << "Task of a participant failed." << std::endl;
                                         updateTaskStatus(std::string("aggregation"), std::string("failed"), std::string("{\"value\":0}"));
@@ -421,8 +387,8 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                                         std::string recPayload = getReturnValueOfAction(taskExecutors.at(i), std::string("participateInAggregation"), taskIds.at(i));
                                         json jRecPayload = json::parse(recPayload);
                                         
-                                        std::cout << std::string("REC PAYLOAD: ") + recPayload << std::endl;
-                                        std::cout << std::string("REC PYLD VALUE: ") + jRecPayload["value"].dump() << std::endl;
+                                        //std::cout << std::string("Received payload: ") + recPayload << std::endl;
+                                        std::cout << std::string("Received value: ") + jRecPayload["value"].dump() << std::endl;
                                         int blindedMeasurement = atoi(std::string(jRecPayload["value"].dump()).c_str());
                                         m_pController->getDB_access()->updateBlindedMeasurement(taskExecutors.at(i).c_str(), blindedMeasurement);
                                         taskIds.erase(taskIds.begin()+i);
@@ -438,9 +404,11 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                                 return;
                             }
                             //sleep(1); //1 second, lower in real world usage
-                            usleep(50 * 1000); //50 miliseconds
+                            usleep(200 * 1000); //200 miliseconds
                         }
-                        //std::cout << "KKKKKKKKKKK" << std::endl;
+                        boost::chrono::milliseconds waitingTime = boost::chrono::duration_cast<boost::chrono::milliseconds> (boost::chrono::system_clock::now() - startWaitingForTasks2);
+                        std::cout << "Polling messages: " + std::to_string(pollCount) << std::endl; 
+                        std::cout << "Waiting time for shares: " << waitingTime.count() << " ms" << std::endl;
                         if(m_pController->getDB_access()->allBlindedMeasurementsReceived()) { //all shares should have been received, but better check it
                             std::cout << "All blinded measurements received." << std::endl;
                             //add blinded measurements -> calculate result
@@ -449,12 +417,12 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                             std::cout << "Aggregation result: " + std::to_string(aggregationResult) << std::endl;
                             updateTaskStatus(std::string("aggregation"), std::string("finished"), std::string("{\"value\":") + std::to_string(aggregationResult) + std::string("}"));
                             return;
-                        } std::cout << "ERR ZZZZ" << std::endl;
-                    }std::cout << "ERR ZZZZ" << std::endl;
-                }std::cout << "ERR ZZZZ" << std::endl;
-            }std::cout << "ERR ZZZZ" << std::endl;
-        }std::cout << "ERR ZZZZ" << std::endl;
-    }std::cout << "ERR ZZZZ" << std::endl;    
+                        }
+                    }
+                }
+            }
+        }
+    } 
     //update status failed
     std::cout << "StartAggregation failed!" << std::endl;
     updateTaskStatus(std::string("aggregation"), std::string("failed"), std::string("{\"value\":0}"));
@@ -466,9 +434,8 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
     
     //following actually not needed, since they are deleted at the end. just to be safe.
     m_pController->getDB_access()->deleteInitiatorRandomShares(sourceOid.c_str()); //reset db entries of this initiator
-    
-    std::cout << "/////////////////////////////////////////////" << std::endl;
-    
+
+    std::cout << "//////////////////PIA//////////////////" << std::endl;
     std::cout << "Aggregation action payload: " + payload << std::endl;
     if(ownOid == oid) { //is the action for this service?
         if(m_pController->getDB_access()->isTrustedInitiator(sourceOid.c_str())) { //is initiator allowed to initiate aggregation? (do we trust?)
@@ -511,15 +478,13 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                             if(participantsSet.find("you") != participantsSet.end()) {
                                 std::cout << "I am part of this aggregation." << std::endl;
                                 
-                                
-                                
                                 //get sum of requested own device properties
                                 long sumOfOwnDeviceProperties = 0;
                                 for(int i = 0; i < devices.size(); i++) {
                                     if(participants.at(i) == "you") {
                                         //are the as mine marked devices really mine?
                                         if(m_pController->getDB_access()->isOwnDevice(devices.at(i).c_str())) {
-                                            std::cout << std::string("GET plain prop of: ") + devices.at(i) + properties.at(i) << std::endl;
+                                            std::cout << std::string("Get plain value of: ") + devices.at(i) + std::string(", ") + properties.at(i) << std::endl;
                                             sumOfOwnDeviceProperties += getPropertyOfEncryptedDevice(devices.at(i), properties.at(i));
                                         }
                                         else {
@@ -531,7 +496,6 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                     }
                                 }
                                 std::cout << "Sum of own device properties: " + std::to_string(sumOfOwnDeviceProperties) << std::endl;
-                                
                                 
                                 //insert participants who trust me in database (random shares)
                                 for(auto &tp : participatingTrustedPartiesSet) {
@@ -558,7 +522,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                         updateTaskStatus(std::string("participateInAggregation"), std::string("failed"), std::string("{\"value\":0}"));
                                         return;
                                     }
-                                    std::cout << "Task ID: " + taskId << std::endl;
+                                    std::cout << "Sent Random Share Task ID: " + taskId << std::endl;
                                     //save task id and task executor
                                     taskIds.push_back(taskId);
                                     taskExecutors.push_back(tp);
@@ -572,6 +536,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                 //it is not necessary, to check if shares were successful. however,we cannot react, if they were not
                                 /*
                                 std::cout << "XXXBefore While loop" << std::endl;
+                                int pollCount = 0;
                                 while(static_cast<int>(taskIds.size()) > 0 && time(NULL) < startWaitingForTasks + 30) { // && time(NULL) < startRunning + 5) { //30 second total timeout
                                     std::cout << "XXXWhile loop" << std::endl;
                                     //taskIds and taskExecutor have the same size, however, we better check it
@@ -580,8 +545,9 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                         for(int i = 0; i < static_cast<int>(taskExecutors.size()); i++) {
                                             std::cout << "XXXFor loop" << std::endl;
                                             //get status of task i
+                                            pollCount++;
                                             std::string status = getStatusOfAction(taskExecutors.at(i), std::string("randomshare"), taskIds.at(i));
-                                            std::cout << "XXXTask status: " + status << std::endl;
+                                            //std::cout << "Task Status: " + status << std::endl;
                                             if(status == "failed") { //then, this task (aggregation itself) failed also
                                                 std::cout << "Randomshare task of a trusted participant failed." << std::endl;
                                                 m_pController->getDB_access()->deleteInitiatorRandomShares(sourceOid.c_str()); //reset db entries of this initiator
@@ -597,16 +563,17 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                             
                                             //it can happen, that updating task to "running" was received after "finished"
                                             else if(status == "running") {
+                                                pollCount++;
                                                 std::string returnValue = getReturnValueOfAction(taskExecutors.at(i), std::string("randomshare"), taskIds.at(i));
                                                 json jReturnValue;
                                                 try {
                                                     jReturnValue = json::parse(returnValue);
                                                 } catch (...) {
-                                                    std::cout << "Error when parsing return value in PIA." << std::endl;
+                                                    std::cout << "Error when parsing return value in participate in aggregation." << std::endl;
                                                     updateTaskStatus(std::string("participateInAggregation"), std::string("failed"), std::string("{\"value\":0}"));
                                                     return;
                                                 }
-                                                if(jReturnValue.find("declined") != jReturnValue.end()) { //this task was actually finished
+                                                if(jReturnValue.find("declined") != jReturnValue.end()) { //this task was actually finished, since the payload is there. can happen if gateway receives messages out of order
                                                     //delete task
                                                     deleteTask(taskExecutors.at(i), std::string("randomshare"), taskIds.at(i));
                                                     if(jReturnValue["declined"].get<bool>() == 0) {
@@ -623,19 +590,15 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                                     }
                                                 }
                                             }
-                                            
                                         }
                                     }
-                                    sleep(1); //1 second, lower in real world usage
-                                    //usleep(50 * 1000); //50 miliseconds
+                                    usleep(200 * 1000); //200 miliseconds
                                 }
-                                
-                                std::cout << "AFTER WHILE LOOP WHEN WAITING FOR OUR TASKS" << std::endl;
+                                std::cout << "Polling messages: " + std::to_string(pollCount) << std::endl;
                                 if(static_cast<int>(taskIds.size()) > 0) {
                                     std::cout << "Timeout when waiting for our random share tasks to be finished. Stop." << std::endl;
                                     //Delete tasks, that are still running (the ones in the vectors)
                                     if(static_cast<int>(taskExecutors.size()) == static_cast<int>(taskExecutors.size())) {
-                                        //std::cout << "XXXSame size" << std::endl;
                                         for(int i = 0; i < static_cast<int>(taskExecutors.size()); i++) {
                                             deleteTask(taskExecutors.at(i), std::string("randomshare"), taskIds.at(i));
                                         }
@@ -660,23 +623,20 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                     int receivedShares = m_pController->getDB_access()->getRandomShareSum(sourceOid.c_str());
                                     long blindedMeasurement = sentSharesSum - receivedShares + sumOfOwnDeviceProperties;
                                     //return result
-                                    
-                                    
-                                    std::cout << "PAYLOAD UPDATE PIA: " + std::string("{\"value\":") + std::to_string(blindedMeasurement) + std::string("}") << std::endl;
-                                    
                                     m_pController->getDB_access()->deleteInitiatorRandomShares(sourceOid.c_str()); //reset db entries of this initiator
+                                    std::cout << "Participate In Aggregation Output: " + std::to_string(blindedMeasurement) << std::endl;
                                     updateTaskStatus(std::string("participateInAggregation"), std::string("finished"), std::string("{\"value\":") + std::to_string(blindedMeasurement) + std::string("}"));
                                     return;
                                 } else {
                                     std::cout << "Timeout when waiting for shares." << std::endl;
                                 }
-                            }std::cout << "ERR ZZZZ" << std::endl;
-                        }std::cout << "ERR ZZZZ" << std::endl;
-                    }std::cout << "ERR ZZZZ" << std::endl;
-                }std::cout << "ERR ZZZZ" << std::endl;
-            }std::cout << "ERR ZZZZ" << std::endl;
-        }std::cout << "ERR ZZZZ" << std::endl;
-    }std::cout << "ERR ZZZZ" << std::endl;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     std::cout << "Participate in Aggregation task failed." << std::endl;
     m_pController->getDB_access()->deleteInitiatorRandomShares(sourceOid.c_str()); //reset db entries of this initiator
     updateTaskStatus(std::string("participateInAggregation"), std::string("failed"), std::string("{\"value\":0}"));
@@ -703,27 +663,16 @@ void vicinity_handler::sendShareAction(string oid, string sourceOid, string payl
                 return;
             }
             //is this participant inserted? did we even receive the request to aggregate yet?
-            
-            
-            
-            
-            
             time_t startWaiting = time(NULL); //current time
             while(time(NULL) < startWaiting + 3) {
-            //for(int i = 0; i < 3; i++) { //how many retries maximal?
-                //std::cout << "RETRYLOOOOOOOOP" << std::endl;
-                if(m_pController->getDB_access()->isAlreadyInsertedInRandomShares(initiator.c_str(), sourceOid.c_str())) { //TODO does not seem to work correctly here
-                    //insert data in database
-                    //uses UPDATE operator -> if sourceOid is no participant, nothing happens -> no need to check, if sourcOid is part of aggregation
-                    //also checks if sourceOid is he oid who trusts me
+                if(m_pController->getDB_access()->isAlreadyInsertedInRandomShares(initiator.c_str(), sourceOid.c_str())) {
+                    //insert data in database; uses UPDATE operator -> if sourceOid is no participant, nothing happens -> no need to check, if sourcOid is part of aggregation
                     m_pController->getDB_access()->updateShareRandomShares(initiator.c_str(), sourceOid.c_str(), share);
-                    std::cout << "Randomshare task finished." << std::endl;
                     updateTaskStatus(string("randomshare"), string("finished"), string("{\"declined\":false}"));
-                    std::cout << "Randomshare task finished.222" << std::endl;
+                    std::cout << "Randomshare task finished." << std::endl;
                     return;
                 } else {
-                    //sleep(1); //1 second sleep. maybe it takes some more time, until we receive a request to aggregate
-                    usleep(50 * 1000); //50 miliseconds
+                    usleep(50 * 1000); //50 miliseconds sleep. maybe it takes some more time, until we receive a request to aggregate
                 }
             }
         }
@@ -771,7 +720,6 @@ bool vicinity_handler::updateTaskStatus(string aid, string status, string payloa
 }
 
 //passed object id can be the one of a he service or the oid of a data source (encrypted device)
-//TODO test this method!!!
 string vicinity_handler::getPublicKey(string oid) {
     using json = nlohmann::json; // for convenience
     //get corresponding he service oid
@@ -791,16 +739,20 @@ string vicinity_handler::getPublicKey(string oid) {
         try {
             json jOutput = json::parse(output);
             if(jOutput["error"].get<bool>() == 0) {
-                receivedKey = jOutput["message"][0]["publickey"];   
+                if(jOutput["message"][0].find("publickey") != jOutput["message"][0].end()) {
+                    receivedKey = jOutput["message"][0]["publickey"];
+                } else {
+                    std::cout << "Error with received public key." << std::endl;
+                }
             }
         } catch (...) {
             std::cout << "Error with payload when getting public key!" << std::endl;
         }
-        //std::cout << "Received KEY: " + receivedKey << std::endl;
         //put key in database
         m_pController->getDB_access()->insert_public_key(heOid.c_str(), receivedKey.c_str()); //insert retrieved key into database
         //return new key
-        std::cout << "Requested key and return it" << std::endl;
+        std::cout << "Requested key and returned it" << std::endl;
+        //std::cout << "Received Key: " + receivedKey << std::endl;
         return receivedKey;
     } else {
         return key;
@@ -841,18 +793,15 @@ string vicinity_handler::getStatusOfAction(string destinationOid, string action,
     http_request request(methods::GET);
     request.headers().add("adapter-id", adapterId);
     request.headers().add("infrastructure-id", ownOid);
-    //request.set_body(payload)
     http_response response = client.request(request).get();
     std::string output = response.extract_string().get();
-    //std::cout << "GET STATUS OF ACTION RECPLD: " + output << std::endl;
-    
-    //std::cout << "OUTPUT: " + output << std::endl;
+    //std::cout << "Output: " + output << std::endl;
     std::string status = "";
     try {
         json jOutput = json::parse(output);
         if(jOutput["error"].get<bool>() == 0) {
             status = jOutput["message"][0]["status"];
-            //std::cout << taskId + std::string(" ") + status << std::endl;
+            //std::cout << TaskId + std::string(" ") + status << std::endl;
         }
     } catch (...) {
         std::cout << "Error with payload when getting status of an action!" << std::endl;
@@ -888,7 +837,7 @@ string vicinity_handler::getReturnValueOfAction(string destinationOid, string ac
 
 //send random share value to destination oid; returns taskId
 string vicinity_handler::sendRandomShare(string destinationOid, string initiatorOid, int randomShare) {
-    std::cout << std::string("SEND RANDOM SHARE DESTINATION: ") + destinationOid << std::endl;
+    std::cout << std::string("Send Random Share Destination: ") + destinationOid << std::endl;
     
     using json = nlohmann::json; // for convenience
     std::string address = std::string("http://127.0.0.1:") + agentPort + std::string("/agent/remote/objects/") + destinationOid + std::string("/actions/randomshare");
@@ -908,7 +857,7 @@ string vicinity_handler::sendRandomShare(string destinationOid, string initiator
             return std::string("");
         }
         std::string taskId = jOutput["message"][0]["taskId"];     
-        std::cout << "SendRandomShare TaskID: " + taskId << std::endl;
+        std::cout << "Send Random Share TaskID: " + taskId << std::endl;
         return taskId;
     } catch (...) {
         std::cout << "Error when sending a share to a trusted party!" << std::endl;
@@ -929,7 +878,6 @@ long vicinity_handler::getPropertyOfEncryptedDevice(string encryptedDeviceOid, s
     http_response response = client.request(request).get();
     std::string output = response.extract_string().get();
     //std::cout << "output: " + output << std::endl;
-    //std::cout << "PYLD: " + output << std::endl;
     long returnValue;
     try {
         json jOutput = json::parse(output);
@@ -942,7 +890,7 @@ long vicinity_handler::getPropertyOfEncryptedDevice(string encryptedDeviceOid, s
     return returnValue;
 }
 
-//deltes a task, returns true if successful, else false //TODO TEST THIS!
+//deltes a task, returns true if successful, else false
 bool vicinity_handler::deleteTask(string destinationOid, string action, string taskId) {
     using json = nlohmann::json; // for convenience
     std::string address = std::string("http://127.0.0.1:") + agentPort + std::string("/agent/remote/objects/") + destinationOid + std::string("/actions/") + action + std::string("/tasks/") + taskId;
@@ -963,7 +911,7 @@ bool vicinity_handler::deleteTask(string destinationOid, string action, string t
     return false;
 }
 
-//https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string
+//Source: https://stackoverflow.com/questions/3418231/replace-part-of-a-string-with-another-string
 string vicinity_handler::replaceAll(std::string str, const std::string from, const std::string to) {
     if(from.empty())
         return str;

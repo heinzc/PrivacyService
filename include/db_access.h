@@ -71,7 +71,7 @@ class db_access
         //if we allowed this oid to start distributed aggregation
         bool isTrustedInitiator(const char * oid);
 
-        //to insert a participant for a new aggregation
+        //insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
         //participants can be inserted multiple times, will only be saves once in database (for this aggregation)
         void insertParticipantRandomShares(const char * initiatorOid, const char * participantOid);
         

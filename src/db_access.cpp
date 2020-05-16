@@ -21,10 +21,10 @@ db_access::db_access(const char* database)
     {
         cout << "Can't open database: ";
         cout << sqlite3_errmsg(db) << endl;
-        //fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
     }
     else {
-        fprintf(stderr, "Opened database successfully\n");
+        cout << "Opened database successfully" << endl;
+    
     }
 
     const char* sql = "CREATE TABLE PUBLIC_KEYS(ID TEXT PRIMARY KEY, PUBLICKEY TEXT NOT NULL);";
@@ -32,69 +32,31 @@ db_access::db_access(const char* database)
     const char* sql3 = "CREATE TABLE DATA_ACCESS(OWN_OID, ALLOWED_REQUESTER_OID TEXT)";
     const char* sql4 = "CREATE TABLE OWN_DEVICES(OID TEXT PRIMARY KEY, OID_PLAIN_DEVICE TEXT)";
     const char* sql5 = "CREATE TABLE FOREIGN_DEVICES_ACCESS_DECRYPT(OID TEXT PRIMARY KEY)";
-    const char* sql6 = "CREATE TABLE PRIVACY_SERVICE(DEVICE_OID TEXT PRIMARY KEY, HE_SERVICE_OID TEXT)"; //is this really needed? TODO
+    const char* sql6 = "CREATE TABLE PRIVACY_SERVICE(DEVICE_OID TEXT PRIMARY KEY, HE_SERVICE_OID TEXT)";
     const char* sql7 = "CREATE TABLE AGGREGATION_TRUSTED_PARTIES(OID TEXT PRIMARY KEY)";
     const char* sql8 = "CREATE TABLE AGGREGATION_PARTIES_WHO_TRUST_ME(OID TEXT PRIMARY KEY)"; //do not insert own oid!
     const char* sql9 = "CREATE TABLE AGGREGATION_RANDOM_SHARES(INITIATOR_OID TEXT, PARTICIPANT_OID TEXT, RECEIVED INTEGER, SHARE INTEGER, PRIMARY KEY(INITIATOR_OID, PARTICIPANT_OID))";
     const char* sql10 = "CREATE TABLE AGGREGATION_TRUSTED_INITIATORS(OID TEXT PRIMARY KEY)";
     const char* sql11 = "CREATE TABLE AGGREGATION_BLINDED_MEASUREMENTS(PARTICIPANT_OID TEXT PRIMARY KEY, RECEIVED INTEGER, BLINDED_MEASUREMENT INTEGER)";
     
-    rc = sqlite3_exec(db, sql, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    const char* sqls[11] = {sql, sql2, sql3, sql4, sql5, sql6, sql7, sql8, sql9, sql10, sql11};
     
-    rc = sqlite3_exec(db, sql2, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql3, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql4, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql5, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql6, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql7, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql8, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql9, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql10, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
-    
-    rc = sqlite3_exec(db, sql11, callback, 0, &zErrMsg);
-    //cout << zErrMsg << endl; //TODO doesn't work when there is no db anymore
+    for(const char* &request : sqls) {
+        rc = sqlite3_exec(db, request, callback, 0, &zErrMsg);
+        if(rc) {
+            cout << sqlite3_errmsg(db) << endl;
+        }
+    }
     
     sqlite3_close(db);
     
-    resetRandomShares(); //TODO decomment!
-    resetBlindedMeasurements(); //TODO decomment!
+    resetRandomShares();
+    resetBlindedMeasurements();
     
     std::cout << std::string("Sqlite threadsafe?: ") + std::to_string(sqlite3_threadsafe()) << std::endl;
     if(!sqlite3_threadsafe()) {
         std::cout << "WARNING! Sqlite installation is not threadsafe!" << std::endl;
     }
-        
-    //if(sqlite3_db_mutex(sqlite3*) == NULL) {
-        //std::cout << "NUUUUULLLL" << std::endl;
-    //}
-    
-    /*
-    updateShareRandomShares("oid 1", "oid 2", 13373);
-    if(trustsMe("oid 1")) {
-        std::cout << "YEAAH" << std::endl;
-    }
-    std::cout << "YEAAH22" << std::endl;
-    
-    insertParticipantRandomShares("SOURZ", "PARTIZ");
-    */
 }
 
 //destructor
@@ -214,7 +176,7 @@ bool db_access::insert_public_key(const char* id, const char* key)
     rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
     sqlite3_close(db);
     printf(zErrMsg);
-    cout << "Values posted" << endl;
+    cout << "Private key inserted in database" << endl;
     
 	return true;
 }
@@ -239,7 +201,7 @@ bool db_access::insert_public_key(const char* id, std::string & key)
     rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
     sqlite3_close(db);
     printf(zErrMsg);
-    cout << "Values posted" << endl;
+    cout << "Public key inserted in database" << endl;
     
 	return true;
 }
@@ -266,7 +228,6 @@ std::string db_access::get_public_key(const char * id)
         for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
             key = results[i];
         }
-        //key = "TEST";
     }
     if (rows * columns == 0) { //key not in database
         cout << "ID not found in database" << endl;
@@ -275,44 +236,6 @@ std::string db_access::get_public_key(const char * id)
     
     return key;
 }
-
-/*
-//check if id is in Access table (check if id has access to decrypt and data)
-bool db_access::hasAccess(const char* id)
-{
-    string sql = "select OID from ACCESS where OID = \'";
-    sql.append(id);
-    sql.append("\'");
-    
-    char** results = NULL;
-    int rows, columns;
-    char* error;
-    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-    std::string key = "";
-    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-        return true;
-    }
-    else return false;
-}
-*/
-/*
-//check if id is found in ACCESS table
-bool db_access::hasAccess2(const char * id)
-{
-    string sql = "select OID from ACCESS where OID = \'";
-    sql.append(id);
-    sql.append("\'");
-    
-    char** results = NULL;
-    int rows, columns;
-    char* error;
-    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry //=> id found
-        return true;
-    }
-    return false;
-}
-*/
 
 //device of owner of this service
 bool db_access::isOwnDevice(const char * id)
@@ -488,8 +411,7 @@ void db_access::deleteInitiatorRandomShares(const char * initiatorOid) {
 
 //update (insert) share
 void db_access::updateShareRandomShares(const char * initiatorOid, const char * participantOid, int value) {
-    std::cout << "UUUUUUUPDATE RANDOM SHARE BEGIN" << std::endl;
-    
+    std::cout << "Update Random Share Begin" << std::endl;
     string sql = string("BEGIN IMMEDIATE TRANSACTION; UPDATE AGGREGATION_RANDOM_SHARES SET RECEIVED = 1, SHARE = ") + std::to_string(value) + string(" WHERE INITIATOR_OID = '") + initiatorOid + string("' AND PARTICIPANT_OID = '") + participantOid + string("'; COMMIT TRANSACTION;");
     int rc = 0;
     do {
@@ -499,18 +421,15 @@ void db_access::updateShareRandomShares(const char * initiatorOid, const char * 
         sqlite3_busy_timeout(db, 2000);
         
         if(rc != SQLITE_OK) {
-            std::cout << "PROBLEM WHEN OPENING DB" << std::endl;
+            std::cout << "Problem when opening database." << std::endl;
         }
-        std::cout << "5555555555555555555555 11" << std::endl;
         rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-        std::cout << "5555555555555555555555" << std::endl;
         sqlite3_close(db);
         if(rc != SQLITE_OK){
             std::cout << std::string("SQLITE ERROR: ") + zErrMsg << std::endl;
         }
     } while(rc != SQLITE_OK);
-    
-    std::cout << "UUUUUUUPDATE RANDOM SHARE END" << std::endl;
+    std::cout << "Update Random Share End" << std::endl;
 }
 
 //returns true, if we received the request for the computation and the participant was inserted
@@ -521,7 +440,7 @@ bool db_access::isAlreadyInsertedInRandomShares(const char * initiatorOid, const
     sqlite3_busy_timeout(db, 2000);
     
     string sql = string("select * from AGGREGATION_RANDOM_SHARES where PARTICIPANT_OID = '") + participantOid + string("' and INITIATOR_OID = '") + initiatorOid + string("';");
-    //std::cout << "IS ALREADY INSERTED SQL: " + sql << std::endl;
+    //std::cout << "Is already inserted sql: " + sql << std::endl;
     
     char** results = NULL;
     int rows, columns;
@@ -595,7 +514,7 @@ bool db_access::isTrustedInitiator(const char * oid) {
     return true;
 }
 
-//insert participants of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
+//insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
 //participants can be inserted multiple times, will only be saves once in database (for this aggregation)
 void db_access::insertParticipantRandomShares(const char * initiatorOid, const char * participantOid) {
     if(trustsMe(participantOid)) { //only participants who trust me send a share; in the trust me table, the own oid musn't be inserted!    
@@ -607,7 +526,7 @@ void db_access::insertParticipantRandomShares(const char * initiatorOid, const c
         string sql = string("BEGIN IMMEDIATE TRANSACTION; INSERT OR REPLACE INTO AGGREGATION_RANDOM_SHARES (INITIATOR_OID, PARTICIPANT_OID, RECEIVED, SHARE) VALUES (\'") + initiatorOid + string("\',\'") + participantOid + string("\',0,0); COMMIT TRANSACTION;");
         rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
         sqlite3_close(db);
-        //cout << std::string("ERR MSG INSERT RANDOM SHARE: ") + zErrMsg << endl;
+        //cout << std::string("Error message random share: ") + zErrMsg << endl;
     }
 }
 

@@ -133,9 +133,9 @@ void rest_handler::handle_post(http_request message) {
         else if(std::find(paths.begin(), paths.end(), "aggregate") != paths.end()) {
             std::cout << "Aggregate called locally." << std::endl;
             //string stvalue = message.extract_string().get();
-            //std::cout << "BODY: " + stvalue << std::endl;
+            //std::cout << "Body: " + stvalue << std::endl;
             json::object request_json = message.extract_json().get().as_object();
-            if(request_json.find("values") != request_json.end()) { //TODO TEST !!!
+            if(request_json.find("values") != request_json.end()) {
                 json::array values = request_json.at("values").as_array();
                 std::vector<std::string> vec;
                 for(auto it = values.begin(); it != values.end(); ++it) {
@@ -171,7 +171,7 @@ void rest_handler::handle_post(http_request message) {
         }
         else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
             string stvalue = message.extract_string().get(); //oid
-            if(m_pController->getDB_access()->hasAccessToDecrypt(stvalue.c_str())) { //TODO TEST geht das?
+            if(m_pController->getDB_access()->hasAccessToDecrypt(stvalue.c_str())) {
                 message.reply(status_codes::OK, "true");
             }
             else {
@@ -238,6 +238,7 @@ string rest_handler::encrypt_ptxt(string pt) {
 }
 
 void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "VICINITY Get Request!" << std::endl;
     // check if request path has correct size
     // exactly two items. could be a request for objects... lets see...
     if(path.size() == 2) {
@@ -287,11 +288,11 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 
 
 void rest_handler::handle_VICINITY_POST_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "VICINITY Post Request!" << std::endl;
     if(path.size() < 3) {
         message.reply(status_codes::BadRequest, "not enough arguments");
     }
     else { //seems to be an action
-        std::cout << "VICINITY POST ACTION!" << std::endl;
         string sourceOid = message.absolute_uri().query();
         //remove "sourceOid=" from sourceOid (request parameter)
         string toRemove = "sourceOid=";
@@ -307,7 +308,7 @@ void rest_handler::handle_VICINITY_POST_request(http_request message, std::vecto
 
 
 void rest_handler::handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path) {
-    std::cout << "VICINITY PUT REQUEST!" << std::endl;
+    std::cout << "VICINITY Put Request!" << std::endl;
     if(path.size() < 4) {
         message.reply(status_codes::BadRequest, "not enough arguments");
     }

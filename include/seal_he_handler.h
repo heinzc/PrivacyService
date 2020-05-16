@@ -7,6 +7,8 @@
 
 #include "seal/seal.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace seal;
 
 class seal_he_handler : he_handler
