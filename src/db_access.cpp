@@ -493,7 +493,6 @@ bool db_access::trustsMe(const char * oid) {
     return true;
 }
 
-
 //if we allowed this oid to start distributed aggregation
 bool db_access::isTrustedInitiator(const char * oid) {
     sqlite3* db;

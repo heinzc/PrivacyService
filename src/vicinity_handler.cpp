@@ -462,11 +462,15 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                     }
                     if(participantsSet.size() >= 3) {
                         std::cout << "There are at least 3 participants" << std::endl;
-                        //determine, which participants are part of my trusted parties
+                        //determine, which participants are part of my trusted parties and which trust me
+                        std::set<std::string> participatingPartiesWhoTrustMeSet;
                         std::set<std::string> participatingTrustedPartiesSet;
                         for(auto i : participantsSet) {
                             if(i != "you") { //cannot be myself
                                 if(m_pController->getDB_access()->trustsMe(i.c_str())) { //only if participant trusts me
+                                    participatingPartiesWhoTrustMeSet.insert(i);
+                                }
+                                if(m_pController->getDB_access()->isTrustedParty(i.c_str())) { //only if i trust this party
                                     participatingTrustedPartiesSet.insert(i);
                                 }
                             }
@@ -498,7 +502,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                 std::cout << "Sum of own device properties: " + std::to_string(sumOfOwnDeviceProperties) << std::endl;
                                 
                                 //insert participants who trust me in database (random shares)
-                                for(auto &tp : participatingTrustedPartiesSet) {
+                                for(auto &tp : participatingPartiesWhoTrustMeSet) {
                                     std::cout << "Insert participant who trusts me in database for aggregation." << std::endl;
                                     m_pController->getDB_access()->insertParticipantRandomShares(sourceOid.c_str(), tp.c_str());
                                 }
@@ -631,7 +635,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                     std::cout << "Timeout when waiting for shares." << std::endl;
                                 }
                             }
-                        }
+                        } std::cout << "There is no trusted party participating." << std::endl;
                     }
                 }
             }
