@@ -5,6 +5,15 @@ Thanks to the homomorphic encryption, it is possible to e.g. store and process y
 
 Using SQlite (included; public domain).
 
+## Table of contents
+- Required Debian packages
+- Building
+- Workin examples
+- Usage and features
+- Program parts
+- Configuration and setup
+- Remarks
+
 ## Required Debian packages:
 cmake
 libgmp-dev
@@ -22,11 +31,11 @@ Then, cd into the root folder of he project. Execute the following commands.
 	make
 The executable should now be found in the root of the project folder.
 
-## Working example
+## Working examples
 Two working examples using the privacy service (homomorphic encryption prototype) can be found [here](https://cpsgit.informatik.uni-kl.de/students/thesis_dennis). The first example shows, how your data can be processed in an untrusted cloud and how you can share it with other people. The second one shows how to use the distributed aggregation.
 
-## Usage
-More specific details than here can be found in the *ServiceThingDescription.json* or in the program code itself.
+## Usage and features
+The privacy service acts as an adapter for the VICINITY network and has to be called like every other adapter. There are several features that you can also see in the Neighbourhood Manager, but some of them are not meant to be used manually and are only meant to be used by the service itself. This is described below. More specific details than here can be found in the *ServiceThingDescription.json* or in the program code itself. In addition, the working examples can also help you.
 ### Properties
 It is discussed [here](https://vicinityh2020.github.io/vicinity-gateway-api/#/actions/getObjectsOidActionsAidTasksTid), how to get properties, and [here](https://vicinityh2020.github.io/vicinity-gateway-api/#/actions/getObjectsOidActionsAidTasksTid) how to put properties.
 #### trustedparties
@@ -44,8 +53,8 @@ For *seal_handler*, the public key also contains the parameters. This is importa
 You can ask someone's privacy service, if someone has access to their encrypted data of a specific object. If you want to share someones data with somebody else, you should call this property, to check, if you are allowed to do so. This property cannot be requested using GET, you have to use PUT and provide the payload in the following format.
 
 	{
-		"requester-id":"whoWantsTheData",
-		"destination-id":"whichIsTheOriginOfTheData"
+		"requester-id" : "whoWantsTheData",
+		"destination-id" : "whichIsTheOriginOfTheData"
 	}
 The *requester-id* is the oid of the object, that requests data or with which oid you want to share encrypted data.  Enter the oid of the object, where the data is from (its origin) in *destination-id*.
 
@@ -94,7 +103,7 @@ This action is called automatically by the privacy service and is used to send a
 The share is sent in the following format:
 
 	{
-		"initiator": "123",
+		"initiator" : "123",
 		"share": 1337
 	}
 The *initiator* is the oid of the privacy service, which started the aggregation. The second value is used to store the share. The action's output is shown below, which is not needed at the moment, but is required.
@@ -173,7 +182,7 @@ Provides functions for encryption, decrypting, aggregation and others for a homo
 It saves references to different other classes, like *db_access*, *vicinity_hander* or an *he_handler*. These references can be provided, if needed.
 
 
-## Configuration and Setup
+## Configuration and setup
 ### Add privacy service in agent
 For the agent, you usually add the adapters in a config data. To add this privacy service, you need to get the address right. The endpoint must contain the */vicinity* part, because all VICINITY related requests must have this in their path.
 
