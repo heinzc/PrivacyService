@@ -274,39 +274,6 @@
                         "type": "object"
                     }
                 }
-            },
-            {
-                "aid": "testaction",
-                "affects": "adapters:Visibility",
-                "write_link":
-                {
-                    "href":"/testaction/{oid}",
-                    "input":
-                    {
-                        "field":
-                        [
-                            {
-                                "name": "text",
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        ],
-                        "type": "object"
-                    },
-                    "output": {
-                        "field":
-                        [
-                            {
-                                "name": "text",
-                                "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        ],
-                        "type": "object"
-                    }
-                }
             }
             ],
             "events": [
