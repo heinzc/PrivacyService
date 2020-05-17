@@ -224,7 +224,7 @@ In this JSON file, add all adapters, where there are objects, you want to be dup
 		"adapters":  [
 			{
 				"adapter-id": "debugging-adapter",
-				 "endpoint": "http://localhost:5000"
+				"endpoint": "http://localhost:5000"
 			}
 		]
 	}
