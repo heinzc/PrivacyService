@@ -169,7 +169,7 @@ void rest_handler::handle_post(http_request message) {
 
             message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(stvalue));
         }
-        else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) {
+        else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) { //DEPRECATED
             string stvalue = message.extract_string().get(); //oid
             if(m_pController->getDB_access()->hasAccessToDecrypt(stvalue.c_str())) {
                 message.reply(status_codes::OK, "true");
