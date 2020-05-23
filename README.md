@@ -211,6 +211,7 @@ This database is created using SQLite. You can alter or add entries in the table
 ### ServiceThingDescription.json
 This file is in the needed format to make the privacy service available in VICINITY. All properties and actions are described in here and if you don't want to offer some of them, you can just delete them out of this file.
 But there are three settings you should consider to change:
+
 | Item | Description |
 | -- | -- |
 | port | Port of the adapter where the privacy service will listen for requests. The agent will communicate over this port. Useful when several privacy services on one machine are needed. |
