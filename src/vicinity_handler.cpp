@@ -438,7 +438,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
     std::cout << "//////////////////PIA//////////////////" << std::endl;
     std::cout << "Aggregation action payload: " + payload << std::endl;
     if(ownOid == oid) { //is the action for this service?
-        if(m_pController->getDB_access()->isTrustedInitiator(sourceOid.c_str())) { //is initiator allowed to initiate aggregation? (do we trust?)
+        if(m_pController->getDB_access()->isTrustedInitiator(sourceOid.c_str()) | m_pController->getDB_access()->isOwnDevice(sourceOid.c_str())) { //is initiator allowed to initiate aggregation? (do we trust?)
             //get participant he services, devices and properties
             json jPayload;
             try {
@@ -651,7 +651,7 @@ void vicinity_handler::sendShareAction(string oid, string sourceOid, string payl
     std::cout << "Randomshare action called, try to insert share in database." << std::endl;
     using json = nlohmann::json; // for convenience
     if(ownOid == oid) { //is the action for this service?
-        if(m_pController->getDB_access()->trustsMe(sourceOid.c_str())) { //does this service trust me?
+        if(m_pController->getDB_access()->trustsMe(sourceOid.c_str()) | m_pController->getDB_access()->isOwnDevice(sourceOid.c_str())) { //does this service trust me?
             //get share value and aggregation origin
             json jPayload;
             string initiator;

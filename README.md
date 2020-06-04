@@ -80,7 +80,7 @@ Output:
 The value *value* represents the final aggregate.
 
 #### participateInAggregation
-This is called automatically by a privacy service, which started an aggregation. This action is used to ask a privacy service to participate in it. Returns the blinded measurement, if input is all right and requester is allowed to aggregate.
+This is called automatically by a privacy service, which started an aggregation. This action is used to ask a privacy service to participate in it. Returns the blinded measurement, if input is all right and requester is allowed to aggregate. Only trusted initiators and own devices are allowed to call this.
 
 Input:
 
@@ -99,7 +99,7 @@ Output:
 The value *value* represents the *Blinded Measurement*.
 
 #### Randomshare
-This action is called automatically by the privacy service and is used to send a trusted party a share. There is no need to call this action yourself.
+This action is called automatically by the privacy service and is used to send a trusted party a share. There is no need to call this action yourself. Only the devices of the tables *AGGREGATION_PARTIES_WHO_TRUST_ME* and *OWN_DEVICES* are allowed to send you a share.
 The share is sent in the following format:
 
 	{
@@ -130,22 +130,20 @@ Output:
 
 ### Local features
 #### aggregate
-The local aggregation can only be called locally, which means you need to send a POST request to e.g. the following endpoint.
+The local aggregation can only be called locally, which means you need to send a POST request to e.g. the following endpoint. The result is found in the response payload directly. 
 
 	http://localhost:4242/aggregate
 The payload must contain the values in the following format. You can add any amount of values.
 
-	{
-		"values" : [
-			"encryptedValue1",
-			"encryptedValue2"
-		]
-	}
+    "values" : [
+        "encryptedValue1",
+        "encryptedValue2"
+    ]
 If you want to aggregate data, which was encrypted using the keys of this (your) privacy service, you did configure this request correctly.
 However, if you want to aggregate data of someone else, you need to provide the oid of the object, where the data is from. You provide this oid in the *sourceOid* header of the request.
 
 #### encrypt
-The payload must directly contain the plain value you want to encrypt. Send to this endpoint, but with your port, of course.
+The payload must directly contain the plain value you want to encrypt. The result is found in the response payload directly. Send to this endpoint, but with your port, of course.
 	
 	http://localhost:4242/encrypt
 Sample payload:
@@ -153,12 +151,13 @@ Sample payload:
 	1337
 
 #### decrypt
-The payload must directly contain the cyphertext to be decrypted. Call the following endpoint.
+The payload must directly contain the cyphertext to be decrypted. The result is found in the response payload directly. Call the following endpoint.
 
 	http://localhost:4242/decrypt
 Sample payload:
 
 	cyphertext1337
+
 
 ## Program parts
 The program is divided into several parts, most of which are discussed here.
@@ -197,13 +196,13 @@ This database is created using SQLite. You can alter or add entries in the table
 | Table name | Modify? | Content |
 |--|--|--|
 | AGGREGATION_BLINDED_MEASUREMENTS | NO | Blinded measurements are saved here when aggregating
-| AGGREGATION_PARTIES_WHO_TRUST_ME | **YES** | Insert oids of all privacy service, which were shared with your own privacy service
+| AGGREGATION_PARTIES_WHO_TRUST_ME | **YES** | Insert oids of all privacy service, which were shared with your own privacy service. They can send you shares (Own Devices can as well)
 | AGGREGATION_RADOM_SHARES | NO | Random shares are saved here when aggregating
-| AGGREGATION_TRUSTED_INITIATORS | **YES** | Insert all oids of objects, which are allowed to start the aggregation. For example all your own objects. 
-| AGGREGATION_TRUSTED_PARTIES | **YES** | Add all oids of foreign privacy services, who you trust. You must be subscribed to those services! 
+| AGGREGATION_TRUSTED_INITIATORS | **YES** | Insert all oids of objects, which are allowed to start the aggregation. Own Devices are allowed to do this, no need to enter them.
+| AGGREGATION_TRUSTED_PARTIES | **YES** | Add all oids of foreign privacy services, who you trust. You must be subscribed to those services!
 | DATA_ACCESS | **YES** | Insert oids who are allowed to get your data e.g. from a foreign Value Added Service which can share your data. This service has to check these oids. 
 | FOREIGN_DEVICES_ACCESS_DECRYPT | **YES** | Insert oids of devices, who can decrypt data encrypted with your public key. No need to insert your own devices. 
-| OWN_DEVICES | **YES** | Insert all of your own devices (which are fully trusted). Needed to check if aggregation request is legal. They have access to decrypt as well. 
+| OWN_DEVICES | **YES** | Insert all of your own devices (which are fully trusted, e.g. the devices of your organisation). Needed to check if aggregation and participateInAggregation request is legal. They have access to decrypt as well and can send you random shares.
 | OWN_KEYS | NO | Here are your public and private key saved. Not encrypted! 
 | PRIVACY_SERVICE | **YES** | Insert first oid of an object and second the oid of the corresponding privacy service. Needed to map both. This way we know, which privacy service created which encrypted device.
 | PUBLIC_KEYS | NO | Here are the public keys of other privacy services saved. You could modify this, but there is no need, as the keys are fetched automatically. |
