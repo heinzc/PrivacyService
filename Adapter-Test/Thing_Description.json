@@ -1,0 +1,56 @@
+{
+        "adapter-id": "wearhealth-adapter-test",
+        "thing-descriptions": [{
+            "oid": "Infra-ID",
+            "name": "Health-Monitor-test",
+            "type": "adapters:ActivityTracker",
+            "properties": [{
+                "pid": "heartrate",
+                "monitors": "adapters:HeartRate",
+                "read_link": {
+                    "href": "/devices/{oid}/properties/{pid}",
+                    "output": {
+                        "type": "object",
+                        "field": [{
+                            "name": "property",
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }, {
+                            "name": "value",
+                            "schema": {
+                                "type": "integer"
+                            }
+                        }]
+                    }
+                }
+            },
+                {
+                    "pid": "bodytemperature",
+                    "monitors": "adapters:CO2Concentration",
+                    "read_link": {
+                        "href": "/devices/{oid}/properties/{pid}",
+                        "output": {
+                            "type": "object",
+                            "field": [{
+                                "name": "property",
+                                "schema": {
+                                    "type": "float"
+                                }
+                            }, {
+                                "name": "value",
+                                "schema": {
+                                    "type": "float"
+                                }
+                            }]
+                        }
+                    }
+
+
+            }
+            ],
+
+            "actions": [],
+            "events": []
+        }]
+     }

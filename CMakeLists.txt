@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party)
 
-project(HE-test LANGUAGES CXX)
+project(Privacy-Service LANGUAGES CXX)
 
 set(Boost_NO_BOOST_CMAKE ON)
 
