@@ -21,16 +21,18 @@ class fhe_handler : he_handler
         void initialize();
 
         void encrypt_and_store(long x, int id);
-        std::string encrypt_as_string(long x);
+        std::string encrypt_as_string(long x, std::string pubkey = std::string());
 
         int decrypt();
         int decrypt(std::string & ctxt);
 
         void aggregate(int count);
-        std::string aggregate(std::vector<std::string> & input);
-        void add(std::string & ctxt);
+        std::string aggregate(std::vector<std::string> & input, const char* publickey);
+        void add(std::string & ctxt, const char* publickey);
 
         int getSum();
+        
+        std::string getPublicKey();
 
     protected:
 
@@ -46,6 +48,9 @@ class fhe_handler : he_handler
         long m_s; // Minimum number of slots [default=0]
 
         Ctxt * m_pPartSum = 0;
+        
+        void setPublicKey(const char* json);
+        void setPrivateKey(const char* json);
 
         FHEcontext * m_pContext = 0;
         FHESecKey * m_pPrivateKey = 0;

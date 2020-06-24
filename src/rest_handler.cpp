@@ -10,6 +10,10 @@
 #include <exception>
 #include <regex>
 
+#include <cpprest/http_client.h>
+
+using namespace web::http;
+using namespace web::http::client; 
 
 rest_handler::rest_handler()
 {
@@ -50,11 +54,11 @@ void rest_handler::handle_error(pplx::task<void>& t)
 // Get Request 
 //
 void rest_handler::handle_get(http_request message) {
-
+    std::cout << "GET!" << std::endl;
     try {
         auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
-        if(std::find(paths.begin(), paths.end(), "aggregation") != paths.end()) {
+        if(std::find(paths.begin(), paths.end(), "aggregation") != paths.end()) { //DEPRECATED
             if(input_counter < 3) {
                 message.reply(status_codes::Forbidden, "not enough inputs provided");
                 return;
@@ -63,11 +67,13 @@ void rest_handler::handle_get(http_request message) {
                 message.reply(status_codes::OK, "OK");
                 return;
             }
+        } else if(std::find(paths.begin(), paths.end(), "sum") != paths.end()) { //DEPRECATED
+            int sum = m_pController->getHE_handler()->getSum();
+            message.reply(status_codes::OK, to_string(sum));
         } else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
             handle_VICINITY_GET_request(message, paths);
             return;
         }
-
         message.reply(status_codes::NotFound,"WAT?!");
     }
     catch(exception& e) {
@@ -102,45 +108,80 @@ void rest_handler::handle_get(http_request message) {
 // A POST request
 //
 void rest_handler::handle_post(http_request message) {
+    std::cout << "POST!" << std::endl;
     try{
         auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
 
-        if(std::find(paths.begin(), paths.end(), "produce") != paths.end()) {
+        if(std::find(paths.begin(), paths.end(), "produce") != paths.end()) { //DEPRECATED
             string stvalue = message.extract_string().get();
             produce_ctxt(stvalue);
             message.reply(status_codes::OK,message.to_string());
             input_counter++;
         }
         else if(std::find(paths.begin(), paths.end(), "encrypt") != paths.end()) {
+            std::cout << "Encrypt called locally." << std::endl;
             string stvalue = message.extract_string().get();
             
             message.reply(status_codes::OK,encrypt_ptxt(stvalue));
         }
-        else if(std::find(paths.begin(), paths.end(), "add") != paths.end()) {
+        else if(std::find(paths.begin(), paths.end(), "add") != paths.end()) { //DEPRECATED
             string stvalue = message.extract_string().get();
-
-            m_pController->getHE_handler()->add(stvalue);
+            
+            m_pController->getHE_handler()->add(stvalue, "placeholder");
             message.reply(status_codes::OK,"läuft!");
         }
         else if(std::find(paths.begin(), paths.end(), "aggregate") != paths.end()) {
-            json::object request_json = message.extract_json().get().as_object();
-            json::array values = request_json.at("values").as_array();
-            std::vector<std::string> vec;
-            for(auto it = values.begin(); it != values.end(); ++it) {
-                std::cout << it->as_string() << std::endl;
-                vec.push_back(it->as_string());
-            }
+            std::cout << "Aggregate called locally." << std::endl;
             //string stvalue = message.extract_string().get();
-
-            std::string result = m_pController->getHE_handler()->aggregate(vec);
-            message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(result));
+            //std::cout << "Body: " + stvalue << std::endl;
+            json::object request_json = message.extract_json().get().as_object();
+            if(request_json.find("values") != request_json.end()) {
+                json::array values = request_json.at("values").as_array();
+                std::vector<std::string> vec;
+                for(auto it = values.begin(); it != values.end(); ++it) {
+                    //std::cout << it->as_string() << std::endl;
+                    try {
+                        vec.push_back(it->as_string());
+                    } catch (...) {
+                        message.reply(status_codes::BadRequest,"Payload incorrect");
+                        return;
+                    }
+                }
+                std::string sourceOid = "";
+                if(message.headers().has(U("sourceOid"))) { //does not need to be provided
+                    sourceOid = ::utility::conversions::to_utf8string(message.headers().operator[](U("sourceOid")));
+                }
+                std::string result = "";
+                if(sourceOid == "") {
+                    result = m_pController->getHE_handler()->aggregate(vec, ""); //use own key
+                } else {
+                    result = m_pController->getHE_handler()->aggregate(vec, (m_pController->getVICINITY_handler()->getPublicKey(sourceOid)).c_str()).c_str();
+                }
+                //std::cout << "Result of aggregation: " + result << std::endl;
+                std::cout << "Aggregate locally finished." << std::endl;
+                message.reply(status_codes::OK, result);
+                return;
+            }
         }
         else if(std::find(paths.begin(), paths.end(), "decrypt") != paths.end()) {
+            std::cout << "Decrypt called locally." << std::endl;
             string stvalue = message.extract_string().get();
 
             message.reply(status_codes::OK, m_pController->getHE_handler()->decrypt(stvalue));
         }
-
+        else if(std::find(paths.begin(), paths.end(), "hasaccess") != paths.end()) { //DEPRECATED
+            string stvalue = message.extract_string().get(); //oid
+            if(m_pController->getDB_access()->hasAccessToDecrypt(stvalue.c_str())) {
+                message.reply(status_codes::OK, "true");
+            }
+            else {
+                message.reply(status_codes::OK, "false");
+            }
+        }
+        else if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_POST_request(message, paths);
+            return;
+        }
         message.reply(status_codes::NotFound,"WAT?!");
     }
     catch(exception& e) {
@@ -167,9 +208,18 @@ void rest_handler::handle_delete(http_request message)
 //
 void rest_handler::handle_put(http_request message)
 {
-    ucout <<  message.to_string() << endl;
-     string rep = U("WRITE YOUR OWN PUT OPERATION");
-     message.reply(status_codes::OK,rep);
+    try{
+        auto paths = http::uri::split_path(http::uri::decode(message.relative_uri().path()));
+
+        if(std::find(paths.begin(), paths.end(), "vicinity") != paths.end()) {
+            handle_VICINITY_PUT_request(message, paths);
+            return;
+        }
+        message.reply(status_codes::NotFound,"WAT?!");
+    }
+    catch(exception& e) {
+        message.reply(status_codes::BadRequest, e.what());
+    }
     return;
 }
 
@@ -187,8 +237,8 @@ string rest_handler::encrypt_ptxt(string pt) {
     return m_pController->getHE_handler()->encrypt_as_string(value);
 }
 
-
 void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "VICINITY Get Request!" << std::endl;
     // check if request path has correct size
     // exactly two items. could be a request for objects... lets see...
     if(path.size() == 2) {
@@ -216,13 +266,12 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 //        }
 //        } catch (std::regex_error& e) {
 //        // Syntax error in the regular expression
-//        }
-
+//        }        
+        
         string oid = path[2];
         string pid = path[4];
-
         string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
-
+        std::cout << "Read Property. Sending answer back." << std::endl;
         message.reply(status_codes::OK, payload);
 
     }
@@ -235,4 +284,42 @@ void rest_handler::handle_VICINITY_GET_request(http_request message, std::vector
 //        std::cout << *it << std::endl;
 //    }
 
+}
+
+
+void rest_handler::handle_VICINITY_POST_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "VICINITY Post Request!" << std::endl;
+    if(path.size() < 3) {
+        message.reply(status_codes::BadRequest, "not enough arguments");
+    }
+    else { //seems to be an action
+        string sourceOid = message.absolute_uri().query();
+        //remove "sourceOid=" from sourceOid (request parameter)
+        string toRemove = "sourceOid=";
+        std::string::size_type i = sourceOid.find(toRemove);
+        if (i != std::string::npos) sourceOid.erase(i, toRemove.length());
+        string oid = path[2];
+        string aid = path.at(1);
+        string payload = message.extract_string().get(); //can only be extracted once!
+        message.reply(status_codes::OK, "{\"status\":\"running\"}");
+        m_pController->getVICINITY_handler()->postAction(oid, aid, payload, sourceOid);
+    }
+}
+
+
+void rest_handler::handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path) {
+    std::cout << "VICINITY Put Request!" << std::endl;
+    if(path.size() < 4) {
+        message.reply(status_codes::BadRequest, "not enough arguments");
+    }
+    else {
+        if(path.at(1) == "objects" && path.at(3) == "properties") { //property
+            string oid = path[2];
+            string pid = path[4];
+            string payload = message.extract_string().get();
+            
+            string payload2 = m_pController->getVICINITY_handler()->writeProperty(oid, pid, payload);
+            message.reply(status_codes::OK, payload2);
+        }
+    }
 }

@@ -1,0 +1,283 @@
+{
+    "port" : "4242",
+    "agent-port" : "9997",
+    "adapter-id" : "encryption_adapter",
+    "thing-descriptions":
+    [
+        {
+            "name": "HE Service",
+            "type": "core:Service",
+            "version": "0.1",
+            "oid": "he_service",
+            "properties": [
+                {
+                    "pid":"publickey",
+                    "monitors" : "adapters:Motion",
+                    "read_link":
+                    {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "output":
+                        {
+                            "field":
+                            [
+                                {
+                                    "name" : "publickey",
+                                    "schema":
+                                    {
+                                        "type":"integer"
+                                    }
+                                }
+                            ],
+                            "type":"object"
+                        }
+                    }
+                },
+                {
+                    "pid":"hasaccess",
+                    "monitors" : "adapters:Visibility",
+                    "write_link": {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "input": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "requester-id",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "name": "destination-id",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ]
+                        },
+                        "output": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "granted",
+                                    "schema": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "pid":"trustedparties",
+                    "monitors" : "adapters:Visibility",
+                    "read_link": {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "output": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "parties",
+                                    "schema": {
+                                        "type": "array",
+                                        "description": "array of oids of he/privacy services, who i trust",
+                                        "item": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }                           
+                            ]
+                        }
+                    }
+                }
+            ],
+            "actions": [
+            {
+                "aid": "decrypt",
+                "affects": "adapters:LightColor",
+                "write_link": {
+                    "href": "/decryptaction/{oid}",
+                    "input": {
+                        "type": "object",
+                        "field": [
+                            {
+                                "name": "value",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    },
+                    "output": {
+                        "type": "object",
+                        "field": [
+                            {
+                                "name": "value",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "aid": "aggregation",
+                "affects": "adapters:Visibility",
+                "write_link":
+                {
+                    "href":"/aggregationaction/{oid}",
+                    "input":
+                    {
+                        "field":
+                        [
+                            {
+                                "name": "participants",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of oids of he/privacy services",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "devices",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of encrypted device oids",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            {
+                            
+                                "name": "properties",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of properties of encrypted devices",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    },
+                    "output": {
+                        "field":
+                        [
+                            {
+                                "name": "value",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    }
+                }
+            },
+            {
+                "aid": "participateInAggregation",
+                "affects": "adapters:Visibility",
+                "write_link":
+                {
+                    "href":"/participateinaggregationaction/{oid}",
+                    "input":
+                    {
+                        "field":
+                        [
+                            {
+                                "name": "participants",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of oids of he/privacy services",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "devices",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of encrypted device oids",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            {
+                            
+                                "name": "properties",
+                                "schema": {
+                                    "type": "array",
+                                    "description": "array of properties of encrypted devices",
+                                    "item": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    },
+                    "output": {
+                        "field":
+                        [
+                            {
+                                "name": "value",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    }
+                }
+            },
+            {
+                "aid": "randomshare",
+                "affects": "adapters:Visibility",
+                "write_link":
+                {
+                    "href":"/randomshareaction/{oid}",
+                    "input":
+                    {
+                        "field":
+                        [
+                            {
+                                "name": "initiator",
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "name": "share",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    },
+                    "output": {
+                        "field":
+                        [
+                            {
+                                "name": "declined",
+                                "schema": {
+                                    "type": "boolean"
+                                }
+                            }
+                        ],
+                        "type": "object"
+                    }
+                }
+            }
+            ],
+            "events": [
+            ]
+        }
+    ]
+}

@@ -74,7 +74,7 @@ void fhe_handler::encrypt_and_store(long x, int id) {
     ciphertext.close();
 }
 
-string fhe_handler::encrypt_as_string(long x) {
+string fhe_handler::encrypt_as_string(long x, std::string pubKey) {
 	Ctxt ctxt = encrypt(x);
 
 	std::stringstream ss;
@@ -172,7 +172,7 @@ void fhe_handler::aggregate(int count)
     ciphertext.close();
 }
 
-std::string fhe_handler::aggregate(std::vector<std::string> & input) {
+std::string fhe_handler::aggregate(std::vector<std::string> & input, const char* publickey) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt sum = encrypt(0);
 
@@ -193,7 +193,7 @@ std::string fhe_handler::aggregate(std::vector<std::string> & input) {
 
 
 
-void fhe_handler::add(std::string & ctxt) {
+void fhe_handler::add(std::string & ctxt, const char* publickey) {
 	const FHEPubKey& publicKey = *m_pPrivateKey;
 	Ctxt * ct = new Ctxt(publicKey);
 
@@ -278,4 +278,16 @@ void fhe_handler::generate_keys() {
 	//secKeyFile.close();
 	//pubKeyFile.close();
 	std::cout << "OK!" << std::endl;
+}
+
+string fhe_handler::getPublicKey() {
+    return "TODO";
+}
+
+void fhe_handler::setPublicKey(const char* json) { //(std::string & n, std::string & g, std::string & n2) {
+    //TODO
+}
+
+void fhe_handler::setPrivateKey(const char* json) {
+    //TODO
 }

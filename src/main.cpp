@@ -6,7 +6,6 @@
 #include "../include/he_controller.h"
 #include "../include/vicinity_handler.h"
 
-#include <cassert>
 #include <iostream>
 
 using namespace std;
@@ -39,40 +38,42 @@ void on_shutdown()
 
 
 int main()
-{	
+{
     he_controller controller = he_controller();
-
+    db_access * db = new db_access("service.db");
+    controller.setDB_access(db);
     vicinity_handler * vicinity = new vicinity_handler();
     vicinity->initialize("config_adapters.json");
     controller.setVICINITY_handler(vicinity);
-
-	he_handler * he = (he_handler*) (new seal_he_handler());
-	he->initialize();
+    he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
-
+    he->initialize(); //must be after setting he handler to be able to access database
+    
     //debugging
+    
+    std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
+    
     std::string value;
     std::string pubKey;
     std::vector<std::string> valuesvec;
 
     value = he->encrypt_as_string(71);
     pubKey = he->getPublicKey();
-    
+
     valuesvec.push_back(value);
     
     value = he->encrypt_as_string(71, pubKey);
 
     valuesvec.push_back(value);
 
-    std::string result = he->aggregate(valuesvec);
-
+    std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
     int intval = he->decrypt(result);
 
     std::cout << "decrypted test result: " << intval << std::endl;
 
     //std::cout << he->getPublicKey() << std::endl;
 
-	utility::string_t address = U("http://127.0.0.1:4242");
+    utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
 
     //on_initialize(address);
     uri_builder uri(address);

@@ -39,6 +39,8 @@ link_directories(${HOMEBREW_LIB})
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
+## include sqlite
+include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
 
 find_package(SEAL 3.4 REQUIRED)
 
@@ -62,10 +64,14 @@ set(SOURCE  src/main.cpp
             src/rest_handler.cpp
             src/fhe_handler.cpp
             src/phe_handler.cpp
+            src/he_controller.cpp
+            src/db_access.cpp
             src/seal_he_handler.cpp
             src/he_controller.cpp
             src/vicinity_handler.cpp
-            src/base64.cpp)
+            src/base64.cpp
+            third-party/sqlite/shell.c
+            third-party/sqlite/sqlite3.c)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME} 
@@ -90,4 +96,5 @@ target_link_libraries(${PROJECT_NAME}
     ntl
     gmp
     m
+    sqlite3
 )

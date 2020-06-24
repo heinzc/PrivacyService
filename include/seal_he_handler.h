@@ -7,6 +7,8 @@
 
 #include "seal/seal.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace seal;
 
 class seal_he_handler : he_handler
@@ -24,8 +26,8 @@ class seal_he_handler : he_handler
         int decrypt(std::string & ctxt);
 
         void aggregate(int count);
-        std::string aggregate(std::vector<std::string> & input);
-        void add(std::string & ctxt);
+        std::string aggregate(std::vector<std::string> & input, const char* publickey);
+        void add(std::string & ctxt, const char* publickey);
 
         int getSum();
 
@@ -37,6 +39,8 @@ class seal_he_handler : he_handler
         size_t m_poly_modulus_degree; // Specific modulus
 
         std::shared_ptr<SEALContext> m_pContext = 0;
+        
+        EncryptionParameters m_pParms;
 
         PublicKey m_PublicKey;
         SecretKey m_SecretKey;
@@ -48,4 +52,10 @@ class seal_he_handler : he_handler
 
         //Ctxt encrypt(long x);
         //NTL::ZZX decrypt(Ctxt & ctxt);
+        
+        void setPublicKey(const char* json);
+        void setPrivateKey(const char* json);
+        
+        std::string getSecretKey();
+        std::string getEncryptionParameters();
 };
