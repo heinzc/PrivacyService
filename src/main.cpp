@@ -39,17 +39,25 @@ void on_shutdown()
 
 int main()
 {
+    // initialize compenents
+    // controller
     he_controller controller = he_controller();
+
+    //database
     db_access * db = new db_access("service.db");
     controller.setDB_access(db);
+
+    // vicinity
     vicinity_handler * vicinity = new vicinity_handler();
-    vicinity->initialize("config_adapters.json");
     controller.setVICINITY_handler(vicinity);
+    vicinity->initialize("config_adapters.json");
+
+    // he
     he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
     
-    //debugging
+    //debugging... to be moved into unittesting
     
     std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
     

@@ -10,11 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party)
 
-project(Privacy-Service LANGUAGES CXX)
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+
+project(privacy-service LANGUAGES CXX)
 
 set(Boost_NO_BOOST_CMAKE ON)
 
-find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex)
+find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex unit_test_framework)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
@@ -58,43 +60,12 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 # unintended consequences that will break the build.  It's generally
 # discouraged (although not necessarily well documented as such) to use
 # include(...) for pulling in other CMake projects anyways.
-add_subdirectory(${CMAKE_SOURCE_DIR}/third-party/nlohmann_json)
+add_subdirectory(third-party/nlohmann_json)
 
-set(SOURCE  src/main.cpp
-            src/rest_handler.cpp
-            src/fhe_handler.cpp
-            src/phe_handler.cpp
-            src/he_controller.cpp
-            src/db_access.cpp
-            src/seal_he_handler.cpp
-            src/he_controller.cpp
-            src/vicinity_handler.cpp
-            src/base64.cpp
-            third-party/sqlite/shell.c
-            third-party/sqlite/sqlite3.c)
-add_executable(${PROJECT_NAME} ${SOURCE})
+# compile lib and binary
+add_subdirectory(src)
 
-target_link_libraries(${PROJECT_NAME} 
-    nlohmann_json::nlohmann_json
-    cpprest
-    Boost::boost
-    Boost::random
-    Boost::system
-    Boost::thread
-    Boost::filesystem
-    Boost::chrono
-    Boost::atomic
-    Boost::date_time
-    Boost::regex
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    SEAL::seal
-    #crypto
-    #ssl
-    helib
-    hcs
-    ntl
-    gmp
-    m
-    sqlite3
-)
+
+#include our own unittests
+enable_testing()
+add_subdirectory(test)
