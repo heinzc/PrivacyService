@@ -1,4 +1,5 @@
-set(SOURCE  rest_handler.cpp
+file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+set(SRC_FILES  rest_handler.cpp
             fhe_handler.cpp
             phe_handler.cpp
             he_controller.cpp
@@ -11,7 +12,7 @@ set(SOURCE  rest_handler.cpp
             ../third-party/sqlite/sqlite3.c
 )
 
-add_library(${PROJECT_NAME}_lib ${SOURCE})
+add_library(${PROJECT_NAME}_lib ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME}_lib
     nlohmann_json::nlohmann_json
     cpprest
