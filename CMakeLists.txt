@@ -1,4 +1,9 @@
-cmake_minimum_required(VERSION 3.5)
+﻿# CMakeList.txt: CMake-Projekt für "PrivacyService". Schließen Sie die Quelle ein, und definieren Sie
+# projektspezifische Logik hier.
+#
+cmake_minimum_required (VERSION 3.8)
+
+project ("PrivacyService" LANGUAGES CXX)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ## Use -std=c++11 as default.
@@ -8,11 +13,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Require full C++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party)
+#set (CMAKE_PREFIX_PATH "C:\\Qt\\5.15.1\\msvc2019_64")
 
-SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+#QT Moc'ing
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
-project(privacy-service LANGUAGES CXX)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 set(Boost_NO_BOOST_CMAKE ON)
 
@@ -32,22 +40,19 @@ if(OPENSSL_FOUND)
     include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-## Might modify the following path to NTL according to your environment
-set(HOMEBREW_INCLUDE /usr/local/include)
-set(HOMEBREW_LIB /usr/local/lib)
-include_directories(${HOMEBREW_INCLUDE})
-link_directories(${HOMEBREW_LIB})
 
-## include third-parties
-include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
-link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
+find_package(Qt5 COMPONENTS Core REQUIRED)
+if(Qt5_FOUND)
+    message(STATUS "QT_INCLUDE_DIRS: ${Qt5_INCLUDE_DIR}")
+    message(STATUS "QT_LIBRARIES: ${Qt5_LIBRARIES}")
+    message(STATUS "QT_VERSION: ${Qt5_VERSION}")
+    include_directories(${Qt5_INCLUDE_DIR})
+endif()
+
+find_package(SEAL 3.5 REQUIRED)
+
 ## include sqlite
 include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
-
-find_package(SEAL 3.4 REQUIRED)
-
-set(helib_DIR ${CMAKE_SOURCE_DIR}/third-party/share/cmake/helib)
-find_package(helib 1.0.0 EXACT REQUIRED)
 
 # Typically you don't care so much for a third party library's tests to be
 # run from your own project's code.
@@ -56,16 +61,17 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 # need to install it when your main project gets installed.
 # set(JSON_Install OFF CACHE INTERNAL "")
 
+
 # Don't use include(nlohmann_json/CMakeLists.txt) since that carries with it
 # unintended consequences that will break the build.  It's generally
 # discouraged (although not necessarily well documented as such) to use
 # include(...) for pulling in other CMake projects anyways.
 add_subdirectory(third-party/nlohmann_json)
 
-# compile lib and binary
+# Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.
 add_subdirectory(src)
 
-
+# TODO: Fügen Sie bei Bedarf Tests hinzu, und installieren Sie Ziele.
 #include our own unittests
 enable_testing()
 add_subdirectory(test)

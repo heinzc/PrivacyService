@@ -1,9 +1,3 @@
-[submodule "third-party/HElib"]
-	path = third-party/HElib
-	url = https://github.com/shaih/HElib.git
-[submodule "third-party/libhcs"]
-	path = third-party/libhcs
-	url = https://github.com/Tiehuis/libhcs.git
 [submodule "third-party/SEAL"]
 	path = third-party/SEAL
 	url = https://github.com/microsoft/SEAL.git

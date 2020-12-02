@@ -1,10 +1,8 @@
 file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(SRC_FILES  rest_handler.cpp
-            fhe_handler.cpp
-            phe_handler.cpp
             he_controller.cpp
             db_access.cpp
-            seal_he_handler.cpp
+            seal_handler.cpp
             he_controller.cpp
             vicinity_handler.cpp
             base64.cpp
@@ -15,6 +13,7 @@ set(SRC_FILES  rest_handler.cpp
 add_library(${PROJECT_NAME}_lib ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME}_lib
     nlohmann_json::nlohmann_json
+    Qt5::Core
     cpprest
     Boost::boost
     Boost::random
@@ -25,16 +24,11 @@ target_link_libraries(${PROJECT_NAME}_lib
     Boost::atomic
     Boost::date_time
     Boost::regex
-    OpenSSL::SSL
-    OpenSSL::Crypto
+    #OpenSSL::SSL
+    #OpenSSL::Crypto
     SEAL::seal
-    #crypto
-    #ssl
-    helib
-    hcs
-    ntl
-    gmp
-    m
+    crypto
+    ssl
     sqlite3
 )
 

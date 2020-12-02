@@ -1,8 +1,6 @@
 #include "../include/stdafx.h"
 #include "../include/rest_handler.h"
-#include "../include/fhe_handler.h"
-#include "../include/phe_handler.h"
-#include "../include/seal_he_handler.h"
+#include "../include/seal_handler.h"
 #include "../include/he_controller.h"
 #include "../include/vicinity_handler.h"
 
