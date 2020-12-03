@@ -1,9 +1,10 @@
-#include "../include/seal_he_handler.h"
+#include "../include/seal_handler.h"
 #include <sstream>
 #include <cassert>
 #include "../include/base64.h"
 
 using namespace std;
+using namespace seal;
 
 seal_he_handler::seal_he_handler(size_t poly_modulus_degree) :
 	he_handler()
@@ -12,7 +13,7 @@ seal_he_handler::seal_he_handler(size_t poly_modulus_degree) :
 
     m_pContext = 0;
     
-    m_pParms = EncryptionParameters (scheme_type::BFV);
+    m_pParms = EncryptionParameters (scheme_type::ckks);
 }
 
 seal_he_handler::~seal_he_handler() {
@@ -24,10 +25,11 @@ seal_he_handler::~seal_he_handler() {
 void seal_he_handler::initialize() {
     
     m_pParms.set_poly_modulus_degree(m_poly_modulus_degree);
-    m_pParms.set_coeff_modulus(CoeffModulus::BFVDefault(m_poly_modulus_degree));
-    m_pParms.set_plain_modulus(8192); //change this, if your own encrypted values can be larger than this!
+    m_pParms.set_coeff_modulus(CoeffModulus::Create(m_poly_modulus_degree, { 60, 40, 40, 60 }));
+    double scale = pow(2.0, 40);
+//    m_pParms.set_plain_modulus(8192); //change this, if your own encrypted values can be larger than this!
 
-    m_pContext = SEALContext::Create(m_pParms);
+    m_pContext = new SEALContext(m_pParms);
 
     //print_parameters(m_pContext);
 
@@ -59,7 +61,7 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
     using nljson = nlohmann::json;
     
     PublicKey useKey;
-    std::shared_ptr<SEALContext> useContext;
+    SEALContext * useContext;
     
     if ( pubKey.empty() ) {
         useKey = m_PublicKey;
@@ -77,17 +79,17 @@ string seal_he_handler::encrypt_as_string(long x, std::string pubKey) {
             return std::string("");
         }    
         
-        EncryptionParameters useParms = EncryptionParameters (scheme_type::BFV);
+        EncryptionParameters useParms = EncryptionParameters (scheme_type::ckks);
         std::stringstream ss2(base64_decode(parms));
         useParms.load(ss2);
-        useContext = SEALContext::Create(useParms);
+        useContext = new SEALContext(useParms);
         
         std::stringstream ss(base64_decode(key));
-        useKey.load(useContext, ss);
+        useKey.load(*useContext, ss);
         std::cout << "using given key" << std::endl;
     }
     
-    Encryptor encryptor(useContext, useKey);
+    Encryptor encryptor(*useContext, useKey);
     Plaintext x_plain(to_hexstring<long>(x, hex));
 
     Ciphertext x_encrypted;
@@ -106,13 +108,13 @@ int seal_he_handler::decrypt() {
 }
 
 int seal_he_handler::decrypt(std::string & ctxt) {
-    Decryptor decryptor(m_pContext, m_SecretKey);
+    Decryptor decryptor(*m_pContext, m_SecretKey);
 
     std::stringstream ss (base64_decode(ctxt));
     Ciphertext val;
     Plaintext plain;
 
-    val.load(m_pContext, ss);
+    val.load(*m_pContext, ss);
 
     decryptor.decrypt(val, plain);
 
@@ -132,7 +134,7 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     
     std::cout << "he handler aggregate" << std::endl;
     PublicKey useKey;
-    std::shared_ptr<SEALContext> useContext;
+    SEALContext * useContext;
     
     //std::cout << std::string("pk: ") + publickey << std::endl;
     if (std::string(publickey) == std::string("")) {
@@ -150,18 +152,18 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
             return std::string("");
         }    
         
-        EncryptionParameters useParms = EncryptionParameters (scheme_type::BFV);
+        EncryptionParameters useParms = EncryptionParameters (scheme_type::ckks);
         std::stringstream ss2(base64_decode(parms));
         useParms.load(ss2);
-        useContext = SEALContext::Create(useParms);
+        useContext = new SEALContext(useParms);
         
         std::stringstream ss(base64_decode(key));
-        useKey.load(useContext, ss);
+        useKey.load(*useContext, ss);
         std::cout << "using given key" << std::endl;
     }
         
-    Encryptor encryptor(useContext, useKey);
-    Evaluator evaluator(useContext);
+    Encryptor encryptor(*useContext, useKey);
+    Evaluator evaluator(*useContext);
     
     //Encryptor encryptor(m_pContext, m_PublicKey);
     //Evaluator evaluator(m_pContext);
@@ -174,7 +176,7 @@ std::string seal_he_handler::aggregate(std::vector<std::string> & input, const c
     for(auto it = input.begin(); it != input.end(); ++it) {
         std::stringstream ss (base64_decode(*it));
         Ciphertext val;
-        val.load(useContext, ss);
+        val.load(*useContext, ss);
         evaluator.add_inplace(sum, val);
     }
     std::stringstream ss;
@@ -227,9 +229,13 @@ std::string seal_he_handler::getEncryptionParameters() {
 void seal_he_handler::generate_keys() {
     std::cout << "Generating keys... " << std::flush;
 
-    KeyGenerator keygen(m_pContext);
-    m_PublicKey = keygen.public_key();
+    KeyGenerator keygen(*m_pContext);
     m_SecretKey = keygen.secret_key();
+    keygen.create_public_key(m_PublicKey);
+
+
+    keygen.create_relin_keys(m_relin_keys);
+    keygen.create_galois_keys(m_gal_keys);
 
 	std::cout << "OK!" << std::endl;
 }
@@ -258,8 +264,8 @@ void seal_he_handler::setPublicKey(const char* json) {
     std::stringstream ss2(base64_decode(parms));
     //following can throw an exception, but is ok here, as it is called when the program begins.
     m_pParms.load(ss2);
-    m_pContext = SEALContext::Create(m_pParms);
-    m_PublicKey.load(m_pContext, ss);
+    m_pContext = new SEALContext(m_pParms);
+    m_PublicKey.load(*m_pContext, ss);
     
     std::cout << "OK!" << std::endl;
 }
@@ -268,7 +274,7 @@ void seal_he_handler::setPrivateKey(const char* json) {
     std::cout << "Setting private key... " << std::flush;
     
     std::stringstream ss(base64_decode(json));
-    m_SecretKey.load(m_pContext, ss);
+    m_SecretKey.load(*m_pContext, ss);
     
     std::cout << "OK!" << std::endl;
 }

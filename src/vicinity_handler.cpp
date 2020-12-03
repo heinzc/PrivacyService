@@ -2,22 +2,22 @@
 #include "../include/rest_handler.h"
 #include "../include/he_handler.h"
 
-#include <cpprest/http_client.h>
-#include <cpprest/json.h>
+//#include <cpprest/http_client.h>
+//#include <cpprest/json.h>
 
 #include <sstream>
 #include <utility>
 #include <regex>
 
-#include <unistd.h> //usleep
+//#include <unistd.h> //usleep
 
 #include <boost/chrono.hpp>
 
 using namespace std;
-using namespace utility;
-using namespace web::http;
-using namespace web::http::client;
-using namespace concurrency::streams;
+//using namespace utility;
+//using namespace web::http;
+//using namespace web::http::client;
+//using namespace concurrency::streams;
 
 
 vicinity_handler::vicinity_handler()
@@ -77,14 +77,15 @@ string vicinity_handler::generateThingDescription() {
         // query the endpoint for /objects
         string adapterid = adapter["adapter-id"].get<string>();
         string endpoint = adapter["endpoint"].get<string>();
-        http_client client(endpoint);
+        //http_client client(endpoint);
 
         // as the requests may take time, we will perform them asynchronous...
-        pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects")).to_string());
+        //pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects")).to_string());
 
-        web::http::http_response response = requestTask.get();
+        //web::http::http_response response = requestTask.get();
         //fix for thing descriptions e.g. of python sample
-        std::string responseStr = response.extract_string().get();
+        //std::string responseStr = response.extract_string().get();
+        std::string responseStr = "";
         std::replace( responseStr.begin(), responseStr.end(), '\'', '\"'); //replace ' with "
         json objects = json::parse(responseStr);//response.extract_string().get());
 
@@ -195,12 +196,13 @@ string vicinity_handler::readProperty(string oid, string pid) {
             objectid = match.str(2);
 
             string adapterendpoint = m_endpoints[adapterid];
-            http_client client(adapterendpoint);
+            //http_client client(adapterendpoint);
 
-            pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects/" + objectid + "/properties/" + pid)).to_string());
+            //pplx::task<web::http::http_response> requestTask = client.request(methods::GET, uri_builder(U("/objects/" + objectid + "/properties/" + pid)).to_string());
 
-            web::http::http_response response = requestTask.get();
-            string rawresult = response.extract_string().get();
+            //web::http::http_response response = requestTask.get();
+            //string rawresult = response.extract_string().get();
+            string rawresult = "";
 
             json result = json::parse(rawresult);
 
@@ -404,7 +406,7 @@ void vicinity_handler::startAggregation(string oid, string sourceOid, string pay
                                 return;
                             }
                             //sleep(1); //1 second, lower in real world usage
-                            usleep(200 * 1000); //200 miliseconds
+                            //usleep(200 * 1000); //200 miliseconds
                         }
                         boost::chrono::milliseconds waitingTime = boost::chrono::duration_cast<boost::chrono::milliseconds> (boost::chrono::system_clock::now() - startWaitingForTasks2);
                         std::cout << "Polling messages: " + std::to_string(pollCount) << std::endl; 
@@ -618,7 +620,7 @@ void vicinity_handler::participateInAggregation(string oid, string sourceOid, st
                                 while(!m_pController->getDB_access()->allRandomSharesReceived(sourceOid.c_str()) && time(NULL) < start + 10) {
                                     //std::cout << "Waiting for shares..." << std::endl;
                                     //sleep(1);
-                                    usleep(50 * 1000); //50 miliseconds
+                                    //usleep(50 * 1000); //50 miliseconds
                                 }
                                 //all shares were received? Now, we either received all, or we do not want to wait any longer for them
                                 if(m_pController->getDB_access()->allRandomSharesReceived(sourceOid.c_str())) {
@@ -676,7 +678,7 @@ void vicinity_handler::sendShareAction(string oid, string sourceOid, string payl
                     std::cout << "Randomshare task finished." << std::endl;
                     return;
                 } else {
-                    usleep(50 * 1000); //50 miliseconds sleep. maybe it takes some more time, until we receive a request to aggregate
+                    //usleep(50 * 1000); //50 miliseconds sleep. maybe it takes some more time, until we receive a request to aggregate
                 }
             }
         }
@@ -692,19 +694,20 @@ bool vicinity_handler::updateTaskStatus(string aid, string status, string payloa
     //sleep(4);
     std::string address = "http://127.0.0.1:" + agentPort + "/agent/actions/" + aid;
     //std::cout << "Update Task Status Address: " + address << std::endl;
-    http_client client(address.c_str());
-    //client.request(methods::PUT, "", status);
-    http_request request(methods::PUT);
-    //request.headers().add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    request.headers().add("status", status.c_str());
-    request.set_body(payload.c_str());
-    //std::cout << request.to_string() << std::endl;
-    //std::cout << request.absolute_uri().to_string() << std::endl;
-    pplx::task<web::http::http_response> requestTask = client.request(request);
-    web::http::http_response response = requestTask.get();
-    std::string responseStr = response.extract_string().get();
+    //http_client client(address.c_str());
+    ////client.request(methods::PUT, "", status);
+    //http_request request(methods::PUT);
+    ////request.headers().add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //request.headers().add("status", status.c_str());
+    //request.set_body(payload.c_str());
+    ////std::cout << request.to_string() << std::endl;
+    ////std::cout << request.absolute_uri().to_string() << std::endl;
+    //pplx::task<web::http::http_response> requestTask = client.request(request);
+    //web::http::http_response response = requestTask.get();
+    //std::string responseStr = response.extract_string().get();
+    std::string responseStr = "";
     std::cout << std::string("Updating Task Status Response: ") + responseStr << std::endl;
     try {
         json jResponseStr = json::parse(responseStr);
@@ -732,12 +735,13 @@ string vicinity_handler::getPublicKey(string oid) {
     if(key == "") { //if key empty -> key of he service is not in database yet
         //request public key from heOid
         std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + heOid + "/properties/publickey";
-        http_client client(address.c_str());
-        http_request request(methods::GET);
-        request.headers().add("adapter-id", adapterId);
-        request.headers().add("infrastructure-id", ownOid);
-        http_response response = client.request(request).get();
-        std::string output = response.extract_string().get();
+        //http_client client(address.c_str());
+        //http_request request(methods::GET);
+        //request.headers().add("adapter-id", adapterId);
+        //request.headers().add("infrastructure-id", ownOid);
+        //http_response response = client.request(request).get();
+        //std::string output = response.extract_string().get();
+        std::string output = "";
         //std::cout << "output: " + output << std::endl;
         std::string receivedKey = "";
         try {
@@ -767,13 +771,14 @@ string vicinity_handler::getPublicKey(string oid) {
 string vicinity_handler::askToParticipateInAggregation(string destinationOid, string payload) {
     using json = nlohmann::json; // for convenience
     std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + destinationOid + "/actions/participateInAggregation";
-    http_client client(address.c_str());
-    http_request request(methods::POST);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    request.set_body(payload);
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::POST);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //request.set_body(payload);
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";
     //std::cout << "output: " + output << std::endl;
     std::string taskId = "";
     try {
@@ -793,12 +798,13 @@ string vicinity_handler::getStatusOfAction(string destinationOid, string action,
     std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + destinationOid + "/actions/" + action + "/tasks/" + taskId;
     
     //std::cout << "URL: " + address << std::endl;
-    http_client client(address.c_str());
-    http_request request(methods::GET);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::GET);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";;
     //std::cout << "Output: " + output << std::endl;
     std::string status = "";
     try {
@@ -818,13 +824,14 @@ string vicinity_handler::getReturnValueOfAction(string destinationOid, string ac
     using json = nlohmann::json; // for convenience
     std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + destinationOid + "/actions/" + action + "/tasks/" + taskId;
     
-    http_client client(address.c_str());
-    http_request request(methods::GET);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    //request.set_body(payload);
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::GET);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    ////request.set_body(payload);
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";
     //std::cout << "output: " + output << std::endl;
     std::string returnValue = "";
     try {
@@ -846,13 +853,14 @@ string vicinity_handler::sendRandomShare(string destinationOid, string initiator
     using json = nlohmann::json; // for convenience
     std::string address = std::string("http://127.0.0.1:") + agentPort + std::string("/agent/remote/objects/") + destinationOid + std::string("/actions/randomshare");
     //std::cout << "URL: " + address << std::endl;
-    http_client client(address.c_str());
-    http_request request(methods::POST);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    request.set_body(std::string("{\"initiator\":\"") + initiatorOid + std::string("\",\"share\":") + std::to_string(randomShare) + std::string("}"));
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::POST);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //request.set_body(std::string("{\"initiator\":\"") + initiatorOid + std::string("\",\"share\":") + std::to_string(randomShare) + std::string("}"));
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";
     std::cout << "OUTPUT: " + output << std::endl;
     try {
         json jOutput = json::parse(output);
@@ -875,12 +883,13 @@ long vicinity_handler::getPropertyOfEncryptedDevice(string encryptedDeviceOid, s
     std::string plainDeviceOid = m_pController->getDB_access()->getPlainDeviceOfOwnEncryptedDevice(encryptedDeviceOid.c_str());
     std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + plainDeviceOid + "/properties/" + pid;
     std::cout << "address: " + address << std::endl;
-    http_client client(address.c_str());
-    http_request request(methods::GET);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::GET);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";
     //std::cout << "output: " + output << std::endl;
     long returnValue;
     try {
@@ -899,12 +908,13 @@ bool vicinity_handler::deleteTask(string destinationOid, string action, string t
     using json = nlohmann::json; // for convenience
     std::string address = std::string("http://127.0.0.1:") + agentPort + std::string("/agent/remote/objects/") + destinationOid + std::string("/actions/") + action + std::string("/tasks/") + taskId;
     //std::cout << "URL: " + address << std::endl;
-    http_client client(address.c_str());
-    http_request request(methods::DEL);
-    request.headers().add("adapter-id", adapterId);
-    request.headers().add("infrastructure-id", ownOid);
-    http_response response = client.request(request).get();
-    std::string output = response.extract_string().get();
+    //http_client client(address.c_str());
+    //http_request request(methods::DEL);
+    //request.headers().add("adapter-id", adapterId);
+    //request.headers().add("infrastructure-id", ownOid);
+    //http_response response = client.request(request).get();
+    //std::string output = response.extract_string().get();
+    std::string output = "";
     try {
         json jOutput = json::parse(output);
         if(jOutput["error"].get<bool>() == 0) {

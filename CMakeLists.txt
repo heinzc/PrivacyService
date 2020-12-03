@@ -13,7 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Require full C++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#set (CMAKE_PREFIX_PATH "C:\\Qt\\5.15.1\\msvc2019_64")
+set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party/lib/cmake;${CMAKE_PREFIX_PATH})
+message(STATUS "CMAKE Prefix: ${CMAKE_PREFIX_PATH}")
 
 #QT Moc'ing
 set(CMAKE_AUTOMOC ON)
@@ -41,18 +42,26 @@ if(OPENSSL_FOUND)
 endif()
 
 
-find_package(Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt5 COMPONENTS Core Network WebSockets REQUIRED)
 if(Qt5_FOUND)
-    message(STATUS "QT_INCLUDE_DIRS: ${Qt5_INCLUDE_DIR}")
-    message(STATUS "QT_LIBRARIES: ${Qt5_LIBRARIES}")
+    message(STATUS "QT_DIR: ${Qt5_DIR}")
     message(STATUS "QT_VERSION: ${Qt5_VERSION}")
     include_directories(${Qt5_INCLUDE_DIR})
 endif()
 
-find_package(SEAL 3.5 REQUIRED)
+find_package(Qt5HttpServer)
+
+find_package(SEAL 3.6 REQUIRED)
+
+## include third-parties
+include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
+link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
 
 ## include sqlite
-include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
+
+
+#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
 
 # Typically you don't care so much for a third party library's tests to be
 # run from your own project's code.

@@ -14,7 +14,7 @@ using namespace seal;
 class seal_he_handler : he_handler
 {
     public:
-        seal_he_handler(size_t poly_modulus_degree = 4096);
+        seal_he_handler(size_t poly_modulus_degree = 8192);
         ~seal_he_handler();
 
         void initialize();
@@ -38,12 +38,15 @@ class seal_he_handler : he_handler
     private:
         size_t m_poly_modulus_degree; // Specific modulus
 
-        std::shared_ptr<SEALContext> m_pContext = 0;
+        SEALContext * m_pContext = 0;
         
         EncryptionParameters m_pParms;
 
         PublicKey m_PublicKey;
         SecretKey m_SecretKey;
+
+        RelinKeys m_relin_keys;
+        GaloisKeys m_gal_keys;
 
         void generate_keys();
 

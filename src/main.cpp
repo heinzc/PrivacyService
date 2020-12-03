@@ -5,38 +5,41 @@
 #include "../include/vicinity_handler.h"
 
 #include <iostream>
+#include <QtCore>
 
 using namespace std;
-using namespace web;
-using namespace http;
-using namespace utility;
-using namespace http::experimental::listener;
+//using namespace web;
+//using namespace http;
+//using namespace utility;
+//using namespace http::experimental::listener;
 
 //std::unique_ptr<rest_handler> g_httpHandler;
 rest_handler * g_httpHandler;
 
-void on_initialize(const string_t& address)
+//void on_initialize(const string_t& address)
+//{
+//    uri_builder uri(address);
+//  
+//    auto addr = uri.to_uri().to_string();
+//    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
+//    //g_httpHandler->open().wait();
+//
+//    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
+//
+//    return;
+//}
+
+//void on_shutdown()
+//{
+//    g_httpHandler->close().wait();
+//    return;
+//}
+
+
+int main(int argc, char* argv[])
 {
-    uri_builder uri(address);
-  
-    auto addr = uri.to_uri().to_string();
-    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    //g_httpHandler->open().wait();
+    QCoreApplication app(argc, argv);
 
-    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-
-    return;
-}
-
-void on_shutdown()
-{
-    g_httpHandler->close().wait();
-    return;
-}
-
-
-int main()
-{
     // initialize compenents
     // controller
     he_controller controller = he_controller();
@@ -79,25 +82,30 @@ int main()
 
     //std::cout << he->getPublicKey() << std::endl;
 
-    utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
+    //utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
 
-    //on_initialize(address);
-    uri_builder uri(address);
+    ////on_initialize(address);
+    //uri_builder uri(address);
   
-    auto addr = uri.to_uri().to_string();
+    //auto addr = uri.to_uri().to_string();
     //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    g_httpHandler = new rest_handler(addr);
+    //g_httpHandler = new rest_handler(addr);
     controller.setREST_handler(g_httpHandler);
-    g_httpHandler->open().wait();
+    g_httpHandler->setup();
+    //g_httpHandler->open().wait();
 
     vicinity->generateThingDescription();
 
-    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-    std::cout << "Press ENTER to exit." << std::endl;
 
+    //ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
+    //std::cout << "Press ENTER to exit." << std::endl;
+
+    return app.exec();
+/*
     std::string line;
     std::getline(std::cin, line);
 
     on_shutdown();
     return 0;
+*/
 }

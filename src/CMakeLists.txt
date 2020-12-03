@@ -14,7 +14,8 @@ add_library(${PROJECT_NAME}_lib ${SRC_FILES})
 target_link_libraries(${PROJECT_NAME}_lib
     nlohmann_json::nlohmann_json
     Qt5::Core
-    cpprest
+    Qt5::HttpServer
+    #cpprest
     Boost::boost
     Boost::random
     Boost::system
@@ -27,9 +28,10 @@ target_link_libraries(${PROJECT_NAME}_lib
     #OpenSSL::SSL
     #OpenSSL::Crypto
     SEAL::seal
-    crypto
-    ssl
-    sqlite3
+    #crypto
+    #ssl
+    unofficial::sqlite3::sqlite3
+    #sqlite3
 )
 
 add_executable(${PROJECT_NAME} main.cpp)
