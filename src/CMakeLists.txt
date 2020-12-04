@@ -6,8 +6,8 @@ set(SRC_FILES  rest_handler.cpp
             he_controller.cpp
             vicinity_handler.cpp
             base64.cpp
-            ../third-party/sqlite/shell.c
-            ../third-party/sqlite/sqlite3.c
+            #../third-party/sqlite/shell.c
+            #../third-party/sqlite/sqlite3.c
 )
 
 add_library(${PROJECT_NAME}_lib ${SRC_FILES})
@@ -17,14 +17,14 @@ target_link_libraries(${PROJECT_NAME}_lib
     Qt5::HttpServer
     #cpprest
     Boost::boost
-    Boost::random
-    Boost::system
-    Boost::thread
-    Boost::filesystem
+    #Boost::random
+    #Boost::system
+    #Boost::thread
+    #Boost::filesystem
     Boost::chrono
-    Boost::atomic
-    Boost::date_time
-    Boost::regex
+    #Boost::atomic
+    #Boost::date_time
+    #Boost::regex
     #OpenSSL::SSL
     #OpenSSL::Crypto
     SEAL::seal

@@ -43,12 +43,14 @@ void rest_handler::setController(he_controller * controller) {
 }
 
 int rest_handler::setup() {
-    QHttpServer httpServer;
-    httpServer.route("/", []() {
+    m_pHttpServer = new QHttpServer();
+    m_pHttpServer->route("/", []() {
+        qDebug() << "hi";
+
         return "Hello world";
         });
 
-    const auto port = httpServer.listen(QHostAddress::Any);
+    const auto port = m_pHttpServer->listen(QHostAddress::Any, 4242);
     if (!port) {
         qDebug() << QCoreApplication::translate(
             "QHttpServerExample", "Server failed to listen on a port.");

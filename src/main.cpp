@@ -6,34 +6,9 @@
 
 #include <iostream>
 #include <QtCore>
+#include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
 
 using namespace std;
-//using namespace web;
-//using namespace http;
-//using namespace utility;
-//using namespace http::experimental::listener;
-
-//std::unique_ptr<rest_handler> g_httpHandler;
-rest_handler * g_httpHandler;
-
-//void on_initialize(const string_t& address)
-//{
-//    uri_builder uri(address);
-//  
-//    auto addr = uri.to_uri().to_string();
-//    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-//    //g_httpHandler->open().wait();
-//
-//    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-//
-//    return;
-//}
-
-//void on_shutdown()
-//{
-//    g_httpHandler->close().wait();
-//    return;
-//}
 
 
 int main(int argc, char* argv[])
@@ -49,63 +24,46 @@ int main(int argc, char* argv[])
     controller.setDB_access(db);
 
     // vicinity
-    vicinity_handler * vicinity = new vicinity_handler();
-    controller.setVICINITY_handler(vicinity);
-    vicinity->initialize("config_adapters.json");
+    //vicinity_handler * vicinity = new vicinity_handler();
+    //controller.setVICINITY_handler(vicinity);
+    //vicinity->initialize("config_adapters.json");
 
     // he
     he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
+                      
+    // RESTful API
+    rest_handler* restHandler = new rest_handler();
+    controller.setREST_handler(restHandler);
+    restHandler->setup();
+
+    //vicinity->generateThingDescription();
+
     
     //debugging... to be moved into unittesting
     
-    std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
+    //std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
     
-    std::string value;
-    std::string pubKey;
-    std::vector<std::string> valuesvec;
+    //std::string value;
+    //std::string pubKey;
+    //std::vector<std::string> valuesvec;
 
-    value = he->encrypt_as_string(71);
-    pubKey = he->getPublicKey();
+    //value = he->encrypt_as_string(71);
+    //pubKey = he->getPublicKey();
 
-    valuesvec.push_back(value);
-    
-    value = he->encrypt_as_string(71, pubKey);
+    //valuesvec.push_back(value);
+    //
+    //value = he->encrypt_as_string(71, pubKey);
 
-    valuesvec.push_back(value);
+    //valuesvec.push_back(value);
 
-    std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
-    int intval = he->decrypt(result);
+    //std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
+    //int intval = he->decrypt(result);
 
-    std::cout << "decrypted test result: " << intval << std::endl;
+    //std::cout << "decrypted test result: " << intval << std::endl;
 
     //std::cout << he->getPublicKey() << std::endl;
 
-    //utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
-
-    ////on_initialize(address);
-    //uri_builder uri(address);
-  
-    //auto addr = uri.to_uri().to_string();
-    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    //g_httpHandler = new rest_handler(addr);
-    controller.setREST_handler(g_httpHandler);
-    g_httpHandler->setup();
-    //g_httpHandler->open().wait();
-
-    vicinity->generateThingDescription();
-
-
-    //ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-    //std::cout << "Press ENTER to exit." << std::endl;
-
     return app.exec();
-/*
-    std::string line;
-    std::getline(std::cin, line);
-
-    on_shutdown();
-    return 0;
-*/
 }

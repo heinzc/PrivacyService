@@ -6,6 +6,8 @@
 
 #include "db_access.h"
 
+class QHttpServer;
+
 using namespace std;
 //using namespace web;
 //using namespace http;
@@ -43,6 +45,7 @@ class rest_handler
         //void handle_VICINITY_PUT_request(http_request message, std::vector<utility::string_t> path);
 
         //http_listener m_listener;
+        QHttpServer* m_pHttpServer;
 
         he_controller * m_pController;
 

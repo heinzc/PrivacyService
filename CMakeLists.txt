@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("PrivacyService" LANGUAGES CXX)
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 ## Use -std=c++11 as default.
 set(CMAKE_CXX_STANDARD 11)
 ## Disable C++ extensions
@@ -13,8 +13,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Require full C++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set (CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/third-party/lib/cmake;${CMAKE_PREFIX_PATH})
-message(STATUS "CMAKE Prefix: ${CMAKE_PREFIX_PATH}")
+#add third-party to cmake prefix
+set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_SOURCE_DIR}/third-party/lib/cmake)
 
 #QT Moc'ing
 set(CMAKE_AUTOMOC ON)
@@ -33,13 +33,13 @@ if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
 endif()
 
-find_package(OPENSSL  REQUIRED COMPONENTS  crypto)
-if(OPENSSL_FOUND)
-    message(STATUS "OPENSSL_INCLUDE_DIRS: ${OPENSSL_INCLUDE_DIR}")
-    message(STATUS "OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
-    message(STATUS "OPENSSL_VERSION: ${OPENSSL_VERSION}")
-    include_directories(${OPENSSL_INCLUDE_DIR})
-endif()
+#find_package(OPENSSL  REQUIRED COMPONENTS  crypto)
+#if(OPENSSL_FOUND)
+#    message(STATUS "OPENSSL_INCLUDE_DIRS: ${OPENSSL_INCLUDE_DIR}")
+#    message(STATUS "OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
+#    message(STATUS "OPENSSL_VERSION: ${OPENSSL_VERSION}")
+#    include_directories(${OPENSSL_INCLUDE_DIR})
+#endif()
 
 
 find_package(Qt5 COMPONENTS Core Network WebSockets REQUIRED)

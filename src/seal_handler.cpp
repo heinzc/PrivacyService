@@ -33,6 +33,7 @@ void seal_he_handler::initialize() {
 
     //print_parameters(m_pContext);
 
+
     generate_keys();
     
     //try to get saved keys from database. if there are none, use newly generated ones
