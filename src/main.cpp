@@ -1,8 +1,8 @@
-#include "../include/stdafx.h"
-#include "../include/rest_handler.h"
-#include "../include/seal_handler.h"
-#include "../include/he_controller.h"
-#include "../include/vicinity_handler.h"
+#include "stdafx.h"
+#include "rest_handler.h"
+#include "seal_handler.h"
+#include "he_controller.h"
+#include "vicinity_handler.h"
 
 #include <iostream>
 #include <QtCore>
@@ -23,11 +23,6 @@ int main(int argc, char* argv[])
     db_access * db = new db_access("service.db");
     controller.setDB_access(db);
 
-    // vicinity
-    //vicinity_handler * vicinity = new vicinity_handler();
-    //controller.setVICINITY_handler(vicinity);
-    //vicinity->initialize("config_adapters.json");
-
     // he
     he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
@@ -36,9 +31,11 @@ int main(int argc, char* argv[])
     // RESTful API
     rest_handler* restHandler = new rest_handler();
     controller.setREST_handler(restHandler);
-    restHandler->setup();
 
-    //vicinity->generateThingDescription();
+    // vicinity
+    vicinity_handler* vicinity = new vicinity_handler();
+    controller.setVICINITY_handler(vicinity);
+    vicinity->initialize("config_adapters.json");
 
     
     //debugging... to be moved into unittesting

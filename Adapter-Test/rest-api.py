@@ -16,7 +16,7 @@ def getvalue():
 def getvalue_bp(oid, pid):
     bp_num = random.uniform(96.3, 100.8)
     print(bp_num);
-    return jsonify({'body temperature': bp_num,'time': date_time})
+    return jsonify({'value': bp_num,'time': date_time})
 
 @app.route('/objects',methods = ['GET'])
 def thing_descriptor():

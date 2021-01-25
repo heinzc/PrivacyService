@@ -5,17 +5,24 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("PrivacyService" LANGUAGES CXX)
 
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ## Use -std=c++11 as default.
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 ## Disable C++ extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
 ## Require full C++ standard
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 #add third-party to cmake prefix
 set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_SOURCE_DIR}/third-party/lib/cmake)
 
+set (RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set (LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+set (ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+set (PDB_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
 #QT Moc'ing
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -25,7 +32,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 set(Boost_NO_BOOST_CMAKE ON)
 
-find_package(Boost REQUIRED COMPONENTS random system thread filesystem chrono atomic date_time regex unit_test_framework)
+find_package(Boost REQUIRED COMPONENTS chrono unit_test_framework)
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
     message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
@@ -53,6 +60,30 @@ find_package(Qt5HttpServer)
 
 find_package(SEAL 3.6 REQUIRED)
 
+# Download and unpack seal at configure time
+#configure_file(third-party/seal.CMakeLists.txt.in seal-download/CMakeLists.txt)
+#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+#  RESULT_VARIABLE result
+#  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+#if(result)
+#  message(FATAL_ERROR "CMake step for seal failed: ${result}")
+#endif()
+#execute_process(COMMAND ${CMAKE_COMMAND} --build .
+#  RESULT_VARIABLE result
+#  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+#if(result)
+#  message(FATAL_ERROR "Build step for seal failed: ${result}")
+#endif()
+#
+# Add seal directly to our build. 
+#add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/seal-src
+#                 ${CMAKE_CURRENT_BINARY_DIR}/seal-build
+#                  )
+#                 EXCLUDE_FROM_ALL)
+
+
+
+
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
@@ -77,10 +108,13 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 # include(...) for pulling in other CMake projects anyways.
 add_subdirectory(third-party/nlohmann_json)
 
+
+
+
+
 # Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.
 add_subdirectory(src)
 
-# TODO: Fügen Sie bei Bedarf Tests hinzu, und installieren Sie Ziele.
 #include our own unittests
-enable_testing()
-add_subdirectory(test)
+#temporarily disabled
+#add_subdirectory(test)

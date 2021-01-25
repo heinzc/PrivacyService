@@ -1,4 +1,4 @@
-file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
+#file(GLOB SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 set(SRC_FILES  rest_handler.cpp
             he_controller.cpp
             db_access.cpp
@@ -10,29 +10,20 @@ set(SRC_FILES  rest_handler.cpp
             #../third-party/sqlite/sqlite3.c
 )
 
-add_library(${PROJECT_NAME}_lib ${SRC_FILES})
-target_link_libraries(${PROJECT_NAME}_lib
+add_library(${PROJECT_NAME}_lib STATIC ${SRC_FILES})
+
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     nlohmann_json::nlohmann_json
     Qt5::Core
     Qt5::HttpServer
     #cpprest
     Boost::boost
-    #Boost::random
-    #Boost::system
-    #Boost::thread
-    #Boost::filesystem
     Boost::chrono
-    #Boost::atomic
-    #Boost::date_time
-    #Boost::regex
-    #OpenSSL::SSL
-    #OpenSSL::Crypto
     SEAL::seal
-    #crypto
-    #ssl
     unofficial::sqlite3::sqlite3
     #sqlite3
 )
+
 
 add_executable(${PROJECT_NAME} main.cpp)
 

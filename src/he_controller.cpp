@@ -1,8 +1,8 @@
-#include "../include/he_controller.h"
-#include "../include/he_handler.h"
-#include "../include/rest_handler.h"
-#include "../include/db_access.h"
-#include "../include/vicinity_handler.h"
+#include "he_controller.h"
+#include "he_handler.h"
+#include "rest_handler.h"
+#include "db_access.h"
+#include "vicinity_handler.h"
 
 he_controller::he_controller()
 {
