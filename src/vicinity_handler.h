@@ -12,7 +12,6 @@
 
 #include "stdafx.h"
 
-#include <nlohmann/json.hpp>
 
 #include "he_controller.h"
 

@@ -10,7 +10,7 @@ set(SRC_FILES  rest_handler.cpp
             #../third-party/sqlite/sqlite3.c
 )
 
-add_library(${PROJECT_NAME}_lib STATIC ${SRC_FILES})
+add_library( ${PROJECT_NAME}_lib OBJECT ${SRC_FILES} )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     nlohmann_json::nlohmann_json
@@ -25,6 +25,12 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC
 )
 
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable( ${PROJECT_NAME} main.cpp )
 
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+target_link_libraries(${PROJECT_NAME} 
+    ${PROJECT_NAME}_lib
+)
+
+
+#build the plugins
+add_subdirectory(mpc_plugin)

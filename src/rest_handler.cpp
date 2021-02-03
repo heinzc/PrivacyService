@@ -31,31 +31,31 @@ void rest_handler::setController(he_controller * controller) {
 }
 
 int rest_handler::setupRoutes() {
-    m_pHttpServer->route("/vicinity/objects", QHttpServerRequest::Method::GET, [=](const QHttpServerRequest& request) {
+    addRoute("/vicinity/objects", QHttpServerRequest::Method::GET, [=](const QHttpServerRequest& request) {
         return handle_VICINITY_GET_objects(request);
         });
 
-    m_pHttpServer->route("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::GET, [=](QString oid, QString pid, const QHttpServerRequest& request) {
+    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::GET, [=](QString oid, QString pid, const QHttpServerRequest& request) {
         return handle_VICINITY_GET_properties(oid, pid, request);
         });
 
-    m_pHttpServer->route("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString pid, const QHttpServerRequest& request) {
+    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString pid, const QHttpServerRequest& request) {
         return handle_VICINITY_PUT_properties(oid, pid, request);
         });
 
-    m_pHttpServer->route("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString aid, const QHttpServerRequest& request) {
+    addRoute("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString aid, const QHttpServerRequest& request) {
         return handle_VICINITY_POST_action(oid, aid, request);
         });
 
-    m_pHttpServer->route("/encrypt", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
+    addRoute(QString("/encrypt"), QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
         return handle_local_encrypt(request);
         });
 
-    m_pHttpServer->route("/aggregate", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
+    addRoute("/aggregate", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
         return handle_local_aggregate(request);
         });
 
-    m_pHttpServer->route("/decrypt", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
+    addRoute("/decrypt", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
         return handle_local_decrypt(request);
         });
 
@@ -106,6 +106,7 @@ QJsonDocument rest_handler::get_blocking(const QUrl& endpoint) {
 
     return QJsonDocument::fromJson(replyPayload);
 }
+
 
 
 //// A POST request
@@ -232,26 +233,11 @@ QJsonObject rest_handler::handle_VICINITY_GET_objects(const QHttpServerRequest& 
 
 
 QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pid, const QHttpServerRequest& request) {
-// TODO: sanitycheck for properties
-//        try {
-//        std::regex re("/vicinity/objects/(.+)/properties/(.+)");
-//        std::smatch match;
-//        if (std::regex_search(subject, match, re) && match.size() == 2) {
-//            oid = match.str(1);
-//            pid = match.str(2);
-//        } else {
-//            cout << "no match: " << match.size() << endl;
-//        }
-//        } catch (std::regex_error& e) {
-//        // Syntax error in the regular expression
-//        }        
+    // TODO: sanitycheck for properties
     qDebug() << "VICINITY Get Parameters!";
     qDebug() << oid << pid;
 
     return m_pController->getVICINITY_handler()->readProperty(oid, pid);
-        //string payload = m_pController->getVICINITY_handler()->readProperty(oid, pid);
-        //std::cout << "Read Property. Sending answer back." << std::endl;
-        //message.reply(status_codes::OK, payload);
 }
 
 

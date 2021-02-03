@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <functional>
+
 #include "stdafx.h"
 #include "he_controller.h"
 
@@ -13,6 +15,8 @@
 #include <QUrl>
 
 #include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
+#include "../third-party/qthttpserver/src/httpserver/qhttpserverrouterrule.h"
+
 
 using namespace std;
 
@@ -33,6 +37,11 @@ class rest_handler : public QObject
         QJsonDocument get_blocking(const QUrl& endpoint);
 
     protected:
+        template<typename ... Args>
+        bool addRoute(QString path, QHttpServerRequest::Method method, Args && ... args) {
+            return m_pHttpServer->route(path, method, std::forward<Args>(args) ...);
+        }
+
 
     private:
         int setupRoutes();
@@ -58,4 +67,6 @@ class rest_handler : public QObject
         QNetworkAccessManager* m_pNetManager;
 
         he_controller * m_pController;
+
+    friend class PrivacyPluginInterface;
 };

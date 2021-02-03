@@ -2,12 +2,16 @@
 
 #include <iostream>
 
+#include <QString>
+#include <QMap>
+
 using namespace std;
 
 class he_handler;
 class rest_handler;
 class db_access;
 class vicinity_handler;
+class PrivacyPluginInterface;
 
 class he_controller
 {
@@ -27,6 +31,9 @@ class he_controller
         void setVICINITY_handler(vicinity_handler *  handler);
         vicinity_handler * getVICINITY_handler();
 
+        void registerPrivacyPlugin(PrivacyPluginInterface* plugin);
+        PrivacyPluginInterface* getPrivacyPluginHandle(const QString& pluginName);
+
     protected:
 
     private:
@@ -34,4 +41,6 @@ class he_controller
         rest_handler * m_pREST_handler;
         db_access * m_pDB_access;
         vicinity_handler * m_pVICINITY_handler;
+
+        QMap<QString, PrivacyPluginInterface *> m_Plugins;
 };

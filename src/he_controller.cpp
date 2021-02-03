@@ -3,6 +3,7 @@
 #include "rest_handler.h"
 #include "db_access.h"
 #include "vicinity_handler.h"
+#include "PrivacyPluginInterface.h"
 
 he_controller::he_controller()
 {
@@ -11,6 +12,8 @@ he_controller::he_controller()
     m_pREST_handler = 0;
     m_pDB_access = 0;
     m_pVICINITY_handler = 0;
+
+    m_Plugins = QMap<QString, PrivacyPluginInterface*>();
 }
 
 he_controller::~he_controller()
@@ -18,6 +21,7 @@ he_controller::~he_controller()
     //dtor
     delete m_pHE_handler;
     delete m_pREST_handler;
+    delete m_pDB_access;
     delete m_pVICINITY_handler;
 }
 
@@ -56,3 +60,13 @@ vicinity_handler * he_controller::getVICINITY_handler() {
     return m_pVICINITY_handler;
 }
 
+void he_controller::registerPrivacyPlugin(PrivacyPluginInterface* plugin) {
+    m_Plugins.insert(plugin->pluginName(), plugin);
+    plugin->setController(this);
+    plugin->initialize();
+    qDebug() << "Plugin " << plugin->pluginName() << " successfully added.";
+}
+
+PrivacyPluginInterface* he_controller::getPrivacyPluginHandle(const QString& pluginName) {
+    return m_Plugins.value(pluginName);
+}
