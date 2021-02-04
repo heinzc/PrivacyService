@@ -1,5 +1,5 @@
 import datetime
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from random import random
 import random
 import json
@@ -17,6 +17,12 @@ def getvalue_bp(oid, pid):
     bp_num = random.uniform(96.3, 100.8)
     print(bp_num);
     return jsonify({'value': bp_num,'time': date_time})
+
+@app.route('/objects/<oid>/properties/<pid>',methods = ['PUT'])
+def putvalue_bp(oid, pid):
+    record = json.loads(request.data)
+    print(record);
+    return jsonify(record)
 
 @app.route('/objects',methods = ['GET'])
 def thing_descriptor():

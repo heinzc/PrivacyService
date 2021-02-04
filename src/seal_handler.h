@@ -1,34 +1,16 @@
 #pragma once
 
-#include <iostream>
 #include "he_handler.h"
 
 #include "he_controller.h"
 
 #include "seal/seal.h"
 
-#include <nlohmann/json.hpp>
-
-
-
-// nur zum test!
-//#include <algorithm>
-//#include <chrono>
-//#include <cstddef>
-//#include <fstream>
-//#include <iomanip>
-#include <iostream>
-//#include <limits>
-//#include <memory>
-//#include <mutex>
-//#include <numeric>
-//#include <random>
-#include <sstream>
 #include <string>
-//#include <thread>
-#include <vector>
+#include <utility>
 
-using namespace seal;
+#include <QString>
+
 
 class seal_he_handler : he_handler
 {
@@ -38,14 +20,14 @@ class seal_he_handler : he_handler
 
         void initialize();
 
-        QString encrypt_as_QString(double x, std::string pubKey = std::string());
+        QString encrypt_as_QString(double x, const QString& pkJson = QString());
 
         //int decrypt(std::string & ctxt);
-        double decrypt(QString& ctxt);
+        double decrypt(const QString& ctxt);
 
-        QString sum(QStringList & input, std::string pubKey = std::string());
+        QString sum(QStringList & input, const QString& pkJson = QString());
 
-        std::string getPublicKey();
+        QString getPublicKey();
 
     protected:
 
@@ -53,29 +35,28 @@ class seal_he_handler : he_handler
         size_t m_poly_modulus_degree; // Specific modulus
         double m_scale;
 
-        SEALContext * m_pContext = 0;
+        seal::SEALContext * m_pContext = 0;
         
-        EncryptionParameters m_pParms;
+        seal::EncryptionParameters m_pParms;
 
-        PublicKey m_PublicKey;
-        SecretKey m_SecretKey;
+        seal::PublicKey m_PublicKey;
+        seal::SecretKey m_SecretKey;
 
-        RelinKeys m_relin_keys;
-        GaloisKeys m_gal_keys;
+        seal::RelinKeys m_relin_keys;
+        seal::GaloisKeys m_gal_keys;
 
         void generate_keys();
 
         template <class T>
         std::string to_hexstring(T t, ios_base & (*f)(ios_base&));
 
-        //Ctxt encrypt(long x);
-        //NTL::ZZX decrypt(Ctxt & ctxt);
+        std::pair<seal::PublicKey, seal::EncryptionParameters> pubKeyParamsFromJson(const QString& pkJson);
         
-        void setPublicKey(const char* json);
-        void setPrivateKey(const char* json);
+        void setPublicKey(const QString& pk);
+        void setPrivateKey(const QString& sk);
         
-        std::string getSecretKey();
-        std::string getEncryptionParameters();
+        QString getSecretKey();
+        QString getEncryptionParameters();
 
 /*
 Helper function: Prints a vector of floating-point values.

@@ -13,6 +13,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUrl>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 #include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
 #include "../third-party/qthttpserver/src/httpserver/qhttpserverrouterrule.h"
@@ -36,6 +38,10 @@ class rest_handler : public QObject
 
         QJsonDocument get_blocking(const QUrl& endpoint);
 
+        QJsonDocument put_blocking(const QUrl& endpoint, const QJsonDocument& payload);
+
+        QJsonDocument post_blocking(const QUrl& endpoint, const QJsonDocument& payload);
+
     protected:
         template<typename ... Args>
         bool addRoute(QString path, QHttpServerRequest::Method method, Args && ... args) {
@@ -49,6 +55,8 @@ class rest_handler : public QObject
 
         //void produce_ctxt(string pt);
         //string encrypt_ptxt(string pt);
+        QJsonDocument extractJsonFromRequest(const QHttpServerRequest& request);
+
         double extract_double_from_request(const QHttpServerRequest& request);
         QString extract_ctxt_from_request(const QHttpServerRequest& request);
 

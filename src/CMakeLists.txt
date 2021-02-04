@@ -16,6 +16,7 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     nlohmann_json::nlohmann_json
     Qt5::Core
     Qt5::HttpServer
+    Qt5::Sql
     #cpprest
     Boost::boost
     Boost::chrono
@@ -24,6 +25,9 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     #sqlite3
 )
 
+#qt_import_plugins(${PROJECT_NAME}_lib
+#    INCLUDE_BY_TYPE sqldrivers Qt5::QSqlite
+#)
 
 add_executable( ${PROJECT_NAME} main.cpp )
 

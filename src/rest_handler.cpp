@@ -1,6 +1,5 @@
 #include "rest_handler.h"
 
-//#include "FHE.h"
 #include "he_handler.h"
 #include "vicinity_handler.h"
 
@@ -108,6 +107,50 @@ QJsonDocument rest_handler::get_blocking(const QUrl& endpoint) {
 }
 
 
+QJsonDocument rest_handler::put_blocking(const QUrl& endpoint, const QJsonDocument& payload) {
+    // disconnect first, so the reply buffer is not read by the slot
+    disconnect(m_pNetManager, SIGNAL(finished(QNetworkReply*)), nullptr, nullptr);
+
+    QNetworkRequest req(endpoint);
+    QScopedPointer<QNetworkReply> reply(m_pNetManager->put(req, payload.toJson()));
+
+    QTime timeout = QTime::currentTime().addSecs(10);
+    while (QTime::currentTime() < timeout && !reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Failure" << reply->errorString();
+    }
+
+    QByteArray replyPayload = reply->readAll();
+
+    return QJsonDocument::fromJson(replyPayload);
+}
+
+
+QJsonDocument rest_handler::post_blocking(const QUrl& endpoint, const QJsonDocument& payload) {
+    // disconnect first, so the reply buffer is not read by the slot
+    disconnect(m_pNetManager, SIGNAL(finished(QNetworkReply*)), nullptr, nullptr);
+
+    QNetworkRequest req(endpoint);
+    QScopedPointer<QNetworkReply> reply(m_pNetManager->post(req, payload.toJson()));
+
+    QTime timeout = QTime::currentTime().addSecs(10);
+    while (QTime::currentTime() < timeout && !reply->isFinished()) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+
+    if (reply->error() != QNetworkReply::NoError) {
+        qDebug() << "Failure" << reply->errorString();
+    }
+
+    QByteArray replyPayload = reply->readAll();
+
+    return QJsonDocument::fromJson(replyPayload);
+}
+
+
 
 //// A POST request
 ////
@@ -137,13 +180,9 @@ QJsonDocument rest_handler::get_blocking(const QUrl& endpoint) {
 //    return m_pController->getHE_handler()->encrypt_as_string(value);
 //}
 //
-double rest_handler::extract_double_from_request(const QHttpServerRequest& request) {
-    QString strValue;
-    double value;
 
-    // check content type and extract value accordingly
-    QVariant contentType = request.headers().value("Content-Type");
-    if (contentType.toString() == "application/json") {
+
+QJsonDocument rest_handler::extractJsonFromRequest(const QHttpServerRequest& request) {
         // read body as JSON
         QJsonDocument body_json = QJsonDocument::fromJson(request.body());
 
@@ -157,6 +196,19 @@ double rest_handler::extract_double_from_request(const QHttpServerRequest& reque
         if (!body_json.object().contains("value")) {
             throw std::invalid_argument("JSON does not contain a value");
         }
+
+        return body_json;
+}
+
+
+double rest_handler::extract_double_from_request(const QHttpServerRequest& request) {
+    QString strValue;
+    double value;
+
+    // check content type and extract value accordingly
+    QVariant contentType = request.headers().value("Content-Type");
+    if (contentType.toString() == "application/json") {
+        QJsonDocument body_json = extractJsonFromRequest(request);
 
         // at this point jsonValue contains the actual value
         QJsonValue jsonValue = body_json.object().value("value");
@@ -200,18 +252,7 @@ QString rest_handler::extract_ctxt_from_request(const QHttpServerRequest& reques
     QVariant contentType = request.headers().value("Content-Type");
     if (contentType.toString() == "application/json") {
         // read body as JSON
-        QJsonDocument body_json = QJsonDocument::fromJson(request.body());
-
-        // check if parsing succeeded
-        if (body_json.isNull()) {
-            throw std::invalid_argument("JSON parse error");
-        }
-        if (!body_json.isObject()) {
-            throw std::invalid_argument("invalid JSON provided");
-        }
-        if (!body_json.object().contains("value")) {
-            throw std::invalid_argument("JSON does not contain a value");
-        }
+        QJsonDocument body_json = extractJsonFromRequest(request);
 
         // at this point jsonValue contains the actual ctxt provided
         QJsonValue jsonValue = body_json.object().value("value");
@@ -225,9 +266,7 @@ QString rest_handler::extract_ctxt_from_request(const QHttpServerRequest& reques
 
 
 QJsonObject rest_handler::handle_VICINITY_GET_objects(const QHttpServerRequest& request) {
-    std::cout << "VICINITY Get Objects!" << std::endl;
-    //string td = m_pController->getVICINITY_handler()->generateThingDescription();
-    //message.reply(status_codes::OK, td);
+    qDebug() << "VICINITY Get Objects!";
     return m_pController->getVICINITY_handler()->getThingDescription();
 }
 
@@ -241,8 +280,26 @@ QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pi
 }
 
 
+QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pid, const QHttpServerRequest& request) {
+    qDebug() << "VICINITY Put Request!";
+    QJsonDocument doc;
+    try {
+        doc = extractJsonFromRequest(request);
+    }
+    catch (std::invalid_argument& e) {
+        QJsonObject error;
+        error.insert("error", e.what());
+        return error;
+    }
+
+    QJsonObject reply_payload = m_pController->getVICINITY_handler()->writeProperty(oid, pid, doc);
+
+    return reply_payload;
+}
+
+
 QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, const QHttpServerRequest& request) {
-    std::cout << "VICINITY Post Request!" << std::endl;
+    qDebug() << "VICINITY Post Request!";
         //string sourceOid = message.absolute_uri().query();
         ////remove "sourceOid=" from sourceOid (request parameter)
         //string toRemove = "sourceOid=";
@@ -256,14 +313,6 @@ QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, 
     return QJsonObject();
 }
 
-
-QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pid, const QHttpServerRequest& request) {
-    std::cout << "VICINITY Put Request!" << std::endl;
-    QByteArray payload = request.body();
-            
-    //string payload2 = m_pController->getVICINITY_handler()->writeProperty(oid, pid, payload);
-    return QJsonObject();
-}
 
 QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request) {
     QJsonObject result;
@@ -281,6 +330,7 @@ QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request
     result.insert("value", encrypted);
     return result;
 }
+
 
 QJsonObject rest_handler::handle_local_aggregate(const QHttpServerRequest& request) {
 //            std::cout << "Aggregate called locally." << std::endl;

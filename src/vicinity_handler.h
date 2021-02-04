@@ -34,10 +34,10 @@ class vicinity_handler : public QObject
         void generateThingDescription();
         QJsonObject getThingDescription();
 
-        QJsonObject readProperty(QString oid, QString pid);
+        QJsonObject readProperty(const QString& oid, const QString& pid);
         //needed for distributed aggregation -> get plain property of encrypted device
         //long readPlainProperty(std::string oid, std::string pid);
-        //std::string writeProperty(std::string oid, std::string aid, std::string payload);
+        QJsonObject writeProperty(const QString& oid, const QString& pid, const QJsonDocument& payload);
         //when an action request is received, this redirects it to the correct function
         //void postAction(std::string oid, std::string aid, std::string payload, std::string sourceOid);
         

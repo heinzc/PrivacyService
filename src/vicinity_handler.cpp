@@ -180,7 +180,7 @@ QJsonObject vicinity_handler::getThingDescription() {
 }
 
 
-QJsonObject vicinity_handler::readProperty(QString oid, QString pid) {
+QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pid) {
     qDebug() << "Read Property; Oid: " + oid + ", Pid: " + pid;
     QJsonObject obj; // return object
 
@@ -272,36 +272,87 @@ QJsonObject vicinity_handler::readProperty(QString oid, QString pid) {
 //        return;
 //    }
 //}
-//
-//string vicinity_handler::writeProperty(string oid, string pid, string payload) {
-//    using json = nlohmann::json; // for convenience
-//
-//    if(oid == m_ownOid) { //he service
-//        //which property?
-//        if(pid == "hasaccess") {
-//            //get requester id from payload
-//            std::cout << "payloadXX: " + payload << std::endl;
-//            json content;
-//            std::string requesterId = "";
-//            std::string destinationOid = "";
-//            try {
-//                content = json::parse(payload);
-//                requesterId = std::string(content["requester-id"]);
-//                destinationOid = std::string(content["destination-id"]);
-//                std::cout << "payloadXX: " + std::string(content["requester-id"]) << std::endl;
-//            } catch (...) {
-//                std::cout << "Error in writeProperty input payload!" << std::endl;
-//                return "";
-//            }
-//            //ask db, if requester has access and send result back
-//            if(m_pController->getDB_access()->hasAccessToData(requesterId.c_str(), destinationOid.c_str())) {
-//                return "{\"granted\":true}";
-//            }
-//            return "{\"granted\":false}";
-//        }
-//        return "";
-//    }
-//}
+
+
+QJsonObject vicinity_handler::writeProperty(const QString& oid, const QString& pid, const QJsonDocument& payload) {
+    qDebug() << "Write Property; Oid: " + oid + ", Pid: " + pid;
+    QJsonObject obj; // return object
+
+    if(oid == m_ownServiceOid) { //he service
+        //which property?
+        //if(pid == "hasaccess") {
+        //    //get requester id from payload
+        //    std::cout << "payloadXX: " + payload << std::endl;
+        //    json content;
+        //    std::string requesterId = "";
+        //    std::string destinationOid = "";
+        //    try {
+        //        content = json::parse(payload);
+        //        requesterId = std::string(content["requester-id"]);
+        //        destinationOid = std::string(content["destination-id"]);
+        //        std::cout << "payloadXX: " + std::string(content["requester-id"]) << std::endl;
+        //    } catch (...) {
+        //        std::cout << "Error in writeProperty input payload!" << std::endl;
+        //        return "";
+        //    }
+        //    //ask db, if requester has access and send result back
+        //    if(m_pController->getDB_access()->hasAccessToData(requesterId.c_str(), destinationOid.c_str())) {
+        //        return "{\"granted\":true}";
+        //    }
+        //    return "{\"granted\":false}";
+        //}
+        return obj;
+    }
+
+    // read property of attached adapter
+    // oid is compount of <adapterid>:<objectid>
+    QString adapterid, objectid;
+    QRegExp rx("(.+):(.+)_enc");
+
+    if (rx.exactMatch(oid)) {
+        QStringList matches = rx.capturedTexts(); // first entry is complete string
+        if (matches.size() == 3) {
+            adapterid = matches.at(1);
+            objectid = matches.at(2);
+        }
+        else {
+            obj.insert("error", "invalid oid");
+            return obj;
+        }
+    }
+    else {
+        obj.insert("error", "invalid oid");
+        return obj;
+    }
+
+    // at this point adapterid and objectid are valid
+    if (m_endpoints.contains(adapterid)) {
+        // decrypt payload data cleartext data
+        QJsonObject jsonBody = payload.object();
+
+        double cleartextValue = m_pController->getHE_handler()->decrypt(jsonBody.value("value").toString());
+
+        jsonBody["value"] = cleartextValue;
+
+        // we know the endpoint and where to send the data. extract and decrypt it before sending
+        QString adapterendpoint = m_endpoints.value(adapterid);
+
+        // send request to adapters /objects
+        QJsonDocument replyJson = m_pController->getREST_handler()->put_blocking(QUrl(adapterendpoint + "/objects/" + objectid + "/properties/" + pid), QJsonDocument(jsonBody));
+
+        // if the reply could not be parse, skip to next adapter
+        if (replyJson.isNull()) {
+            obj.insert("error", "error retrieving original property value");
+            return obj;
+        }
+
+        obj.insert("adapter-reply", replyJson.object());
+        return obj;
+    }
+
+    return obj;
+}
+
 
 QString vicinity_handler::getOwnOid() {
     return m_ownServiceOid;

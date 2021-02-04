@@ -1,12 +1,10 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
 #include "he_controller.h"
 
-#include "db_access.h"
+#include <iostream>
 
-#include <QtCore>
+#include <QString>
 
 class he_handler
 {
@@ -26,14 +24,14 @@ class he_handler
 
         virtual void initialize() = 0;
 
-        virtual QString encrypt_as_QString(double x, std::string pubKey = std::string() ) = 0;
+        virtual QString encrypt_as_QString(double x, const QString& pubKey = QString() ) = 0;
 
         //virtual int decrypt(std::string & ctxt) = 0;
-        virtual double decrypt(QString& ctxt) = 0;
+        virtual double decrypt(const QString& ctxt) = 0;
 
-        QString sum(QStringList& input, std::string pubKey = std::string());
+        virtual QString sum(QStringList& input, const QString& pubKey = QString()) = 0;
 
-        virtual std::string getPublicKey() = 0;
+        virtual QString getPublicKey() = 0;
 
     protected:
         he_controller * m_pController;

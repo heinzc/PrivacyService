@@ -49,7 +49,7 @@ endif()
 #endif()
 
 
-find_package(Qt5 COMPONENTS Core Network WebSockets REQUIRED)
+find_package(Qt5 COMPONENTS Core Network WebSockets Sql REQUIRED)
 if(Qt5_FOUND)
     message(STATUS "QT_DIR: ${Qt5_DIR}")
     message(STATUS "QT_VERSION: ${Qt5_VERSION}")
