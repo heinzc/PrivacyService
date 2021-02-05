@@ -11,7 +11,6 @@ set(SRC_FILES  rest_handler.cpp
 add_library( ${PROJECT_NAME}_lib OBJECT ${SRC_FILES} )
 
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC
-    nlohmann_json::nlohmann_json
     Qt5::Core
     Qt5::HttpServer
     Qt5::Sql

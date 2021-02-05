@@ -73,8 +73,6 @@ find_package(SEAL 3.6 REQUIRED)
 #                 EXCLUDE_FROM_ALL)
 
 
-
-
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
@@ -88,18 +86,9 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 # set(JSON_Install OFF CACHE INTERNAL "")
 
 
-# Don't use include(nlohmann_json/CMakeLists.txt) since that carries with it
-# unintended consequences that will break the build.  It's generally
-# discouraged (although not necessarily well documented as such) to use
-# include(...) for pulling in other CMake projects anyways.
-add_subdirectory(third-party/nlohmann_json)
-
-
-
-
-
 # Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.
 add_subdirectory(src)
+
 
 #include our own unittests
 #temporarily disabled
