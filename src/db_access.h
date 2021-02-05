@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../third-party/sqlite/sqlite3.h"
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -30,10 +29,12 @@ class db_access
         ////insert public key
         //bool insert_public_key(const char* id, const char* key);
         //bool insert_public_key(const char* id, std::string & key);
-        //
+        bool insert_public_key(const QString& id, const QString& pkJson);
+
         ////get public key, returns empty string if key is not in database!
         //std::string get_public_key(const char* id);
-        //
+        QString get_public_key(const QString& id);
+
         ////check if id is in Access table (check if id has access to decrypt and data)
         ////bool hasAccess(const char* id);
         //
@@ -48,25 +49,28 @@ class db_access
         //
         ////owners device, or trusted device
         //bool hasAccessToDecrypt(const char * id);
-        //
+        bool hasAccessToDecrypt(const QString& id);
+        
         ////check if data requester is allowed to data
         //bool hasAccessToData(const char * data_requester_oid, const char * destination_oid);
-        //
+        bool hasAccessToData(const QString& data_requester_oid, const QString& destination_oid);
+        
         ////get the corresponding privacy service oid of input oid
         //std::string getPrivacyService(const char * id);
-        //
-        ////clears the table
-        //void resetRandomShares();
-        //
-        ////has to be called after finished or aborted computation with the requester id (initiator oid)
-        //void deleteInitiatorRandomShares(const char * initiatorOid);
-        //
-        ////update (insert) share
-        //void updateShareRandomShares(const char * initiatorOid, const char * participantOid, int value);
-        //
-        ////returns true, if we received the request for the computation and the participant was inserted
-        //bool isAlreadyInsertedInRandomShares(const char * initiatorOid, const char * participantOid);
-        //
+        QString getPrivacyService(const QString& id);
+
+        //clears the table
+        void resetRandomShares();
+        
+        //has to be called after finished or aborted computation with the requester id (initiator oid)
+        void deleteInitiatorRandomShares(const QString& initiatorOid);
+        
+        //update (insert) share
+        void updateShareRandomShares(const QString& initiatorOid, const QString& participantOid, double value);
+        
+        //returns true, if we received the request for the computation and the participant was inserted
+        bool isAlreadyInsertedInRandomShares(const QString& initiatorOid, const QString& participantOid);
+        
         ////returns true if all shares received (also true, if there are no entries at all)
         //bool allRandomSharesReceived(const char * initiatorOid);
         //
@@ -103,19 +107,7 @@ class db_access
         //
         ////returns sum of received random shares of the aggregateion initiated by initiatorOid
         //int getRandomShareSum(const char* initiatorOid);
-        //
-        ////prints returned values of database //www.sqlite.org/quickstart.html
-        //static int callback(void* data, int argc, char** argv, char** azColName) {
-        //    int i;
-        //    fprintf(stderr, "%s: ", (const char*)data);
 
-        //    for (i = 0; i < argc; i++) {
-        //        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-        //    }
-
-        //    printf("\n");
-        //    return 0;
-        //}
         
     private:
         QString m_dbName;

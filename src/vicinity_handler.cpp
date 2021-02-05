@@ -2,8 +2,6 @@
 #include "rest_handler.h"
 #include "he_handler.h"
 
-//#include <cpprest/http_client.h>
-//#include <cpprest/json.h>
 
 #include <sstream>
 #include <utility>
@@ -11,7 +9,6 @@
 
 //#include <unistd.h> //usleep
 
-#include <boost/chrono.hpp>
 #include <QFile>
 #include <QDebug>
 #include <QJsonDocument>

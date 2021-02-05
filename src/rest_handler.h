@@ -3,9 +3,7 @@
 #include <iostream>
 #include <functional>
 
-#include "stdafx.h"
 #include "he_controller.h"
-
 #include "db_access.h"
 
 #include <QtCore>

@@ -6,8 +6,6 @@ set(SRC_FILES  rest_handler.cpp
             he_controller.cpp
             vicinity_handler.cpp
             base64.cpp
-            #../third-party/sqlite/shell.c
-            #../third-party/sqlite/sqlite3.c
 )
 
 add_library( ${PROJECT_NAME}_lib OBJECT ${SRC_FILES} )
@@ -17,12 +15,7 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC
     Qt5::Core
     Qt5::HttpServer
     Qt5::Sql
-    #cpprest
-    Boost::boost
-    Boost::chrono
     SEAL::seal
-    unofficial::sqlite3::sqlite3
-    #sqlite3
 )
 
 #qt_import_plugins(${PROJECT_NAME}_lib

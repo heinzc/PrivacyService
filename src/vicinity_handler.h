@@ -1,5 +1,7 @@
 #pragma once
 
+#include "he_controller.h"
+
 #include <iostream>
 #include <map>
 #include <set>
@@ -10,10 +12,6 @@
 #include <QMap>
 #include <QNetworkReply>
 
-#include "stdafx.h"
-
-
-#include "he_controller.h"
 
 using namespace std;
 

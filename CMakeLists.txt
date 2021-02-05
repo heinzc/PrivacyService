@@ -30,15 +30,6 @@ set(CMAKE_AUTOUIC ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-set(Boost_NO_BOOST_CMAKE ON)
-
-find_package(Boost REQUIRED COMPONENTS chrono unit_test_framework)
-if(Boost_FOUND)
-    message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")
-    message(STATUS "Boost_LIBRARIES: ${Boost_LIBRARIES}")
-    message(STATUS "Boost_VERSION: ${Boost_VERSION}")
-    include_directories(${Boost_INCLUDE_DIRS})
-endif()
 
 #find_package(OPENSSL  REQUIRED COMPONENTS  crypto)
 #if(OPENSSL_FOUND)
@@ -88,11 +79,6 @@ find_package(SEAL 3.6 REQUIRED)
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
 
-## include sqlite
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
-
-
-#include_directories(${CMAKE_SOURCE_DIR}/third-party/sqlite)
 
 # Typically you don't care so much for a third party library's tests to be
 # run from your own project's code.

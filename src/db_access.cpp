@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-#include "../third-party/sqlite/sqlite3.h"
 #include <stdlib.h>
 
 #include <QDebug>
@@ -29,7 +28,7 @@ db_access::db_access(QString dbName)
     }
 
     
-    //resetRandomShares();
+    resetRandomShares();
     //resetBlindedMeasurements();
 }
 
@@ -69,9 +68,9 @@ bool db_access::createTables() {
         << "CREATE TABLE IF NOT EXISTS PRIVACY_SERVICE(DEVICE_OID TEXT PRIMARY KEY, HE_SERVICE_OID TEXT)"
         << "CREATE TABLE IF NOT EXISTS AGGREGATION_TRUSTED_PARTIES(OID TEXT PRIMARY KEY)"
         << "CREATE TABLE IF NOT EXISTS AGGREGATION_PARTIES_WHO_TRUST_ME(OID TEXT PRIMARY KEY)" //do not insert own oid!
-        << "CREATE TABLE IF NOT EXISTS AGGREGATION_RANDOM_SHARES(INITIATOR_OID TEXT, PARTICIPANT_OID TEXT, RECEIVED INTEGER, SHARE INTEGER, PRIMARY KEY(INITIATOR_OID, PARTICIPANT_OID))"
+        << "CREATE TABLE IF NOT EXISTS AGGREGATION_RANDOM_SHARES(INITIATOR_OID TEXT, PARTICIPANT_OID TEXT, RECEIVED REAL, SHARE REAL, PRIMARY KEY(INITIATOR_OID, PARTICIPANT_OID))"
         << "CREATE TABLE IF NOT EXISTS AGGREGATION_TRUSTED_INITIATORS(OID TEXT PRIMARY KEY)"
-        << "CREATE TABLE IF NOT EXISTS AGGREGATION_BLINDED_MEASUREMENTS(PARTICIPANT_OID TEXT PRIMARY KEY, RECEIVED INTEGER, BLINDED_MEASUREMENT INTEGER)";
+        << "CREATE TABLE IF NOT EXISTS AGGREGATION_BLINDED_MEASUREMENTS(PARTICIPANT_OID TEXT PRIMARY KEY, RECEIVED REAL, BLINDED_MEASUREMENT REAL)";
 
     if (!m_db.isOpen()) {
         m_db.open();
@@ -88,67 +87,6 @@ bool db_access::createTables() {
     return true;
 }
 
-
-////to save own keys (public and private key) in database
-//bool db_access:: insert_own_key(const char* keytype, const char* value)
-//{
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "INSERT OR REPLACE INTO OWN_KEYS";
-//    sql.append(" (KEYTYPE,VALUE) VALUES (\'");
-//    sql.append(keytype);
-//    sql.append("\',\'");
-//    sql.append(value);
-//    sql.append("\');");  
-//    
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    sqlite3_close(db);
-//    printf(zErrMsg);
-//    cout << "Values posted" << endl;
-//    
-//	return true;
-//}
-//
-////to save own keys (public and private key) in database
-//bool db_access:: insert_own_key(const char* keytype, std::string & value)
-//{
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    sqlite3_stmt *stmt;
-//    sqlite3_prepare(db, "INSERT OR REPLACE INTO OWN_KEYS (KEYTYPE,VALUE) VALUES (?,?);",
-//                    -1,
-//                    &stmt,
-//                    0
-//    );
-//    
-//    std::string keyy = keytype;
-//    //bind params
-//    sqlite3_bind_text(stmt,
-//                      1,  //1st param
-//                      keyy.data(),
-//                      keyy.size(),
-//                      0
-//    );
-//    sqlite3_bind_text(stmt,
-//                      2, //2nd param
-//                      value.data(),
-//                      value.size(),
-//                      0
-//    );
-//    //execute statement
-//    sqlite3_step(stmt);
-//    //free
-//    sqlite3_finalize(stmt);
-//    
-//    sqlite3_close(db);
-//	return true;
-//}
 
 //to save own keys (public and private key) in database
 bool db_access::insert_own_key(const QString& keytype, const QString& value) {
@@ -172,35 +110,6 @@ bool db_access::insert_own_key(const QString& keytype, const QString& value) {
     return true;
 }
 
-////used to retrieve own keys (including private key) from the database
-//std::string db_access::get_own_key(const char* keytype)
-//{
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "select VALUE from OWN_KEYS where KEYTYPE = \'";
-//    sql.append(keytype);
-//    sql.append("\';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    std::string value = "";
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            value = results[i];
-//        }
-//    }
-//    if (rows * columns == 0) { //key not in database
-//        cout << "Keytype not found in database" << endl;
-//        return "";
-//    }
-//    return value;
-//}
 
 //used to retrieve own keys (including private key) from the database
 QString db_access::get_own_key(const QString& keytype)
@@ -224,88 +133,54 @@ QString db_access::get_own_key(const QString& keytype)
 
     return rec.value("VALUE").toString();
 }
-//
-////insert public key
-//bool db_access::insert_public_key(const char* id, const char* key)
-//{    
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "BEGIN IMMEDIATE TRANSACTION; INSERT OR REPLACE INTO PUBLIC_KEYS";
-//    sql.append(" (ID,PUBLICKEY) VALUES (\'");
-//    sql.append(id);
-//    sql.append("\',\'");
-//    sql.append(key);
-//    sql.append("\'); COMMIT TRANSACTION;");
-//    
-//    //std::cout << sql.c_str() << std::endl;
-//
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    sqlite3_close(db);
-//    printf(zErrMsg);
-//    cout << "Private key inserted in database" << endl;
-//    
-//	return true;
-//}
-//
-////insert public key
-//bool db_access::insert_public_key(const char* id, std::string & key)
-//{    
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "BEGIN IMMEDIATE TRANSACTION; INSERT OR REPLACE INTO PUBLIC_KEYS";
-//    sql.append(" (ID,PUBLICKEY) VALUES (\'");
-//    sql.append(id);
-//    sql.append("\',\'");
-//    sql.append(key);
-//    sql.append("\'); COMMIT TRANSACTION;");
-//    
-//    //std::cout << sql.c_str() << std::endl;
-//
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    sqlite3_close(db);
-//    printf(zErrMsg);
-//    cout << "Public key inserted in database" << endl;
-//    
-//	return true;
-//}
-//
-////get public key, returns empty string if key is not in database!
-//std::string db_access::get_public_key(const char * id)
-//{
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "select PUBLICKEY from PUBLIC_KEYS where ID = \'";
-//    sql.append(id);
-//    sql.append("\';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    std::string key = "";
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            key = results[i];
-//        }
-//    }
-//    if (rows * columns == 0) { //key not in database
-//        cout << "ID not found in database" << endl;
-//        return "";
-//    }
-//    
-//    return key;
-//}
-//
+
+
+//insert public key
+bool db_access::insert_public_key(const QString& id, const QString& pkJson) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("INSERT OR REPLACE INTO PUBLIC_KEYS (ID,PUBLICKEY) VALUES (:id, :pubkey);");
+    query.bindValue(":id", id);
+    query.bindValue(":pubkey", pkJson);
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    qDebug() << "inserting pubkey " << id << " successful";
+    return true;
+}
+
+
+//get public key, returns empty string if key is not in database!
+QString db_access::get_public_key(const QString& id) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT PUBLICKEY from PUBLIC_KEYS where ID = \'" + id + "\';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return QString();
+    }
+
+    QSqlRecord rec = query.record();
+
+    return rec.value("PUBLICKEY").toString();
+}
+
+
 ////device of owner of this service
 //bool db_access::isOwnDevice(const char * id)
 //{
@@ -358,169 +233,158 @@ QString db_access::get_own_key(const QString& keytype)
 //    }
 //    return output;
 //}
-//
-////owners device, or trusted device
-//bool db_access::hasAccessToDecrypt(const char * id)
-//{
-//    if(isOwnDevice(id)) {
-//        return true;
-//    }
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    //else, check if it is a foreign device with access to decrypt
-//    string sql = "select OID from FOREIGN_DEVICES_ACCESS_DECRYPT where OID = \'";
-//    sql.append(id);
-//    sql.append("\';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry //=> id found
-//        return true;
-//    }
-//    return false;
-//}
-//
-////check if data requester is allowed to data
-////only used so other parties can know, with whom we want to share data!
-//bool db_access::hasAccessToData(const char * data_requester_oid, const char * destination_oid)
-//{
-//    if(!isOwnDevice(destination_oid)) {
-//        return false; //destination is not our device!
-//    }
-//    if(isOwnDevice(data_requester_oid)) {
-//        return true;
-//    }
-//
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    //as it is not the owner, check if requester oid has access to this device
-//    string sql = "select OID from DATA_ACCESS where OWN_OID = \'";
-//    sql.append(destination_oid);
-//    sql.append("\' and ALLOWED_REQUESTER_OID = \'");
-//    sql.append(data_requester_oid);
-//    sql.append("\';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry //=> id found
-//        return true;
-//    }
-//    return false;
-//}
-//
-////get the corresponding privacy service oid of input oid
-//std::string db_access::getPrivacyService(const char * id)
-//{
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "select HE_SERVICE_OID from PRIVACY_SERVICE where DEVICE_OID = \'";
-//    sql.append(id);
-//    sql.append("\';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    std::string service = "";
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            service = results[i];
-//        }
-//    }
-//    if (rows * columns == 0) { //key not in database
-//        cout << "ID not found in database" << endl;
-//        return "";
-//    }
-//    return service;
-//}
-//
-////clears the table
-//void db_access::resetRandomShares() {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "BEGIN IMMEDIATE TRANSACTION; delete from AGGREGATION_RANDOM_SHARES; COMMIT TRANSACTION;";
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//
-//    sqlite3_close(db);
-//}
-//
-////has to be called after finished or aborted computation with the requester id (initiator oid)
-//void db_access::deleteInitiatorRandomShares(const char * initiatorOid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "BEGIN IMMEDIATE TRANSACTION; delete from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = \'";
-//    sql.append(initiatorOid);
-//    sql.append("\'; COMMIT TRANSACTION;");
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    
-//    sqlite3_close(db);
-//}
-//
-////update (insert) share
-//void db_access::updateShareRandomShares(const char * initiatorOid, const char * participantOid, int value) {
-//    std::cout << "Update Random Share Begin" << std::endl;
-//    string sql = string("BEGIN IMMEDIATE TRANSACTION; UPDATE AGGREGATION_RANDOM_SHARES SET RECEIVED = 1, SHARE = ") + std::to_string(value) + string(" WHERE INITIATOR_OID = '") + initiatorOid + string("' AND PARTICIPANT_OID = '") + participantOid + string("'; COMMIT TRANSACTION;");
-//    int rc = 0;
-//    do {
-//        sqlite3* db;
-//        char* zErrMsg = 0;
-//        rc = sqlite3_open(databaseName, &db);
-//        sqlite3_busy_timeout(db, 2000);
-//        
-//        if(rc != SQLITE_OK) {
-//            std::cout << "Problem when opening database." << std::endl;
-//        }
-//        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//        sqlite3_close(db);
-//        if(rc != SQLITE_OK){
-//            std::cout << std::string("SQLITE ERROR: ") + zErrMsg << std::endl;
-//        }
-//    } while(rc != SQLITE_OK);
-//    std::cout << "Update Random Share End" << std::endl;
-//}
-//
-////returns true, if we received the request for the computation and the participant was inserted
-//bool db_access::isAlreadyInsertedInRandomShares(const char * initiatorOid, const char * participantOid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select * from AGGREGATION_RANDOM_SHARES where PARTICIPANT_OID = '") + participantOid + string("' and INITIATOR_OID = '") + initiatorOid + string("';");
-//    //std::cout << "Is already inserted sql: " + sql << std::endl;
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means not inserted
-//        return false;
-//    }
-//    return true;
-//}
+
+
+//owners device, or trusted device
+bool db_access::hasAccessToDecrypt(const QString& id) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from FOREIGN_DEVICES_ACCESS_DECRYPT where OID = \'" + id + "\';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result (no first record), deny access
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    // if id was found, return true
+    return true;
+}
+
+
+//check if data requester is allowed to data
+//only used so other parties can know, with whom we want to share data!
+bool db_access::hasAccessToData(const QString& data_requester_oid, const QString& destination_oid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from DATA_ACCESS where OWN_OID = \'" + destination_oid + "\'and ALLOWED_REQUESTER_OID = \'" + data_requester_oid + "\';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result (no first record), deny access
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    // if id was found, return true
+    return true;
+}
+
+
+//get the corresponding privacy service oid of input oid
+QString db_access::getPrivacyService(const QString& id) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT HE_SERVICE_OID from PRIVACY_SERVICE where DEVICE_OID = \'" + id + "\';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return QString();
+    }
+
+    QSqlRecord rec = query.record();
+
+    return rec.value("PUBLICKEY").toString();
+}
+
+
+//clears the table
+void db_access::resetRandomShares() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("DELETE from AGGREGATION_RANDOM_SHARES;");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << "query not active: " << query.lastError().text();
+    }
+}
+
+
+//has to be called after finished or aborted computation with the requester id (initiator oid)
+void db_access::deleteInitiatorRandomShares(const QString& initiatorOid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("delete from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = \'" + initiatorOid + "\';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << "query not active: " << query.lastError().text();
+    }
+}
+
+
+//update (insert) share
+void db_access::updateShareRandomShares(const QString& initiatorOid, const QString& participantOid, double value) {
+    qDebug() << "Update Random Share Begin";
+
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("UPDATE AGGREGATION_RANDOM_SHARES SET RECEIVED = 1, SHARE = " + QString::number(value) + " WHERE INITIATOR_OID = '" + initiatorOid + "' AND PARTICIPANT_OID = '" + participantOid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << "query not active: " << query.lastError().text();
+    }
+
+    qDebug() << "Update Random Share End";
+}
+
+
+//returns true, if we received the request for the computation and the participant was inserted
+bool db_access::isAlreadyInsertedInRandomShares(const QString& initiatorOid, const QString& participantOid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT * from AGGREGATION_RANDOM_SHARES where PARTICIPANT_OID = '" + participantOid + "' and INITIATOR_OID = '" + initiatorOid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result (no first record), deny
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    // if id was found, return true
+    return true;
+}
+
 //
 ////returns true if all shares received
 //bool db_access::allRandomSharesReceived(const char * initiatorOid) {

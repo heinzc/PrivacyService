@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "rest_handler.h"
 #include "seal_handler.h"
 #include "he_controller.h"
