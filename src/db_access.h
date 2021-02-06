@@ -59,9 +59,6 @@ class db_access
         //std::string getPrivacyService(const char * id);
         QString getPrivacyService(const QString& id);
 
-        //clears the table
-        void resetRandomShares();
-        
         //has to be called after finished or aborted computation with the requester id (initiator oid)
         void deleteInitiatorRandomShares(const QString& initiatorOid);
         
@@ -71,42 +68,39 @@ class db_access
         //returns true, if we received the request for the computation and the participant was inserted
         bool isAlreadyInsertedInRandomShares(const QString& initiatorOid, const QString& participantOid);
         
-        ////returns true if all shares received (also true, if there are no entries at all)
-        //bool allRandomSharesReceived(const char * initiatorOid);
-        //
-        ////if oid trusts this service (-> would send share in aggregation)
-        //bool trustsMe(const char * oid);
-        //
-        ////if we allowed this oid to start distributed aggregation
-        //bool isTrustedInitiator(const char * oid);
+        //returns true if all shares received (also true, if there are no entries at all)
+        bool allRandomSharesReceived(const QString& initiatorOid);
+        
+        //if oid trusts this service (-> would send share in aggregation)
+        bool trustsMe(const QString& oid);
+        
+        //if we allowed this oid to start distributed aggregation
+        bool isTrustedInitiator(const QString& oid);
 
-        ////insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
-        ////participants can be inserted multiple times, will only be saves once in database (for this aggregation)
-        //void insertParticipantRandomShares(const char * initiatorOid, const char * participantOid);
-        //
-        ////insert participants of own aggregation into database
-        //void insertParticipantBlindedMeasurements(const char * participantOid);
-        //
-        ////update (insert) blinded measurement
-        //void updateBlindedMeasurement(const char * participantOid, int value);
-        //
-        ////if all shares received of own aggregation
-        //bool allBlindedMeasurementsReceived();
-        //
-        ////resets the complete table
-        //void resetBlindedMeasurements();
-        //
-        ////returns all trusted parties for distributed aggregation
-        //std::vector<std::string> getTrustedParties();
-        //
-        ////returns true, if oid is a trusted party
-        //bool isTrustedParty(const char* oid);
-        //
-        ////returns the sum of the blinded measurements -> the result of the aggregation
-        //int getBlindedMeasurementSum();
-        //
-        ////returns sum of received random shares of the aggregateion initiated by initiatorOid
-        //int getRandomShareSum(const char* initiatorOid);
+        //insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
+        //participants can be inserted multiple times, will only be saves once in database (for this aggregation)
+        bool insertParticipantRandomShares(const QString& initiatorOid, const QString& participantOid);
+        
+        //insert participants of own aggregation into database
+        bool insertParticipantBlindedMeasurements(const QString& participantOid);
+        
+        //update (insert) blinded measurement
+        bool updateBlindedMeasurement(const QString& participantOid, double value);
+        
+        //if all shares received of own aggregation
+        bool allBlindedMeasurementsReceived();
+        
+        //returns all trusted parties for distributed aggregation
+        QStringList getTrustedParties();
+        
+        //returns true, if oid is a trusted party
+        bool isTrustedParty(const QString& oid);
+        
+        //returns the sum of the blinded measurements -> the result of the aggregation
+        double getBlindedMeasurementSum();
+        
+        //returns sum of received random shares of the aggregateion initiated by initiatorOid
+        double getRandomShareSum(const QString& initiatorOid);
 
         
     private:
@@ -115,4 +109,10 @@ class db_access
 
         bool open();
         bool createTables();
+
+        //clears the table
+        bool resetRandomShares();
+
+        //resets the complete table
+        bool resetBlindedMeasurements();
 };

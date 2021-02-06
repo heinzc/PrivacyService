@@ -105,23 +105,6 @@ QString seal_he_handler::encrypt_as_QString(double x, const QString& pkJson) {
     return result;
 }
 
-/*
-int seal_he_handler::decrypt(std::string & ctxt) {
-    Decryptor decryptor(*m_pContext, m_SecretKey);
-
-    std::stringstream ss (base64_decode(ctxt));
-    Ciphertext val;
-    Plaintext plain;
-
-    val.load(*m_pContext, ss);
-
-    decryptor.decrypt(val, plain);
-
-    //std::cout << "Test to string plain: " << plain.to_string() << std::endl;
-
-    return std::stoi(plain.to_string(), nullptr, 16);
-}
-*/
 
 /**
  * @brief Decrypts the given ciphertext

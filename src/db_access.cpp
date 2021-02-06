@@ -29,7 +29,7 @@ db_access::db_access(QString dbName)
 
     
     resetRandomShares();
-    //resetBlindedMeasurements();
+    resetBlindedMeasurements();
 }
 
 //destructor
@@ -305,24 +305,6 @@ QString db_access::getPrivacyService(const QString& id) {
 }
 
 
-//clears the table
-void db_access::resetRandomShares() {
-    if (!m_db.isOpen()) {
-        m_db.open();
-    }
-
-    QSqlQuery query(m_db);
-
-    query.prepare("DELETE from AGGREGATION_RANDOM_SHARES;");
-    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
-    query.exec();
-
-    if (!query.isActive()) {
-        qDebug() << "query not active: " << query.lastError().text();
-    }
-}
-
-
 //has to be called after finished or aborted computation with the requester id (initiator oid)
 void db_access::deleteInitiatorRandomShares(const QString& initiatorOid) {
     if (!m_db.isOpen()) {
@@ -385,229 +367,303 @@ bool db_access::isAlreadyInsertedInRandomShares(const QString& initiatorOid, con
     return true;
 }
 
-//
-////returns true if all shares received
-//bool db_access::allRandomSharesReceived(const char * initiatorOid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select PARTICIPANT_OID from AGGREGATION_RANDOM_SHARES where RECEIVED = 0 and INITIATOR_OID = '") + initiatorOid + string("';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means, we received all shares of this aggregation
-//        return true;
-//    }
-//    return false;
-//}
-//
-////if oid trusts this service (-> would send share in aggregation
-//bool db_access::trustsMe(const char * oid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select OID from AGGREGATION_PARTIES_WHO_TRUST_ME where OID = '") + oid + string("';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means, this party does not trust us
-//        return false;
-//    }
-//    return true;
-//}
-//
-////if we allowed this oid to start distributed aggregation
-//bool db_access::isTrustedInitiator(const char * oid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select OID from AGGREGATION_TRUSTED_INITIATORS where OID = '") + oid + string("';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means, this party does not trust us
-//        return false;
-//    }
-//    return true;
-//}
-//
-////insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
-////participants can be inserted multiple times, will only be saves once in database (for this aggregation)
-//void db_access::insertParticipantRandomShares(const char * initiatorOid, const char * participantOid) {
-//    if(trustsMe(participantOid)) { //only participants who trust me send a share; in the trust me table, the own oid musn't be inserted!    
-//        sqlite3* db;
-//        char* zErrMsg = 0;
-//        int rc = sqlite3_open(databaseName, &db);
-//        sqlite3_busy_timeout(db, 2000);
-//        
-//        string sql = string("BEGIN IMMEDIATE TRANSACTION; INSERT OR REPLACE INTO AGGREGATION_RANDOM_SHARES (INITIATOR_OID, PARTICIPANT_OID, RECEIVED, SHARE) VALUES (\'") + initiatorOid + string("\',\'") + participantOid + string("\',0,0); COMMIT TRANSACTION;");
-//        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//        sqlite3_close(db);
-//        //cout << std::string("Error message random share: ") + zErrMsg << endl;
-//    }
-//}
-//
-////insert participants of own aggregation into database
-//void db_access::insertParticipantBlindedMeasurements(const char * participantOid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("BEGIN IMMEDIATE TRANSACTION; INSERT OR REPLACE INTO AGGREGATION_BLINDED_MEASUREMENTS (PARTICIPANT_OID, RECEIVED, BLINDED_MEASUREMENT) VALUES (\'") + participantOid + string("\',0,0); COMMIT TRANSACTION;");
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    
-//    sqlite3_close(db);
-//}
-//
-////update (insert) blinded measurement
-//void db_access::updateBlindedMeasurement(const char * participantOid, int value) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("BEGIN IMMEDIATE TRANSACTION; UPDATE AGGREGATION_BLINDED_MEASUREMENTS SET RECEIVED = 1, BLINDED_MEASUREMENT = ") + std::to_string(value) + string(" WHERE PARTICIPANT_OID = '") + participantOid + string("'; COMMIT TRANSACTION;");
-//    std::cout << std::string("SQL: ") + sql << std::endl;
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    
-//    sqlite3_close(db);
-//}
-//
-////if all shares received of own aggregation (also true, if there are no entries at all)
-//bool db_access::allBlindedMeasurementsReceived() {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select PARTICIPANT_OID from AGGREGATION_BLINDED_MEASUREMENTS where RECEIVED = 0';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means, we received all shares of this aggregation
-//        return true;
-//    }
-//    return false;
-//}
-//
-////resets the complete table
-//void db_access::resetBlindedMeasurements() {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "BEGIN IMMEDIATE TRANSACTION; delete from AGGREGATION_BLINDED_MEASUREMENTS; COMMIT TRANSACTION;";
-//    rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
-//    
-//    sqlite3_close(db);
-//}
-//
-////returns all trusted parties for distributed aggregation
-//std::vector<std::string> db_access::getTrustedParties() {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "select OID from AGGREGATION_TRUSTED_PARTIES;";
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    std::vector<std::string> trustedParties;
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            trustedParties.push_back(std::string(results[i]));
-//        }
-//    }
-//    return trustedParties;
-//}
-//
-////returns true, if oid is a trusted party
-//bool db_access::isTrustedParty(const char* oid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select OID from AGGREGATION_TRUSTED_PARTIES where OID = '") + oid + string("';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    if (rows == 0) { //0 means, we do not trust this party
-//        return false;
-//    }
-//    return true;
-//}
-//
-//
-////returns the sum of the blinded measurements -> the result of the aggregation
-//int db_access::getBlindedMeasurementSum() {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = "select BLINDED_MEASUREMENT from AGGREGATION_BLINDED_MEASUREMENTS;";
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    int sum = 0;
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            sum += atoi(results[i]);
-//        }
-//    }
-//    return sum;
-//}
-//
-////returns sum of received random shares of the aggregateion initiated by initiatorOid
-//int db_access::getRandomShareSum(const char* initiatorOid) {
-//    sqlite3* db;
-//    char* zErrMsg = 0;
-//    int rc = sqlite3_open(databaseName, &db);
-//    sqlite3_busy_timeout(db, 2000);
-//    
-//    string sql = string("select SHARE from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = '") + initiatorOid + string("';");
-//    
-//    char** results = NULL;
-//    int rows, columns;
-//    char* error;
-//    sqlite3_get_table(db, sql.c_str(), &results, &rows, &columns, &error);
-//    sqlite3_close(db);
-//    int sum = 0;
-//    if (rows > 0) { //because result[0] is column name, but rows does not include the column entry
-//        for (int i = 1; i <= rows * columns; i++) { //this is also why we need the offset of 1
-//            sum += atoi(results[i]);
-//        }
-//    }
-//    return sum;
-//}
+
+//returns true if all shares received
+bool db_access::allRandomSharesReceived(const QString& initiatorOid) {
+
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT PARTICIPANT_OID from AGGREGATION_RANDOM_SHARES where RECEIVED = 0 and INITIATOR_OID = '" + initiatorOid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result, there is no missing share
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return true;
+    }
+    // if something is still missing, return false
+    return false;
+}
+
+
+//if oid trusts this service (-> would send share in aggregation
+bool db_access::trustsMe(const QString& oid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from AGGREGATION_PARTIES_WHO_TRUST_ME where OID = '" + oid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result, this oid does not trust us
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+    // if something is still missing, return false
+    return true;
+}
+
+
+//if we allowed this oid to start distributed aggregation
+bool db_access::isTrustedInitiator(const QString& oid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from AGGREGATION_TRUSTED_INITIATORS where OID = '" + oid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result, this oid does not trust us
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+    // if something is still missing, return false
+    return true;
+}
+
+
+//insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
+//participants can be inserted multiple times, will only be saves once in database (for this aggregation)
+bool db_access::insertParticipantRandomShares(const QString& initiatorOid, const QString& participantOid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("INSERT OR REPLACE INTO AGGREGATION_RANDOM_SHARES (INITIATOR_OID, PARTICIPANT_OID, RECEIVED, SHARE) VALUES (\'" + initiatorOid + "\',\'" + participantOid + "\',0,0);");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+//insert participants of own aggregation into database
+bool db_access::insertParticipantBlindedMeasurements(const QString& participantOid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("INSERT OR REPLACE INTO AGGREGATION_BLINDED_MEASUREMENTS (PARTICIPANT_OID, RECEIVED, BLINDED_MEASUREMENT) VALUES (\'" + participantOid + "\',0,0);");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+//update (insert) blinded measurement
+bool db_access::updateBlindedMeasurement(const QString& participantOid, double value) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("UPDATE AGGREGATION_BLINDED_MEASUREMENTS SET RECEIVED = 1, BLINDED_MEASUREMENT = " + QString::number(value) + " WHERE PARTICIPANT_OID = '" + participantOid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+//if all shares received of own aggregation (also true, if there are no entries at all)
+bool db_access::allBlindedMeasurementsReceived() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT PARTICIPANT_OID from AGGREGATION_BLINDED_MEASUREMENTS where RECEIVED = 0';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result, this oid does not trust us
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return true;
+    }
+    // if something is still missing, return false
+    return false;
+}
+
+
+
+//returns all trusted parties for distributed aggregation
+QStringList db_access::getTrustedParties() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QStringList result;
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from AGGREGATION_TRUSTED_PARTIES;");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there was an error, show message and return empty list
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return result;
+    }
+
+    // otherwise populate the result list.
+    while (query.next()) {
+        result.push_back(query.value("OID").toString());
+    }
+
+    return result;
+}
+
+
+//returns true, if oid is a trusted party
+bool db_access::isTrustedParty(const QString& oid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT OID from AGGREGATION_TRUSTED_PARTIES where OID = '" + oid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there is no result, we do not trust this oid
+    if (!query.first()) {
+        qDebug() << query.lastError().text();
+        return false;
+    }
+    // if something is still missing, return false
+    return true;
+}
+
+
+//returns the sum of the blinded measurements -> the result of the aggregation
+double db_access::getBlindedMeasurementSum() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    double result = 0;
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT BLINDED_MEASUREMENT from AGGREGATION_BLINDED_MEASUREMENTS;");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there was an error, show message and return 0
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return result;
+    }
+
+    // otherwise populate the result list.
+    while (query.next()) {
+        result += query.value("BLINDED_MEASUREMENT").toDouble();
+    }
+
+    return result;
+}
+
+//returns sum of received random shares of the aggregateion initiated by initiatorOid
+double db_access::getRandomShareSum(const QString& initiatorOid) {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    double result = 0;
+    QSqlQuery query(m_db);
+
+    query.prepare("SELECT SHARE from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = '" + initiatorOid + "';");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    // if there was an error, show message and return 0
+    if (!query.isActive()) {
+        qDebug() << query.lastError().text();
+        return result;
+    }
+
+    // otherwise populate the result list.
+    while (query.next()) {
+        result += query.value("SHARE").toDouble();
+    }
+
+    return result;
+}
+
+
+//clears the table
+bool db_access::resetRandomShares() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("DELETE from AGGREGATION_RANDOM_SHARES;");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << "query not active: " << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+//resets the complete table
+bool db_access::resetBlindedMeasurements() {
+    if (!m_db.isOpen()) {
+        m_db.open();
+    }
+
+    QSqlQuery query(m_db);
+
+    query.prepare("DELETE from AGGREGATION_BLINDED_MEASUREMENTS;");
+    //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
+    query.exec();
+
+    if (!query.isActive()) {
+        qDebug() << "query not active: " << query.lastError().text();
+        return false;
+    }
+
+    return true;
+}
