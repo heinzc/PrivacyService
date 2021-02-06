@@ -1,6 +1,3 @@
-[submodule "third-party/SEAL"]
-	path = third-party/SEAL
-	url = https://github.com/microsoft/SEAL.git
 [submodule "third-party/qthttpserver"]
 	path = third-party/qthttpserver
 	url = https://github.com/qt-labs/qthttpserver.git

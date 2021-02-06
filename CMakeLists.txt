@@ -17,10 +17,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #add third-party to cmake prefix
 set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_SOURCE_DIR}/third-party/lib/cmake)
 
-set (RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set (LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
-set (ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
-set (PDB_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+set (RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set (LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set (ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set (PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 #QT Moc'ing
@@ -29,15 +29,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
-
-
-#find_package(OPENSSL  REQUIRED COMPONENTS  crypto)
-#if(OPENSSL_FOUND)
-#    message(STATUS "OPENSSL_INCLUDE_DIRS: ${OPENSSL_INCLUDE_DIR}")
-#    message(STATUS "OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
-#    message(STATUS "OPENSSL_VERSION: ${OPENSSL_VERSION}")
-#    include_directories(${OPENSSL_INCLUDE_DIR})
-#endif()
 
 
 find_package(Qt5 COMPONENTS Core Network WebSockets Sql REQUIRED)
@@ -49,41 +40,31 @@ endif()
 
 find_package(Qt5HttpServer)
 
-find_package(SEAL 3.6 REQUIRED)
 
 # Download and unpack seal at configure time
-#configure_file(third-party/seal.CMakeLists.txt.in seal-download/CMakeLists.txt)
-#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-#  RESULT_VARIABLE result
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
-#if(result)
-#  message(FATAL_ERROR "CMake step for seal failed: ${result}")
-#endif()
-#execute_process(COMMAND ${CMAKE_COMMAND} --build .
-#  RESULT_VARIABLE result
-#  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
-#if(result)
-#  message(FATAL_ERROR "Build step for seal failed: ${result}")
-#endif()
-#
+configure_file(third-party/seal.CMakeLists.txt.in seal-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+if(result)
+  message(FATAL_ERROR "CMake step for seal failed: ${result}")
+endif()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+  RESULT_VARIABLE result
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+if(result)
+  message(FATAL_ERROR "Build step for seal failed: ${result}")
+endif()
+
 # Add seal directly to our build. 
-#add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/seal-src
-#                 ${CMAKE_CURRENT_BINARY_DIR}/seal-build
-#                  )
-#                 EXCLUDE_FROM_ALL)
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/seal-src
+                 ${CMAKE_CURRENT_BINARY_DIR}/seal-build
+                  )
 
 
 ## include third-parties
 include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
 link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
-
-
-# Typically you don't care so much for a third party library's tests to be
-# run from your own project's code.
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-# If you only include this third party in PRIVATE source files, you do not
-# need to install it when your main project gets installed.
-# set(JSON_Install OFF CACHE INTERNAL "")
 
 
 # Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.
