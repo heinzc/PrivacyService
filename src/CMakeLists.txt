@@ -5,7 +5,6 @@ set(SRC_FILES  rest_handler.cpp
             seal_handler.cpp
             he_controller.cpp
             vicinity_handler.cpp
-            base64.cpp
 )
 
 add_library( ${PROJECT_NAME}_lib OBJECT ${SRC_FILES} )

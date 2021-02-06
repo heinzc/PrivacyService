@@ -5,7 +5,6 @@
 #include <iostream>
 #include <sstream>
 #include <cassert>
-#include "base64.h"
 
 #include <QtCore>
 #include <QJsonObject>
