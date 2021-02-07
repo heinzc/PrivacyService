@@ -1,12 +1,22 @@
-#include <boost/test/unit_test.hpp>
+#include <QtTest/QtTest>
 
-#include "../include/db_access.h"
+#include "../src/db_access.h"
 
-BOOST_AUTO_TEST_SUITE(db_access_test_suite)
+class TestDbAccess : public QObject
+{
+    Q_OBJECT
 
-    BOOST_AUTO_TEST_CASE(DummyTest)
-    {
-        BOOST_CHECK(true);
-    }
+private slots:
+    void testCreateTables();
+};
 
-BOOST_AUTO_TEST_SUITE_END()
+void TestDbAccess::testCreateTables()
+{
+    QString str = "Hello";
+    QVERIFY(str.toUpper() == "HELLO");
+    QCOMPARE(str.toUpper(), QString("HELLO"));
+}
+
+QTEST_MAIN(TestDbAccess)
+
+#include "test_db_access.moc"

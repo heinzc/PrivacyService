@@ -31,7 +31,7 @@ set(CMAKE_AUTOUIC ON)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 
-find_package(Qt5 COMPONENTS Core Network WebSockets Sql REQUIRED)
+find_package(Qt5 COMPONENTS Core Network WebSockets Sql Test REQUIRED)
 if(Qt5_FOUND)
     message(STATUS "QT_DIR: ${Qt5_DIR}")
     message(STATUS "QT_VERSION: ${Qt5_VERSION}")
@@ -72,5 +72,4 @@ add_subdirectory(src)
 
 
 #include our own unittests
-#temporarily disabled
-#add_subdirectory(test)
+add_subdirectory(test)

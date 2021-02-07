@@ -24,3 +24,5 @@ QJsonObject mpc_plugin::handleHueHue() {
 	value.insert("value", "huehue");
 	return value;
 }
+
+#include "moc_mpc_plugin.cpp"
