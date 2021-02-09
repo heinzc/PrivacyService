@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <QString>
+#include <QJsonObject>
 
 class he_handler
 {
@@ -28,6 +29,10 @@ class he_handler
 
         //virtual int decrypt(std::string & ctxt) = 0;
         virtual double decrypt(const QString& ctxt) = 0;
+
+        virtual QString recrypt(const QString& ctxt) = 0;
+
+        virtual void recrypt_for_svm(const QString& ctxt, int dimension, QJsonObject& retVal) = 0;
 
         virtual QString sum(QStringList& input, const QString& pubKey = QString()) = 0;
 

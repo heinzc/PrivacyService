@@ -42,7 +42,7 @@ int rest_handler::setupRoutes() {
         return handle_VICINITY_PUT_properties(oid, pid, request);
         });
 
-    addRoute("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString aid, const QHttpServerRequest& request) {
+    addRoute("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::POST, [=](QString oid, QString aid, const QHttpServerRequest& request) {
         return handle_VICINITY_POST_action(oid, aid, request);
         });
 
@@ -193,9 +193,9 @@ QJsonDocument rest_handler::extractJsonFromRequest(const QHttpServerRequest& req
         if (!body_json.isObject()) {
             throw std::invalid_argument("invalid JSON provided");
         }
-        if (!body_json.object().contains("value")) {
-            throw std::invalid_argument("JSON does not contain a value");
-        }
+        //if (!body_json.object().contains("value")) {
+        //    throw std::invalid_argument("JSON does not contain a value");
+        //}
 
         return body_json;
 }
@@ -300,16 +300,23 @@ QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pi
 
 QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, const QHttpServerRequest& request) {
     qDebug() << "VICINITY Post Request!";
-        //string sourceOid = message.absolute_uri().query();
-        ////remove "sourceOid=" from sourceOid (request parameter)
-        //string toRemove = "sourceOid=";
-        //std::string::size_type i = sourceOid.find(toRemove);
-        //if (i != std::string::npos) sourceOid.erase(i, toRemove.length());
-        //string oid = path[2];
-        //string aid = path.at(1);
-        //string payload = message.extract_string().get(); //can only be extracted once!
-        //message.reply(status_codes::OK, "{\"status\":\"running\"}");
-        //m_pController->getVICINITY_handler()->postAction(oid, aid, payload, sourceOid);
+    qDebug() << "oid: " << oid << ", aid: " << aid;
+    qDebug() << "headers: " << request.headers();
+    qDebug() << "body: " << request.body();
+    qDebug() << request.query().toString();
+    qDebug() << request.url();
+
+    //string sourceOid = message.absolute_uri().query();
+    ////remove "sourceOid=" from sourceOid (request parameter)
+    //string toRemove = "sourceOid=";
+    //std::string::size_type i = sourceOid.find(toRemove);
+    //if (i != std::string::npos) sourceOid.erase(i, toRemove.length());
+    //string oid = path[2];
+    //string aid = path.at(1);
+    //string payload = message.extract_string().get(); //can only be extracted once!
+    //message.reply(status_codes::OK, "{\"status\":\"running\"}");
+    //m_pController->getVICINITY_handler()->postAction(oid, aid, payload, sourceOid);
+
     return QJsonObject();
 }
 

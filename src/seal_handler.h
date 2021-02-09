@@ -10,12 +10,13 @@
 #include <utility>
 
 #include <QString>
+#include <QJsonObject>
 
 
 class seal_he_handler : he_handler
 {
     public:
-        seal_he_handler(size_t poly_modulus_degree = 8192);
+        seal_he_handler(size_t poly_modulus_degree = 16384);
         ~seal_he_handler();
 
         void initialize();
@@ -24,6 +25,10 @@ class seal_he_handler : he_handler
 
         //int decrypt(std::string & ctxt);
         double decrypt(const QString& ctxt);
+
+        QString recrypt(const QString& ctxt);
+
+        void recrypt_for_svm(const QString& ctxt, int dimension, QJsonObject& retVal);
 
         QString sum(QStringList & input, const QString& pkJson = QString());
 
@@ -57,6 +62,9 @@ class seal_he_handler : he_handler
         
         QString getSecretKey();
         QString getEncryptionParameters();
+
+        void StringToCipher(const QString& cipher, seal::Ciphertext& retVal, seal::SEALContext* useContext = 0);
+        QString cipherToString(const seal::Ciphertext& cipher);
 
 /*
 Helper function: Prints a vector of floating-point values.
@@ -105,5 +113,28 @@ Helper function: Prints a vector of floating-point values.
             Restore the old std::cout formatting.
             */
             std::cout.copyfmt(old_fmt);
+        }
+
+
+        // split vector for SVM algorithm
+        inline std::vector<double> split_to_long(std::vector<double>& in, int dimension)
+        {
+            std::vector<double> vec;
+
+            for (int i = 0; i < dimension; i++)
+            {
+                vec.push_back(in[i * dimension]);
+            }
+
+            std::vector<double> result;
+
+            for (int i = 0; i < dimension; i++)
+            {
+                for (int j = 0; j < dimension; j++)
+                {
+                    result.push_back(vec[j]);
+                }
+            }
+            return result;
         }
 };

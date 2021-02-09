@@ -34,8 +34,8 @@ seal_he_handler::~seal_he_handler() {
 void seal_he_handler::initialize() {
     
     m_pParms.set_poly_modulus_degree(m_poly_modulus_degree);
-    m_pParms.set_coeff_modulus(CoeffModulus::Create(m_poly_modulus_degree, { 60, 40, 40, 60 }));
-    m_scale = pow(2.0, 40);
+    m_pParms.set_coeff_modulus(CoeffModulus::Create(m_poly_modulus_degree, { 60, 60, 60, 60, 60, 60 }));
+    m_scale = pow(2.0, 60);
 //    m_pParms.set_plain_modulus(8192); //change this, if your own encrypted values can be larger than this!
 
     m_pContext = new SEALContext(m_pParms);
@@ -125,6 +125,73 @@ double seal_he_handler::decrypt(const QString& ctxt) {
     encoder.decode(plain, result);
 
     return result.at(0);
+}
+
+/**
+ * @brief Recrypt the given ciphertext, refreshing its error term
+ * @param ctxt input ciphertext with error
+ * @return fresh encryption of the given ciphertext
+*/
+QString seal_he_handler::recrypt(const QString& ctxt) {
+    CKKSEncoder encoder(*m_pContext);
+    Encryptor encryptor(*m_pContext, m_PublicKey);
+    Decryptor decryptor(*m_pContext, m_SecretKey);
+
+    Ciphertext old_cipher;
+    StringToCipher(ctxt, old_cipher, m_pContext);
+
+    Plaintext old_plain;
+    decryptor.decrypt(old_cipher, old_plain);
+
+    vector<double> decoded;
+    encoder.decode(old_plain, decoded);
+
+    Plaintext return_plain;
+
+    encoder.encode(decoded, m_scale, return_plain);
+
+    Ciphertext return_encrypted;
+    encryptor.encrypt(return_plain, return_encrypted);
+
+    return cipherToString(return_encrypted);
+}
+
+/**
+ * @brief Recrypt the given ciphertext and the given dimension for the SVM algorithm
+ * @param ctxt input ciphertext with error, corresponding to the original split vector
+ * @param dimension dimension for the split
+ * @param retVal return jsonObject. Will contain "split_vector" and "long_vector" after call to this method
+*/
+void seal_he_handler::recrypt_for_svm(const QString& ctxt, int dimension, QJsonObject& retVal) {
+    CKKSEncoder encoder(*m_pContext);
+    Encryptor encryptor(*m_pContext, m_PublicKey);
+    Decryptor decryptor(*m_pContext, m_SecretKey);
+    
+    Ciphertext old_cipher;
+    StringToCipher(ctxt, old_cipher, m_pContext);
+
+    Plaintext old_plain;
+    decryptor.decrypt(old_cipher, old_plain);
+        
+    vector<double> decoded;
+    encoder.decode(old_plain, decoded);
+
+    // long vector
+    vector<double> new_long = split_to_long(decoded, dimension);
+    Plaintext p_new_long;
+    Ciphertext e_new_long;
+    encoder.encode(new_long, m_scale, p_new_long);
+    encryptor.encrypt(p_new_long, e_new_long);
+
+    // split vector
+    Plaintext p_new_split;
+    Ciphertext e_new_split;
+    encoder.encode(decoded, m_scale, p_new_split);
+    encryptor.encrypt(p_new_split, e_new_split);
+    
+
+    retVal.insert("vector_long", cipherToString(e_new_long));
+    retVal.insert("vector_split", cipherToString(e_new_split));
 }
 
 /**
@@ -268,6 +335,30 @@ QString seal_he_handler::getEncryptionParameters() {
 
     return params;
 }
+
+
+void seal_he_handler::StringToCipher(const QString& cipher, seal::Ciphertext& retVal, seal::SEALContext* useContext) {
+    if (useContext == 0) {
+        useContext = m_pContext;
+    }
+
+    stringstream ss(QByteArray::fromBase64(cipher.toUtf8()).toStdString());
+
+    retVal.load(*useContext, ss);
+}
+
+
+QString seal_he_handler::cipherToString(const seal::Ciphertext& cipher) {
+    stringstream ss;
+    cipher.save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    QString result(b.toBase64());
+
+    return result;
+}
+
+
 
 /**
  * @brief Setup Method to generate a new keypair.

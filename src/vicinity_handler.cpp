@@ -273,31 +273,40 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
 
 QJsonObject vicinity_handler::writeProperty(const QString& oid, const QString& pid, const QJsonDocument& payload) {
     qDebug() << "Write Property; Oid: " + oid + ", Pid: " + pid;
+    QJsonObject jsonBody = payload.object();
+
     QJsonObject obj; // return object
 
     if(oid == m_ownServiceOid) { //he service
-        //which property?
-        //if(pid == "hasaccess") {
-        //    //get requester id from payload
-        //    std::cout << "payloadXX: " + payload << std::endl;
-        //    json content;
-        //    std::string requesterId = "";
-        //    std::string destinationOid = "";
-        //    try {
-        //        content = json::parse(payload);
-        //        requesterId = std::string(content["requester-id"]);
-        //        destinationOid = std::string(content["destination-id"]);
-        //        std::cout << "payloadXX: " + std::string(content["requester-id"]) << std::endl;
-        //    } catch (...) {
-        //        std::cout << "Error in writeProperty input payload!" << std::endl;
-        //        return "";
-        //    }
-        //    //ask db, if requester has access and send result back
-        //    if(m_pController->getDB_access()->hasAccessToData(requesterId.c_str(), destinationOid.c_str())) {
-        //        return "{\"granted\":true}";
-        //    }
-        //    return "{\"granted\":false}";
-        //}
+        if (pid == "recrypt") {
+            // decrypt payload data cleartext data
+            QString recrypted = m_pController->getHE_handler()->recrypt(jsonBody.value("ciphertext").toString());
+
+            obj.insert("value", recrypted);
+
+            return obj;
+        }
+        else if (pid == "recrypt_svm") {
+            m_pController->getHE_handler()->recrypt_for_svm(jsonBody.value("ciphertext").toString(), jsonBody.value("dimension").toInt(), obj);
+
+            return obj;
+        } 
+        else if (pid == "hasaccess") {  
+            // get requester id from payload
+            QString requesterId = jsonBody.value("requester-id").toString();
+            QString destinationOid = jsonBody.value("destination-id").toString(); 
+
+            //ask db, if requester has access and send result back
+            bool access_granted = m_pController->getDB_access()->hasAccessToData(requesterId, destinationOid);
+
+            obj.insert("granted", access_granted);
+
+            return obj;
+        }
+
+        obj.insert("error", true);
+        obj.insert("error-msg", "matching Property not found");
+
         return obj;
     }
 
@@ -325,8 +334,6 @@ QJsonObject vicinity_handler::writeProperty(const QString& oid, const QString& p
     // at this point adapterid and objectid are valid
     if (m_endpoints.contains(adapterid)) {
         // decrypt payload data cleartext data
-        QJsonObject jsonBody = payload.object();
-
         double cleartextValue = m_pController->getHE_handler()->decrypt(jsonBody.value("value").toString());
 
         jsonBody["value"] = cleartextValue;

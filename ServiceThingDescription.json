@@ -86,6 +86,76 @@
                             ]
                         }
                     }
+                },
+				{
+                    "pid":"recrypt_svm",
+                    "monitors" : "adapters:Visibility",
+                    "write_link": {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "input": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "dimension",
+                                    "schema": {
+                                        "type": "integer"
+                                    }
+                                },
+                                {
+                                    "name": "ciphertext",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ]
+                        },
+                        "output": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "vector_split",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                },
+								{
+                                    "name": "vector_long",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+								{
+                    "pid":"recrypt",
+                    "monitors" : "adapters:Visibility",
+                    "write_link": {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "input": {
+                            "type": "object",
+                            "field": [
+                                {
+                                    "name": "ciphertext",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ]
+                        },
+                        "output": {
+                            "type": "object",
+                            "field": [
+								{
+                                    "name": "value",
+                                    "schema": {
+                                        "type": "string"
+                                    }
+                                }
+                            ]
+                        }
+                    }
                 }
             ],
             "actions": [
@@ -93,7 +163,7 @@
                 "aid": "decrypt",
                 "affects": "adapters:LightColor",
                 "write_link": {
-                    "href": "/decryptaction/{oid}",
+                    "href": "/objects/{oid}/actions/{aid}",
                     "input": {
                         "type": "object",
                         "field": [
@@ -123,7 +193,7 @@
                 "affects": "adapters:Visibility",
                 "write_link":
                 {
-                    "href":"/aggregationaction/{oid}",
+                    "href":"/objects/{oid}/actions/{aid}",
                     "input":
                     {
                         "field":
@@ -181,7 +251,7 @@
                 "affects": "adapters:Visibility",
                 "write_link":
                 {
-                    "href":"/participateinaggregationaction/{oid}",
+                    "href":"/objects/{oid}/actions/{aid}",
                     "input":
                     {
                         "field":
@@ -239,7 +309,7 @@
                 "affects": "adapters:Visibility",
                 "write_link":
                 {
-                    "href":"/randomshareaction/{oid}",
+                    "href":"/objects/{oid}/actions/{aid}",
                     "input":
                     {
                         "field":
