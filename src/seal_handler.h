@@ -34,6 +34,14 @@ class seal_he_handler : he_handler
 
         QString getPublicKey();
 
+        QString getEncryptionParameters();
+
+        QString getRelinKeys();
+        void getRelinKeys(QString& relinKeys);
+
+        QString getGaloisKeys();
+        void getGaloisKeys(QString& galoisKeys);
+
     protected:
 
     private:
@@ -44,16 +52,18 @@ class seal_he_handler : he_handler
         
         seal::EncryptionParameters m_pParms;
 
-        seal::PublicKey m_PublicKey;
         seal::SecretKey m_SecretKey;
 
+        seal::PublicKey m_PublicKey;
+        seal::Serializable<seal::PublicKey> * m_serPubKey = 0;
+
         seal::RelinKeys m_relin_keys;
+        seal::Serializable<seal::RelinKeys> * m_serRelinKeys = 0;
+
         seal::GaloisKeys m_gal_keys;
+        seal::Serializable<seal::GaloisKeys> * m_serGalKeys = 0;
 
         void generate_keys();
-
-        template <class T>
-        std::string to_hexstring(T t, ios_base & (*f)(ios_base&));
 
         std::pair<seal::PublicKey, seal::EncryptionParameters> pubKeyParamsFromJson(const QString& pkJson);
         
@@ -61,10 +71,13 @@ class seal_he_handler : he_handler
         void setPrivateKey(const QString& sk);
         
         QString getSecretKey();
-        QString getEncryptionParameters();
 
         void StringToCipher(const QString& cipher, seal::Ciphertext& retVal, seal::SEALContext* useContext = 0);
         QString cipherToString(const seal::Ciphertext& cipher);
+        QString cipherToString(const seal::Serializable<seal::Ciphertext>& serCipher);
+
+        template <class T>
+        std::string to_hexstring(T t, ios_base& (*f)(ios_base&));
 
 /*
 Helper function: Prints a vector of floating-point values.

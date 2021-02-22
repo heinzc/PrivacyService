@@ -88,20 +88,12 @@ QString seal_he_handler::encrypt_as_QString(double x, const QString& pkJson) {
     
     CKKSEncoder encoder(*useContext);
     Plaintext x_plain;
-
     encoder.encode(x, m_scale, x_plain);
 
     Encryptor encryptor(*useContext, useKey);
-    Ciphertext x_encrypted;
-    encryptor.encrypt(x_plain, x_encrypted);
 
-    std::stringstream ss;
-	x_encrypted.save(ss);
-
-    QByteArray b = QByteArray::fromStdString(ss.str());
-    QString result(b.toBase64());
-
-    return result;
+    // return a seedable object, since we will never directly operate on a qstring
+    return cipherToString(encryptor.encrypt(x_plain));
 }
 
 
@@ -147,13 +139,9 @@ QString seal_he_handler::recrypt(const QString& ctxt) {
     encoder.decode(old_plain, decoded);
 
     Plaintext return_plain;
-
     encoder.encode(decoded, m_scale, return_plain);
 
-    Ciphertext return_encrypted;
-    encryptor.encrypt(return_plain, return_encrypted);
-
-    return cipherToString(return_encrypted);
+    return cipherToString(encryptor.encrypt(return_plain));
 }
 
 /**
@@ -179,19 +167,15 @@ void seal_he_handler::recrypt_for_svm(const QString& ctxt, int dimension, QJsonO
     // long vector
     vector<double> new_long = split_to_long(decoded, dimension);
     Plaintext p_new_long;
-    Ciphertext e_new_long;
     encoder.encode(new_long, m_scale, p_new_long);
-    encryptor.encrypt(p_new_long, e_new_long);
+    // using the seedable objects, because we want to send them over the network, not use them here anymore.
+    retVal.insert("vector_long", cipherToString(encryptor.encrypt(p_new_long)));
 
     // split vector
     Plaintext p_new_split;
-    Ciphertext e_new_split;
     encoder.encode(decoded, m_scale, p_new_split);
-    encryptor.encrypt(p_new_split, e_new_split);
-    
-
-    retVal.insert("vector_long", cipherToString(e_new_long));
-    retVal.insert("vector_split", cipherToString(e_new_split));
+    // using the seedable objects, because we want to send them over the network, not use them here anymore.
+    retVal.insert("vector_split", cipherToString(encryptor.encrypt(p_new_split)));
 }
 
 /**
@@ -239,13 +223,7 @@ QString seal_he_handler::sum(QStringList& input, const QString& pkJson) {
         evaluator.add_inplace(sum, val);
     }
 
-    stringstream ss;
-    sum.save(ss);
-
-    QByteArray b = QByteArray::fromStdString(ss.str());
-    QString result(b.toBase64());
-
-    return result;
+    return cipherToString(sum);
 }
 
 
@@ -292,7 +270,7 @@ pair<PublicKey, EncryptionParameters> seal_he_handler::pubKeyParamsFromJson(cons
 */
 QString seal_he_handler::getPublicKey() {
     stringstream ss;
-    m_PublicKey.save(ss);
+    m_serPubKey->save(ss);
 
     QByteArray b = QByteArray::fromStdString(ss.str());
     QString key(b.toBase64());
@@ -305,20 +283,6 @@ QString seal_he_handler::getPublicKey() {
     
     QJsonDocument returnDoc(keyJson);
     return returnDoc.toJson();
-}
-
-/**
- * @brief Get the local Secret Key. This is only used to stored it in the local DB and not accessible from outside.
- * @return The Secret Key
-*/
-QString seal_he_handler::getSecretKey() {
-    std::stringstream ss;
-    m_SecretKey.save(ss);
-
-    QByteArray b = QByteArray::fromStdString(ss.str());
-    QString key(b.toBase64());
-
-    return key;
 }
 
 /**
@@ -337,7 +301,63 @@ QString seal_he_handler::getEncryptionParameters() {
 }
 
 
-void seal_he_handler::StringToCipher(const QString& cipher, seal::Ciphertext& retVal, seal::SEALContext* useContext) {
+QString seal_he_handler::getRelinKeys() {
+    std::stringstream ss;
+    //m_pContext->last_context_data()->parms().save(ss);
+    m_serRelinKeys->save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+
+    return QString(b.toBase64());
+}
+
+
+void seal_he_handler::getRelinKeys(QString& relinKeys) {
+    std::stringstream ss;
+    //m_pContext->last_context_data()->parms().save(ss);
+    m_serRelinKeys->save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    relinKeys = QString(b.toBase64());
+}
+
+
+QString seal_he_handler::getGaloisKeys() {
+    std::stringstream ss;
+    //m_pContext->last_context_data()->parms().save(ss);
+    m_serGalKeys->save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    return QString(b.toBase64());
+}
+
+
+void seal_he_handler::getGaloisKeys(QString& galoisKeys) {
+    std::stringstream ss;
+    //m_pContext->last_context_data()->parms().save(ss);
+    m_pParms.save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    galoisKeys = QString(b.toBase64());
+}
+
+
+/**
+ * @brief Get the local Secret Key. This is only used to stored it in the local DB and not accessible from outside.
+ * @return The Secret Key
+*/
+QString seal_he_handler::getSecretKey() {
+    std::stringstream ss;
+    m_SecretKey.save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    QString key(b.toBase64());
+
+    return key;
+}
+
+
+void seal_he_handler::StringToCipher(const QString& cipher, Ciphertext& retVal, SEALContext* useContext) {
     if (useContext == 0) {
         useContext = m_pContext;
     }
@@ -348,7 +368,7 @@ void seal_he_handler::StringToCipher(const QString& cipher, seal::Ciphertext& re
 }
 
 
-QString seal_he_handler::cipherToString(const seal::Ciphertext& cipher) {
+QString seal_he_handler::cipherToString(const Ciphertext& cipher) {
     stringstream ss;
     cipher.save(ss);
 
@@ -359,6 +379,16 @@ QString seal_he_handler::cipherToString(const seal::Ciphertext& cipher) {
 }
 
 
+QString seal_he_handler::cipherToString(const Serializable<Ciphertext>& serCipher) {
+    stringstream ss;
+    serCipher.save(ss);
+
+    QByteArray b = QByteArray::fromStdString(ss.str());
+    QString result(b.toBase64());
+
+    return result;
+}
+
 
 /**
  * @brief Setup Method to generate a new keypair.
@@ -367,14 +397,27 @@ void seal_he_handler::generate_keys() {
     qDebug() << "Generating keys... ";
 
     KeyGenerator keygen(*m_pContext);
+    // secret key
     m_SecretKey = keygen.secret_key();
+
+    // public key
     keygen.create_public_key(m_PublicKey);
+    m_serPubKey = new Serializable<PublicKey>(keygen.create_public_key());
 
-
+    // reliniarization keys
     keygen.create_relin_keys(m_relin_keys);
+    m_serRelinKeys = new Serializable<RelinKeys>(keygen.create_relin_keys());
+
+    // Galois Keys
     keygen.create_galois_keys(m_gal_keys);
+    m_serGalKeys = new Serializable<GaloisKeys>(keygen.create_galois_keys());
 
 	qDebug() << "OK!";
+
+    qDebug() << "Size comparison:";
+    qDebug() << "Public Key (normal) " << m_PublicKey.save_size() << "bytes. Public Key (seedable) " << m_serPubKey->save_size();
+    qDebug() << "Relin Key (normal) " << m_relin_keys.save_size() << "bytes. Relin Key (seedable) " << m_serRelinKeys->save_size();
+    qDebug() << "Galois Key (normal) " << m_gal_keys.save_size() << "bytes. Galois Key (seedable) " << m_serGalKeys->save_size();
 }
 
 /**

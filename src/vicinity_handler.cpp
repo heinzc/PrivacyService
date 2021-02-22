@@ -184,9 +184,8 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
     //read property of the service itself
     if(oid == m_ownServiceOid) { 
         if(pid == "publickey") {
-            std::cout << "Publickey requested and returned" << std::endl;
-            //json keyJson = json::parse(std::string("{}"));
-            //keyJson["publickey"] = m_pController->getHE_handler()->getPublicKey();
+            qDebug() << "Publickey requested and returned";
+            obj.insert("value", m_pController->getHE_handler()->getPublicKey());
             return obj;
         }
         else if(pid == "trustedparties") {
