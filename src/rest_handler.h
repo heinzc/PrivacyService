@@ -34,6 +34,8 @@ class rest_handler : public QObject
 
         void get(const QUrl & endpoint, QObject* caller);
 
+
+public slots:
         QJsonDocument get_blocking(const QUrl& endpoint);
 
         QJsonDocument put_blocking(const QUrl& endpoint, const QJsonDocument& payload);

@@ -22,7 +22,7 @@
                                     "name" : "publickey",
                                     "schema":
                                     {
-                                        "type":"integer"
+                                        "type":"string"
                                     }
                                 }
                             ],
@@ -30,6 +30,50 @@
                         }
                     }
                 },
+			                {
+                    "pid":"relinkeys",
+                    "monitors" : "adapters:Motion",
+                    "read_link":
+                    {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "output":
+                        {
+                            "field":
+                            [
+                                {
+                                    "name" : "relinkeys",
+                                    "schema":
+                                    {
+                                        "type":"string"
+                                    }
+                                }
+                            ],
+                            "type":"object"
+                        }
+                    }
+                },
+                {
+                    "pid":"galoiskeys",
+                    "monitors" : "adapters:Motion",
+                    "read_link":
+                    {
+                        "href":"/objects/{oid}/properties/{pid}",
+                        "output":
+                        {
+                            "field":
+                            [
+                                {
+                                    "name" : "galoiskeys",
+                                    "schema":
+                                    {
+                                        "type":"string"
+                                    }
+                                }
+                            ],
+                            "type":"object"
+                        }
+                    }
+                },				
                 {
                     "pid":"hasaccess",
                     "monitors" : "adapters:Visibility",

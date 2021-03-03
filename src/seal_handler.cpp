@@ -335,10 +335,14 @@ QString seal_he_handler::getGaloisKeys() {
 void seal_he_handler::getGaloisKeys(QString& galoisKeys) {
     std::stringstream ss;
     //m_pContext->last_context_data()->parms().save(ss);
-    m_pParms.save(ss);
+    m_serGalKeys->save(ss);
+    qDebug() << "original size should be: " << m_serGalKeys->save_size();
 
     QByteArray b = QByteArray::fromStdString(ss.str());
+    qDebug() << "Byte array size is: " << b.size();
+    
     galoisKeys = QString(b.toBase64());
+    qDebug() << "and as a base64 encoded string: " << galoisKeys.size();
 }
 
 

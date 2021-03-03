@@ -38,6 +38,14 @@ class he_handler
 
         virtual QString getPublicKey() = 0;
 
+        virtual QString getEncryptionParameters() = 0;
+
+        virtual QString getRelinKeys() = 0;
+        virtual void getRelinKeys(QString& relinKeys) = 0;
+
+        virtual QString getGaloisKeys() = 0;
+        virtual void getGaloisKeys(QString& galoisKeys) = 0;
+
     protected:
         he_controller * m_pController;
 };

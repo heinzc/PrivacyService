@@ -185,7 +185,25 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
     if(oid == m_ownServiceOid) { 
         if(pid == "publickey") {
             qDebug() << "Publickey requested and returned";
-            obj.insert("value", m_pController->getHE_handler()->getPublicKey());
+            obj.insert("publickey", m_pController->getHE_handler()->getPublicKey());
+            return obj;
+        }
+        else if(pid == "relinkeys") {
+            qDebug() << "Reliniarization Keys requested and returned";
+            QString relinKeys;
+            m_pController->getHE_handler()->getRelinKeys(relinKeys);
+            obj.insert("relinkeys", relinKeys);
+            return obj;
+        }
+        else if (pid == "galoiskeys") {
+            qDebug() << "Galois Keys requested and returned";
+            QString galoisKeys;
+            m_pController->getHE_handler()->getGaloisKeys(galoisKeys);
+            obj.insert("galoiskeys", galoisKeys);
+            qDebug() << "json object size:" << obj.size();
+            QJsonDocument doc(obj);
+            QString strJson(doc.toJson(QJsonDocument::Compact));
+            qDebug() << "json as string size: " << strJson.size();
             return obj;
         }
         else if(pid == "trustedparties") {

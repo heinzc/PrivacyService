@@ -111,14 +111,17 @@ QJsonDocument rest_handler::put_blocking(const QUrl& endpoint, const QJsonDocume
     // disconnect first, so the reply buffer is not read by the slot
     disconnect(m_pNetManager, SIGNAL(finished(QNetworkReply*)), nullptr, nullptr);
 
+    qDebug() << "received new call to put. Sending out request";
+
     QNetworkRequest req(endpoint);
     QScopedPointer<QNetworkReply> reply(m_pNetManager->put(req, payload.toJson()));
 
+    qDebug() << "Waiting for request to finish...";
     QTime timeout = QTime::currentTime().addSecs(10);
     while (QTime::currentTime() < timeout && !reply->isFinished()) {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
-
+    qDebug() << "finished";
     if (reply->error() != QNetworkReply::NoError) {
         qDebug() << "Failure" << reply->errorString();
     }
