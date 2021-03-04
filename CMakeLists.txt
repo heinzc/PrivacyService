@@ -40,26 +40,35 @@ endif()
 
 find_package(Qt5HttpServer)
 
+#find_package(SEAL 3.6 QUIET)
+#if(SEAL_FOUND)
+#    message(STATUS "Using lokal Setup of SEAL, Version: ${SEAL_VERSION}")
+#    set(SEAL_USE_LOCAL ON CACHE BOOL "if a local seal install should be used")
+#endif()
 
-# Download and unpack seal at configure time
-configure_file(third-party/seal.CMakeLists.txt.in seal-download/CMakeLists.txt)
-execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
-if(result)
-  message(FATAL_ERROR "CMake step for seal failed: ${result}")
-endif()
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-  RESULT_VARIABLE result
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
-if(result)
-  message(FATAL_ERROR "Build step for seal failed: ${result}")
-endif()
+#if(NOT SEAL_USE_LOCAL)
+    message(STATUS "No lokal SEAL found. Including it in build.")
 
-# Add seal directly to our build. 
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/seal-src
-                 ${CMAKE_CURRENT_BINARY_DIR}/seal-build
-                  )
+    # Download and unpack seal at configure time
+    configure_file(third-party/seal.CMakeLists.txt.in seal-download/CMakeLists.txt)
+    execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+      RESULT_VARIABLE result
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+    if(result)
+      message(FATAL_ERROR "CMake step for seal failed: ${result}")
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} --build .
+      RESULT_VARIABLE result
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/seal-download )
+    if(result)
+      message(FATAL_ERROR "Build step for seal failed: ${result}")
+    endif()
+
+    # Add seal directly to our build. 
+    add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/seal-src
+                        ${CMAKE_CURRENT_BINARY_DIR}/seal-build
+                        )
+#endif()
 
 
 ## include third-parties
