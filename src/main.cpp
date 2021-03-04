@@ -1,105 +1,94 @@
-#include "../include/stdafx.h"
-#include "../include/rest_handler.h"
-#include "../include/fhe_handler.h"
-#include "../include/phe_handler.h"
-#include "../include/seal_he_handler.h"
-#include "../include/he_controller.h"
-#include "../include/vicinity_handler.h"
+#include "rest_handler.h"
+#include "seal_handler.h"
+#include "he_controller.h"
+#include "vicinity_handler.h"
+#include "PrivacyPluginInterface.h"
 
 #include <iostream>
 
+#include <QtCore>
+#include <QDebug>
+
+#include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
+
 using namespace std;
-using namespace web;
-using namespace http;
-using namespace utility;
-using namespace http::experimental::listener;
 
-//std::unique_ptr<rest_handler> g_httpHandler;
-rest_handler * g_httpHandler;
+// controller
+he_controller controller = he_controller();
 
-void on_initialize(const string_t& address)
-{
-    uri_builder uri(address);
-  
-    auto addr = uri.to_uri().to_string();
-    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    //g_httpHandler->open().wait();
+void load_plugins() {
+    // look for plugins in the "plugins" subdirectory of the application
+    QDir pluginsDir = QDir(QCoreApplication::applicationDirPath());
+    pluginsDir.cd("plugins");
 
-    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-
-    return;
+    const auto entryList = pluginsDir.entryList(QDir::Files);
+    for (const QString& fileName : entryList) {
+        qDebug() << "loading plugins from: " << pluginsDir.absoluteFilePath(fileName) << "...";
+        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+        QObject* plugin = loader.instance();
+        if (plugin) {
+            auto privacyplugin = qobject_cast<PrivacyPluginInterface*>(plugin);
+            if (privacyplugin) {
+                controller.registerPrivacyPlugin(privacyplugin);
+            }
+        }
+        else {
+            qDebug() << "Failed to load plugin: " << loader.fileName() << ": " << loader.errorString();
+        }
+    }
 }
 
-void on_shutdown()
+int main(int argc, char* argv[])
 {
-    g_httpHandler->close().wait();
-    return;
-}
+    QCoreApplication app(argc, argv);
 
-
-int main()
-{
     // initialize compenents
-    // controller
-    he_controller controller = he_controller();
-
     //database
     db_access * db = new db_access("service.db");
     controller.setDB_access(db);
-
-    // vicinity
-    vicinity_handler * vicinity = new vicinity_handler();
-    controller.setVICINITY_handler(vicinity);
-    vicinity->initialize("config_adapters.json");
 
     // he
     he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
+                      
+    // RESTful API
+    rest_handler* restHandler = new rest_handler();
+    controller.setREST_handler(restHandler);
+
+    // vicinity
+    vicinity_handler* vicinity = new vicinity_handler();
+    controller.setVICINITY_handler(vicinity);
+    vicinity->initialize("config_adapters.json");
+
+
+    // load plugins. This has to be the last step, as Plugins may interact with REST, the DB or VICINITY
+    load_plugins();
+
     
     //debugging... to be moved into unittesting
     
-    std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
+    //std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
     
-    std::string value;
-    std::string pubKey;
-    std::vector<std::string> valuesvec;
+    //std::string value;
+    //std::string pubKey;
+    //std::vector<std::string> valuesvec;
 
-    value = he->encrypt_as_string(71);
-    pubKey = he->getPublicKey();
+    //value = he->encrypt_as_string(71);
+    //pubKey = he->getPublicKey();
 
-    valuesvec.push_back(value);
-    
-    value = he->encrypt_as_string(71, pubKey);
+    //valuesvec.push_back(value);
+    //
+    //value = he->encrypt_as_string(71, pubKey);
 
-    valuesvec.push_back(value);
+    //valuesvec.push_back(value);
 
-    std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
-    int intval = he->decrypt(result);
+    //std::string result = he->aggregate(valuesvec, db->get_own_key("PK").c_str());
+    //int intval = he->decrypt(result);
 
-    std::cout << "decrypted test result: " << intval << std::endl;
+    //std::cout << "decrypted test result: " << intval << std::endl;
 
     //std::cout << he->getPublicKey() << std::endl;
 
-    utility::string_t address = U("http://127.0.0.1:" + vicinity->getOwnPort()); //127.0.0.1    192.168.188.37
-
-    //on_initialize(address);
-    uri_builder uri(address);
-  
-    auto addr = uri.to_uri().to_string();
-    //g_httpHandler = std::unique_ptr<rest_handler>(new rest_handler(addr));
-    g_httpHandler = new rest_handler(addr);
-    controller.setREST_handler(g_httpHandler);
-    g_httpHandler->open().wait();
-
-    vicinity->generateThingDescription();
-
-    ucout << utility::string_t(U("Listening for requests at: ")) << addr << std::endl;
-    std::cout << "Press ENTER to exit." << std::endl;
-
-    std::string line;
-    std::getline(std::cin, line);
-
-    on_shutdown();
-    return 0;
+    return app.exec();
 }

@@ -1,15 +1,18 @@
-ADD_DEFINITIONS(-DBOOST_TEST_DYN_LINK)
+enable_testing(true)
 
-file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
-#set(TEST_SRC_FILES  test_main.cpp
-#            test_base64.cpp
-#)
+
+set(TEST_SRC_FILES  #test_main.cpp
+            test_db_access.cpp
+)
+
 
 add_executable(${PROJECT_NAME}_unittest ${TEST_SRC_FILES})
 
-target_link_libraries(${PROJECT_NAME}_unittest 
+
+target_link_libraries(${PROJECT_NAME}_unittest PRIVATE
         ${PROJECT_NAME}_lib
-        Boost::unit_test_framework
+        Qt5::Test
 )
+
 
 add_test(NAME UnitTests COMMAND ${PROJECT_NAME}_unittest)
