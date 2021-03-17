@@ -81,13 +81,13 @@ class seal_he_handler : he_handler
 
 /*
 Helper function: Prints a vector of floating-point values.
-*/
+
         template <typename T>
         inline void print_vector(std::vector<T> vec, std::size_t print_size = 4, int prec = 3)
         {
             /*
             Save the formatting information for std::cout.
-            */
+            
             std::ios old_fmt(nullptr);
             old_fmt.copyfmt(std::cout);
 
@@ -124,10 +124,10 @@ Helper function: Prints a vector of floating-point values.
 
             /*
             Restore the old std::cout formatting.
-            */
+            
             std::cout.copyfmt(old_fmt);
         }
-
+        */
 
         // split vector for SVM algorithm
         inline std::vector<double> split_to_long(std::vector<double>& in, int dimension)
