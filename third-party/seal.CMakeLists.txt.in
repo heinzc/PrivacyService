@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.20)
 
 project(seal-download)
 
 include(ExternalProject)
 ExternalProject_Add(seal
   GIT_REPOSITORY    https://github.com/microsoft/SEAL.git
-  GIT_TAG           v3.6.1
+  GIT_TAG           v4.0.0
   SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/seal-src"
   BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/seal-build"
   CONFIGURE_COMMAND ""
