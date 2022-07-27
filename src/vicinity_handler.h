@@ -41,8 +41,8 @@ class vicinity_handler : public QObject
         
         QString getOwnOid();
         QString getAdapterId();
-        QString getAgentPort();
-        QString getOwnPort();
+        uint8_t getAgentPort();
+        uint8_t getOwnPort();
 
         //void decrypt(std::string oid, std::string sourceOid, std::string payload);
         //void startAggregation(std::string oid, std::string sourceOid, std::string payload);
@@ -80,7 +80,7 @@ class vicinity_handler : public QObject
         
         //bool updateTaskStatus(std::string aid, std::string status, std::string payload);
         
-        QString m_agentPort;
+        uint8_t m_agentPort;
         QJsonObject m_ownTD;
         QString m_ownServiceOid;
         QString m_ownAdapterId;

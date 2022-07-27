@@ -3,8 +3,14 @@
 #include "he_handler.h"
 #include "vicinity_handler.h"
 
-#include <QNetworkRequest>
+#include <QCoreApplication>
 
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+
+#include <QHttpServer>
+
+#include <QStringConverter>
 
 
 rest_handler::rest_handler() :
@@ -233,7 +239,8 @@ double rest_handler::extract_double_from_request(const QHttpServerRequest& reque
     }
     // if no Content-Type is given, assume text/plain
     else if (contentType.isNull() || contentType.toString() == "text/plain") {
-        strValue = QTextCodec::codecForUtfText(request.body())->toUnicode(request.body());
+        auto fromUtf8 = QStringDecoder(QStringDecoder::Utf8);
+        strValue = fromUtf8(request.body());
         bool convertOK;
         value = strValue.toDouble(&convertOK);
         if (!convertOK) {
@@ -394,5 +401,3 @@ QJsonObject rest_handler::handle_local_decrypt(const QHttpServerRequest& request
     result.insert("value", decrypted);
     return result;
 }
-
-#include "moc_rest_handler.cpp"

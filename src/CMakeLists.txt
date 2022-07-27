@@ -7,24 +7,29 @@ set(SRC_FILES  rest_handler.cpp
             vicinity_handler.cpp
 )
 
-add_library( ${PROJECT_NAME}_lib OBJECT ${SRC_FILES} )
+add_library( ${PROJECT_NAME}lib STATIC ${SRC_FILES} )
 
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC
-    Qt5::Core
-    Qt5::HttpServer
-    Qt5::Sql
+target_link_libraries(${PROJECT_NAME}lib PUBLIC
+    Qt6::Core
+    Qt6::Network
+    Qt6::HttpServer
+    Qt6::Sql
     SEAL::seal
 )
 
-#qt_import_plugins(${PROJECT_NAME}_lib
+set_target_properties(${PROJECT_NAME}lib PROPERTIES DEBUG_POSTFIX "d")
+
+#qt_import_plugins(${PROJECT_NAME}lib
 #    INCLUDE_BY_TYPE sqldrivers Qt5::QSqlite
 #)
 
 add_executable( ${PROJECT_NAME} main.cpp )
 
 target_link_libraries(${PROJECT_NAME} 
-    ${PROJECT_NAME}_lib
+    ${PROJECT_NAME}lib
 )
+
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
 
 
 #build the plugins

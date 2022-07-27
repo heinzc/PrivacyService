@@ -1,3 +1,0 @@
-[submodule "third-party/qthttpserver"]
-	path = third-party/qthttpserver
-	url = https://github.com/qt-labs/qthttpserver.git

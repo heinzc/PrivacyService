@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt: CMake-Projekt für "PrivacyService". Schließen Sie die Quelle ein, und definieren Sie
 # projektspezifische Logik hier.
 #
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.20)
 
 project ("PrivacyService" LANGUAGES CXX)
 
@@ -15,12 +15,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 #add third-party to cmake prefix
-set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_SOURCE_DIR}/third-party/lib/cmake)
+list (APPEND CMAKE_PREFIX_PATH
+    C:/Qt/6.4.0/msvc2019_64
+)
 
-set (RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set (LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set (ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
-set (PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+#set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/bin)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/lib)
+set (CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/lib)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/lib)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/lib)
+set (CMAKE_PDB_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/bin)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 #QT Moc'ing
@@ -30,17 +36,14 @@ set(CMAKE_AUTORCC OFF)
 #No Qt UI files used
 set(CMAKE_AUTOUIC OFF)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-
-find_package(Qt5 COMPONENTS Core Network WebSockets Sql Test REQUIRED)
-if(Qt5_FOUND)
-    message(STATUS "QT_DIR: ${Qt5_DIR}")
-    message(STATUS "QT_VERSION: ${Qt5_VERSION}")
-    include_directories(${Qt5_INCLUDE_DIR})
+find_package(Qt6 COMPONENTS Core Network HttpServer Sql Test REQUIRED)
+if(Qt6_FOUND)
+    message(STATUS "QT_DIR: ${Qt6_DIR}")
+    message(STATUS "QT_VERSION: ${Qt6_VERSION}")
 endif()
 
-find_package(Qt5HttpServer)
+#find_package(Qt5HttpServer)
 
 #find_package(SEAL 3.6 QUIET)
 #if(SEAL_FOUND)
@@ -71,11 +74,6 @@ find_package(Qt5HttpServer)
                         ${CMAKE_CURRENT_BINARY_DIR}/seal-build
                         )
 #endif()
-
-
-## include third-parties
-include_directories(${CMAKE_SOURCE_DIR}/third-party/include)
-link_directories(${CMAKE_SOURCE_DIR}/third-party/lib)
 
 
 # Fügen Sie der ausführbaren Datei dieses Projekts eine Quelle hinzu.

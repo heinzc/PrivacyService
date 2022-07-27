@@ -5,7 +5,8 @@
 #include <vector>
 
 #include <QString>
-#include <QSqlDatabase>
+
+class QSqlDatabase;
 
 class db_access
 {
@@ -105,7 +106,7 @@ class db_access
         
     private:
         QString m_dbName;
-        QSqlDatabase m_db;
+        QSqlDatabase* m_db;
 
         bool open();
         bool createTables();

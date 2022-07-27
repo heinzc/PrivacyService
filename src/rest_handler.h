@@ -6,16 +6,17 @@
 #include "he_controller.h"
 #include "db_access.h"
 
-#include <QtCore>
 #include <QObject>
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
+
+#include <QHttpServer>
+
 #include <QUrl>
 #include <QJsonObject>
 #include <QJsonDocument>
 
-#include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
-#include "../third-party/qthttpserver/src/httpserver/qhttpserverrouterrule.h"
+
+
+class QNetworkAccessManager;
 
 
 using namespace std;

@@ -12,7 +12,8 @@
 #include <QFile>
 #include <QDebug>
 #include <QJsonDocument>
-#include <QRegExp>
+#include <QJsonArray>
+#include <QRegularExpression>
 
 
 
@@ -30,7 +31,7 @@ vicinity_handler::vicinity_handler() :
     m_configFile = QJsonObject();
 
     m_ownServiceOid = QString();
-    m_agentPort = QString();
+    m_agentPort = 0;
     m_ownAdapterId = QString();
 }
 
@@ -65,7 +66,7 @@ void vicinity_handler::initialize(QString configfile) {
     }
 
     // parse array of all adapters and store them in a map
-    for (auto& adapter : m_configFile.value("adapters").toArray()) {
+    for (auto adapter : m_configFile.value("adapters").toArray()) {
         // query the endpoint for /objects
         QString adapterid = adapter.toObject().value("adapter-id").toString();
         QString endpoint = adapter.toObject().value("endpoint").toString();
@@ -73,7 +74,7 @@ void vicinity_handler::initialize(QString configfile) {
         m_endpoints.insert(adapterid, endpoint);
     }
 
-    m_agentPort = "9997";
+    m_agentPort = 9997;
     //initialize random seed with current time
     srand (time(NULL)); 
 
@@ -110,7 +111,7 @@ void vicinity_handler::generateThingDescription() {
 
 
     // iterate over all adapters in config file and request their TD
-    for (auto& adapter : m_configFile.value("adapters").toArray()) {
+    for (auto adapter : m_configFile.value("adapters").toArray()) {
         // query the endpoint for /objects
         QString endpoint = adapter.toObject().value("endpoint").toString();
 
@@ -143,7 +144,7 @@ void vicinity_handler::getAdapterTDFinished(QNetworkReply* reply) {
     QJsonArray currentTD = m_ownTD.value("thing-descriptions").toArray();
 
     // go through all objects in the foreign adapters TD, rename them and add to our own TD
-    for (auto& td : adapterObjects) {
+    for (auto td : adapterObjects) {
         QJsonObject tdNode = td.toObject();
 
         tdNode.insert("oid", adapterid + ":" + tdNode.value("oid").toString() + "_enc");
@@ -221,10 +222,11 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
     // read property of attached adapter
     // oid is compount of <adapterid>:<objectid>
     QString adapterid, objectid;
-    QRegExp rx("(.+):(.+)_enc");
+    QRegularExpression rx("(.+):(.+)_enc");
+    QRegularExpressionMatch rx_match = rx.match(oid);
 
-    if (rx.exactMatch(oid)) {
-        QStringList matches = rx.capturedTexts(); // first entry is complete string
+    if (rx_match.hasMatch()) {
+        QStringList matches = rx_match.capturedTexts(); // first entry is complete string
         if (matches.size() == 3) {
             adapterid = matches.at(1);
             objectid = matches.at(2);
@@ -330,10 +332,11 @@ QJsonObject vicinity_handler::writeProperty(const QString& oid, const QString& p
     // read property of attached adapter
     // oid is compount of <adapterid>:<objectid>
     QString adapterid, objectid;
-    QRegExp rx("(.+):(.+)_enc");
+    QRegularExpression rx("(.+):(.+)_enc");
+    QRegularExpressionMatch rx_match = rx.match(oid);
 
-    if (rx.exactMatch(oid)) {
-        QStringList matches = rx.capturedTexts(); // first entry is complete string
+    if (rx_match.hasMatch()) {
+        QStringList matches = rx_match.capturedTexts(); // first entry is complete string
         if (matches.size() == 3) {
             adapterid = matches.at(1);
             objectid = matches.at(2);
@@ -383,11 +386,11 @@ QString vicinity_handler::getAdapterId() {
     return m_ownAdapterId;
 }
 
-QString vicinity_handler::getAgentPort() {
+uint8_t vicinity_handler::getAgentPort() {
     return m_agentPort;
 }
 
-QString vicinity_handler::getOwnPort() {
+uint8_t vicinity_handler::getOwnPort() {
     return 4242;
 }
 //
@@ -1040,7 +1043,3 @@ string vicinity_handler::replaceAll(std::string str, const std::string from, con
     }
     return str;
 }
-
-
-
-#include "moc_vicinity_handler.cpp"

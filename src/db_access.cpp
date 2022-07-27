@@ -10,6 +10,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlError>
+#include <QSqlDatabase>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ using namespace std;
 db_access::db_access(QString dbName)
 {
     m_dbName = dbName;
+    m_db = nullptr;
 
     if ( open() ) {
         qDebug() << "Database open";
@@ -35,16 +37,16 @@ db_access::db_access(QString dbName)
 //destructor
 db_access::~db_access()
 {
-    m_db.close();
+    m_db->close();
 }
 
 
 bool db_access::open() {
     /* Open database */
-    m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName(m_dbName);
+    m_db = new QSqlDatabase(QSqlDatabase::addDatabase("QSQLITE"));
+    m_db->setDatabaseName(m_dbName);
 
-    if (!m_db.open())
+    if (!m_db->open())
     {
         qDebug() << "Can't open database: " << m_dbName;
         return false;
@@ -72,12 +74,12 @@ bool db_access::createTables() {
         << "CREATE TABLE IF NOT EXISTS AGGREGATION_TRUSTED_INITIATORS(OID TEXT PRIMARY KEY)"
         << "CREATE TABLE IF NOT EXISTS AGGREGATION_BLINDED_MEASUREMENTS(PARTICIPANT_OID TEXT PRIMARY KEY, RECEIVED REAL, BLINDED_MEASUREMENT REAL)";
 
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
     for (QString queryString : qAsConst(createQueries)) {
-        QSqlQuery query = m_db.exec(queryString);
+        QSqlQuery query = m_db->exec(queryString);
         if (!query.isActive()) {
             qDebug() << "query not active: " << query.lastError().text();
             return false;
@@ -90,11 +92,11 @@ bool db_access::createTables() {
 
 //to save own keys (public and private key) in database
 bool db_access::insert_own_key(const QString& keytype, const QString& value) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("INSERT OR REPLACE INTO OWN_KEYS (KEYTYPE,VALUE) VALUES (:keytype, :value);");
     query.bindValue(":keytype", keytype);
@@ -114,11 +116,11 @@ bool db_access::insert_own_key(const QString& keytype, const QString& value) {
 //used to retrieve own keys (including private key) from the database
 QString db_access::get_own_key(const QString& keytype)
 {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT VALUE from OWN_KEYS where KEYTYPE = \'" + keytype + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -137,11 +139,11 @@ QString db_access::get_own_key(const QString& keytype)
 
 //insert public key
 bool db_access::insert_public_key(const QString& id, const QString& pkJson) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("INSERT OR REPLACE INTO PUBLIC_KEYS (ID,PUBLICKEY) VALUES (:id, :pubkey);");
     query.bindValue(":id", id);
@@ -160,11 +162,11 @@ bool db_access::insert_public_key(const QString& id, const QString& pkJson) {
 
 //get public key, returns empty string if key is not in database!
 QString db_access::get_public_key(const QString& id) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT PUBLICKEY from PUBLIC_KEYS where ID = \'" + id + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -237,11 +239,11 @@ QString db_access::get_public_key(const QString& id) {
 
 //owners device, or trusted device
 bool db_access::hasAccessToDecrypt(const QString& id) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from FOREIGN_DEVICES_ACCESS_DECRYPT where OID = \'" + id + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -261,11 +263,11 @@ bool db_access::hasAccessToDecrypt(const QString& id) {
 //check if data requester is allowed to data
 //only used so other parties can know, with whom we want to share data!
 bool db_access::hasAccessToData(const QString& data_requester_oid, const QString& destination_oid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from DATA_ACCESS where OWN_OID = \'" + destination_oid + "\'and ALLOWED_REQUESTER_OID = \'" + data_requester_oid + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -284,11 +286,11 @@ bool db_access::hasAccessToData(const QString& data_requester_oid, const QString
 
 //get the corresponding privacy service oid of input oid
 QString db_access::getPrivacyService(const QString& id) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT HE_SERVICE_OID from PRIVACY_SERVICE where DEVICE_OID = \'" + id + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -307,11 +309,11 @@ QString db_access::getPrivacyService(const QString& id) {
 
 //has to be called after finished or aborted computation with the requester id (initiator oid)
 void db_access::deleteInitiatorRandomShares(const QString& initiatorOid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("delete from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = \'" + initiatorOid + "\';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -327,11 +329,11 @@ void db_access::deleteInitiatorRandomShares(const QString& initiatorOid) {
 void db_access::updateShareRandomShares(const QString& initiatorOid, const QString& participantOid, double value) {
     qDebug() << "Update Random Share Begin";
 
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("UPDATE AGGREGATION_RANDOM_SHARES SET RECEIVED = 1, SHARE = " + QString::number(value) + " WHERE INITIATOR_OID = '" + initiatorOid + "' AND PARTICIPANT_OID = '" + participantOid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -347,11 +349,11 @@ void db_access::updateShareRandomShares(const QString& initiatorOid, const QStri
 
 //returns true, if we received the request for the computation and the participant was inserted
 bool db_access::isAlreadyInsertedInRandomShares(const QString& initiatorOid, const QString& participantOid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT * from AGGREGATION_RANDOM_SHARES where PARTICIPANT_OID = '" + participantOid + "' and INITIATOR_OID = '" + initiatorOid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -371,11 +373,11 @@ bool db_access::isAlreadyInsertedInRandomShares(const QString& initiatorOid, con
 //returns true if all shares received
 bool db_access::allRandomSharesReceived(const QString& initiatorOid) {
 
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT PARTICIPANT_OID from AGGREGATION_RANDOM_SHARES where RECEIVED = 0 and INITIATOR_OID = '" + initiatorOid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -393,11 +395,11 @@ bool db_access::allRandomSharesReceived(const QString& initiatorOid) {
 
 //if oid trusts this service (-> would send share in aggregation
 bool db_access::trustsMe(const QString& oid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from AGGREGATION_PARTIES_WHO_TRUST_ME where OID = '" + oid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -415,11 +417,11 @@ bool db_access::trustsMe(const QString& oid) {
 
 //if we allowed this oid to start distributed aggregation
 bool db_access::isTrustedInitiator(const QString& oid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from AGGREGATION_TRUSTED_INITIATORS where OID = '" + oid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -438,11 +440,11 @@ bool db_access::isTrustedInitiator(const QString& oid) {
 //insert new participant of an aggregation. function automatically determines the needed participants (those who trust me apart from myself)
 //participants can be inserted multiple times, will only be saves once in database (for this aggregation)
 bool db_access::insertParticipantRandomShares(const QString& initiatorOid, const QString& participantOid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("INSERT OR REPLACE INTO AGGREGATION_RANDOM_SHARES (INITIATOR_OID, PARTICIPANT_OID, RECEIVED, SHARE) VALUES (\'" + initiatorOid + "\',\'" + participantOid + "\',0,0);");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -459,11 +461,11 @@ bool db_access::insertParticipantRandomShares(const QString& initiatorOid, const
 
 //insert participants of own aggregation into database
 bool db_access::insertParticipantBlindedMeasurements(const QString& participantOid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("INSERT OR REPLACE INTO AGGREGATION_BLINDED_MEASUREMENTS (PARTICIPANT_OID, RECEIVED, BLINDED_MEASUREMENT) VALUES (\'" + participantOid + "\',0,0);");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -480,11 +482,11 @@ bool db_access::insertParticipantBlindedMeasurements(const QString& participantO
 
 //update (insert) blinded measurement
 bool db_access::updateBlindedMeasurement(const QString& participantOid, double value) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("UPDATE AGGREGATION_BLINDED_MEASUREMENTS SET RECEIVED = 1, BLINDED_MEASUREMENT = " + QString::number(value) + " WHERE PARTICIPANT_OID = '" + participantOid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -501,11 +503,11 @@ bool db_access::updateBlindedMeasurement(const QString& participantOid, double v
 
 //if all shares received of own aggregation (also true, if there are no entries at all)
 bool db_access::allBlindedMeasurementsReceived() {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT PARTICIPANT_OID from AGGREGATION_BLINDED_MEASUREMENTS where RECEIVED = 0';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -524,12 +526,12 @@ bool db_access::allBlindedMeasurementsReceived() {
 
 //returns all trusted parties for distributed aggregation
 QStringList db_access::getTrustedParties() {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
     QStringList result;
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from AGGREGATION_TRUSTED_PARTIES;");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -552,11 +554,11 @@ QStringList db_access::getTrustedParties() {
 
 //returns true, if oid is a trusted party
 bool db_access::isTrustedParty(const QString& oid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT OID from AGGREGATION_TRUSTED_PARTIES where OID = '" + oid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -574,12 +576,12 @@ bool db_access::isTrustedParty(const QString& oid) {
 
 //returns the sum of the blinded measurements -> the result of the aggregation
 double db_access::getBlindedMeasurementSum() {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
     double result = 0;
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT BLINDED_MEASUREMENT from AGGREGATION_BLINDED_MEASUREMENTS;");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -601,12 +603,12 @@ double db_access::getBlindedMeasurementSum() {
 
 //returns sum of received random shares of the aggregateion initiated by initiatorOid
 double db_access::getRandomShareSum(const QString& initiatorOid) {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
     double result = 0;
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("SELECT SHARE from AGGREGATION_RANDOM_SHARES where INITIATOR_OID = '" + initiatorOid + "';");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -629,11 +631,11 @@ double db_access::getRandomShareSum(const QString& initiatorOid) {
 
 //clears the table
 bool db_access::resetRandomShares() {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("DELETE from AGGREGATION_RANDOM_SHARES;");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...
@@ -650,11 +652,11 @@ bool db_access::resetRandomShares() {
 
 //resets the complete table
 bool db_access::resetBlindedMeasurements() {
-    if (!m_db.isOpen()) {
-        m_db.open();
+    if (!m_db->isOpen()) {
+        m_db->open();
     }
 
-    QSqlQuery query(m_db);
+    QSqlQuery query(*m_db);
 
     query.prepare("DELETE from AGGREGATION_BLINDED_MEASUREMENTS;");
     //query.bindValue(":keytype", keytype); // TODO: see why binding Values is not working...

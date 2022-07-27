@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-#include <QtCore>
+#include <QCoreApplication>
 #include <QDebug>
-
-#include "../third-party/qthttpserver/src/httpserver/qhttpserver.h"
+#include <QDir>
+#include <QPluginLoader>
 
 using namespace std;
 
