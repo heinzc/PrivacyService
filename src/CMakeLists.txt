@@ -25,11 +25,17 @@ set_target_properties(${PROJECT_NAME}lib PROPERTIES DEBUG_POSTFIX "d")
 
 add_executable( ${PROJECT_NAME} main.cpp )
 
-target_link_libraries(${PROJECT_NAME} 
+target_link_libraries(${PROJECT_NAME}
     ${PROJECT_NAME}lib
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
+
+install(TARGETS ${PROJECT_NAME} ${PROJECT_NAME}lib
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION bin
+    ARCHIVE DESTINATION bin
+)
 
 
 #build the plugins

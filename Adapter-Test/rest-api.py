@@ -3,6 +3,8 @@ from flask import Flask, jsonify, request
 from random import random
 import random
 import json
+import requests
+
 app = Flask(__name__)
 
 date_time = datetime.datetime.now()
@@ -59,5 +61,10 @@ def thing_descriptor():
 
 if __name__ == '__main__':
 
-    app.run(host = 'localhost', debug =True)
+    app.run(host = '0.0.0.0', debug =True)
 	#adapter port = 5000
+    #active discovery
+    #requests.post(
+    #    'http://localhost:9997/objects',
+    #    data=thing_descriptor()
+    #)

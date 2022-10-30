@@ -76,7 +76,7 @@ void vicinity_handler::initialize(QString configfile) {
 
     m_agentPort = 9997;
     //initialize random seed with current time
-    srand (time(NULL)); 
+    srand (time(NULL));
 
     generateThingDescription();
 }
@@ -183,7 +183,7 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
     QJsonObject obj; // return object
 
     //read property of the service itself
-    if(oid == m_ownServiceOid) { 
+    if(oid == m_ownServiceOid) {
         if(pid == "publickey") {
             qDebug() << "Publickey requested and returned";
             obj.insert("publickey", m_pController->getHE_handler()->getPublicKey());
@@ -218,7 +218,7 @@ QJsonObject vicinity_handler::readProperty(const QString& oid, const QString& pi
             return obj;
         }
     }
-    
+
     // read property of attached adapter
     // oid is compount of <adapterid>:<objectid>
     QString adapterid, objectid;
@@ -309,11 +309,11 @@ QJsonObject vicinity_handler::writeProperty(const QString& oid, const QString& p
             m_pController->getHE_handler()->recrypt_for_svm(jsonBody.value("ciphertext").toString(), jsonBody.value("dimension").toInt(), obj);
 
             return obj;
-        } 
-        else if (pid == "hasaccess") {  
+        }
+        else if (pid == "hasaccess") {
             // get requester id from payload
             QString requesterId = jsonBody.value("requester-id").toString();
-            QString destinationOid = jsonBody.value("destination-id").toString(); 
+            QString destinationOid = jsonBody.value("destination-id").toString();
 
             //ask db, if requester has access and send result back
             bool access_granted = m_pController->getDB_access()->hasAccessToData(requesterId, destinationOid);
@@ -431,9 +431,9 @@ uint8_t vicinity_handler::getOwnPort() {
 //
 //void vicinity_handler::startAggregation(string oid, string sourceOid, string payload) {
 //    using json = nlohmann::json; //for convenience
-//    
+//
 //    m_pController->getDB_access()->resetBlindedMeasurements();
-//    
+//
 //    if(m_ownOid == oid) { //is the action for this service?
 //        if(m_pController->getDB_access()->isOwnDevice(sourceOid.c_str())) { //only has to be called from owner devices (check sourceOid)
 //            //get participant he services, devices and properties
@@ -469,7 +469,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                            //oid of destination has to be replaced with "you", makes setup easier (no need to save the oid manually)
 //                            std::cout << "Ask participant to participate in aggregation." << std::endl;
 //                            std::string taskId = askToParticipateInAggregation(p, replaceAll(payload, p, std::string("you")));
-//                            std::cout << std::string("Task ID: ") + taskId << std::endl; 
+//                            std::cout << std::string("Task ID: ") + taskId << std::endl;
 //                            taskIds.push_back(taskId);
 //                            taskExecutors.push_back(p);
 //                        }
@@ -495,7 +495,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                                        std::cout << "One of the participateInAggregation tasks is finished." << std::endl;
 //                                        std::string recPayload = getReturnValueOfAction(taskExecutors.at(i), std::string("participateInAggregation"), taskIds.at(i));
 //                                        json jRecPayload = json::parse(recPayload);
-//                                        
+//
 //                                        //std::cout << std::string("Received payload: ") + recPayload << std::endl;
 //                                        std::cout << std::string("Received value: ") + jRecPayload["value"].dump() << std::endl;
 //                                        int blindedMeasurement = atoi(std::string(jRecPayload["value"].dump()).c_str());
@@ -516,7 +516,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                            //usleep(200 * 1000); //200 miliseconds
 //                        }
 //                        boost::chrono::milliseconds waitingTime = boost::chrono::duration_cast<boost::chrono::milliseconds> (boost::chrono::system_clock::now() - startWaitingForTasks2);
-//                        std::cout << "Polling messages: " + std::to_string(pollCount) << std::endl; 
+//                        std::cout << "Polling messages: " + std::to_string(pollCount) << std::endl;
 //                        std::cout << "Waiting time for shares: " << waitingTime.count() << " ms" << std::endl;
 //                        if(m_pController->getDB_access()->allBlindedMeasurementsReceived()) { //all shares should have been received, but better check it
 //                            std::cout << "All blinded measurements received." << std::endl;
@@ -531,7 +531,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                }
 //            }
 //        }
-//    } 
+//    }
 //    //update status failed
 //    std::cout << "StartAggregation failed!" << std::endl;
 //    updateTaskStatus(std::string("aggregation"), std::string("failed"), std::string("{\"value\":0}"));
@@ -540,7 +540,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //
 //void vicinity_handler::participateInAggregation(string oid, string sourceOid, string payload) {
 //    using json = nlohmann::json; //for convenience
-//    
+//
 //    //following actually not needed, since they are deleted at the end. just to be safe.
 //    m_pController->getDB_access()->deleteInitiatorRandomShares(sourceOid.c_str()); //reset db entries of this initiator
 //
@@ -585,12 +585,12 @@ uint8_t vicinity_handler::getOwnPort() {
 //                            }
 //                        }
 //                        //is there at least one participant, who i trust?
-//                        if(participatingTrustedPartiesSet.size() >= 1) {                        
+//                        if(participatingTrustedPartiesSet.size() >= 1) {
 //                            std::cout << "There is at least 1 trusted party" << std::endl;
 //                            //am i really a part of this aggregation?
 //                            if(participantsSet.find("you") != participantsSet.end()) {
 //                                std::cout << "I am part of this aggregation." << std::endl;
-//                                
+//
 //                                //get sum of requested own device properties
 //                                long sumOfOwnDeviceProperties = 0;
 //                                for(int i = 0; i < devices.size(); i++) {
@@ -609,7 +609,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                                    }
 //                                }
 //                                std::cout << "Sum of own device properties: " + std::to_string(sumOfOwnDeviceProperties) << std::endl;
-//                                
+//
 //                                //insert participants who trust me in database (random shares)
 //                                for(auto &tp : participatingPartiesWhoTrustMeSet) {
 //                                    std::cout << "Insert participant who trusts me in database for aggregation." << std::endl;
@@ -644,8 +644,8 @@ uint8_t vicinity_handler::getOwnPort() {
 //                                //wait until all tasks were finished or at least one failed (the send share ones).
 //                                time_t startWaitingForTasks = time(NULL); //current time
 //                                //time_t startRunning = time(NULL); //current time
-//                                
-//                                
+//
+//
 //                                //it is not necessary, to check if shares were successful. however,we cannot react, if they were not
 //                                /*
 //                                std::cout << "XXXBefore While loop" << std::endl;
@@ -673,7 +673,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                                                taskExecutors.erase(taskExecutors.begin()+i);
 //                                                break;
 //                                            }
-//                                            
+//
 //                                            //it can happen, that updating task to "running" was received after "finished"
 //                                            else if(status == "running") {
 //                                                pollCount++;
@@ -721,7 +721,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //                                    return;
 //                                }
 //                                */
-//                                
+//
 //                                time_t start = time(NULL); //current time
 //                                std::cout << "Waiting for shares..." << std::endl;
 //                                while(!m_pController->getDB_access()->allRandomSharesReceived(sourceOid.c_str()) && time(NULL) < start + 10) {
@@ -833,46 +833,52 @@ uint8_t vicinity_handler::getOwnPort() {
 //    return true;
 //}
 //
-////passed object id can be the one of a he service or the oid of a data source (encrypted device)
-//string vicinity_handler::getPublicKey(string oid) {
-//    using json = nlohmann::json; // for convenience
-//    //get corresponding he service oid
-//    std::string heOid = m_pController->getDB_access()->getPrivacyService(oid.c_str());
-//    std::string key = m_pController->getDB_access()->get_public_key(heOid.c_str());
-//    if(key == "") { //if key empty -> key of he service is not in database yet
-//        //request public key from heOid
-//        std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + heOid + "/properties/publickey";
-//        //http_client client(address.c_str());
-//        //http_request request(methods::GET);
-//        //request.headers().add("adapter-id", adapterId);
-//        //request.headers().add("infrastructure-id", m_ownOid);
-//        //http_response response = client.request(request).get();
-//        //std::string output = response.extract_string().get();
-//        std::string output = "";
-//        //std::cout << "output: " + output << std::endl;
-//        std::string receivedKey = "";
-//        try {
-//            json jOutput = json::parse(output);
-//            if(jOutput["error"].get<bool>() == 0) {
-//                if(jOutput["message"][0].find("publickey") != jOutput["message"][0].end()) {
-//                    receivedKey = jOutput["message"][0]["publickey"];
-//                } else {
-//                    std::cout << "Error with received public key." << std::endl;
-//                }
-//            }
-//        } catch (...) {
-//            std::cout << "Error with payload when getting public key!" << std::endl;
-//        }
-//        //put key in database
-//        m_pController->getDB_access()->insert_public_key(heOid.c_str(), receivedKey.c_str()); //insert retrieved key into database
-//        //return new key
-//        std::cout << "Requested key and returned it" << std::endl;
-//        //std::cout << "Received Key: " + receivedKey << std::endl;
-//        return receivedKey;
-//    } else {
-//        return key;
-//    }
-//}
+//passed object id can be the one of a he service or the oid of a data source (encrypted device)
+string vicinity_handler::getPublicKey(string oid)
+{
+    // get corresponding he service oid
+    QString heOid = m_pController->getDB_access()->getPrivacyService(QString::fromStdString(oid));
+    QString key = m_pController->getDB_access()->get_public_key(heOid);
+    if (key.isEmpty())
+    { // if key empty -> key of he service is not in database yet
+        // request public key from heOid
+        QString address = "http://127.0.0.1:" + QString::number(m_agentPort) + "/agent/remote/objects/" + heOid + "/properties/publickey";
+        QList<QPair<QByteArray, QByteArray>> headers;
+        headers.append(qMakePair<QByteArray, QByteArray>("adapter-id", m_ownAdapterId.toUtf8()));
+        headers.append(qMakePair<QByteArray, QByteArray>("infrastructure-id", m_ownServiceOid.toUtf8()));
+        QJsonDocument replyDoc = m_pController->getREST_handler()->get_blocking(address, headers);
+        // std::cout << "output: " + output << std::endl;
+        QString receivedKey = "";
+        try
+        {
+            if (!replyDoc.object().contains("error"))
+            {
+                if (replyDoc.object().contains("publickey"))
+                {
+                    receivedKey = replyDoc.object().value("publickey").toString();
+                }
+                else
+                {
+                    std::cout << "Error with received public key." << std::endl;
+                }
+            }
+        }
+        catch (...)
+        {
+            std::cout << "Error with payload when getting public key!" << std::endl;
+        }
+        // put key in database
+        m_pController->getDB_access()->insert_public_key(heOid, receivedKey); // insert retrieved key into database
+        // return new key
+        std::cout << "Requested key and returned it" << std::endl;
+        // std::cout << "Received Key: " + receivedKey << std::endl;
+        return receivedKey.toStdString();
+    }
+    else
+    {
+        return key.toStdString();
+    }
+}
 //
 ////returns task status; payload  must contain properties, participants, devices
 //string vicinity_handler::askToParticipateInAggregation(string destinationOid, string payload) {
@@ -903,7 +909,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //string vicinity_handler::getStatusOfAction(string destinationOid, string action, string taskId) {
 //    using json = nlohmann::json; // for convenience
 //    std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + destinationOid + "/actions/" + action + "/tasks/" + taskId;
-//    
+//
 //    //std::cout << "URL: " + address << std::endl;
 //    //http_client client(address.c_str());
 //    //http_request request(methods::GET);
@@ -930,7 +936,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //string vicinity_handler::getReturnValueOfAction(string destinationOid, string action, string taskId) {
 //    using json = nlohmann::json; // for convenience
 //    std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + destinationOid + "/actions/" + action + "/tasks/" + taskId;
-//    
+//
 //    //http_client client(address.c_str());
 //    //http_request request(methods::GET);
 //    //request.headers().add("adapter-id", adapterId);
@@ -956,7 +962,7 @@ uint8_t vicinity_handler::getOwnPort() {
 ////send random share value to destination oid; returns taskId
 //string vicinity_handler::sendRandomShare(string destinationOid, string initiatorOid, int randomShare) {
 //    std::cout << std::string("Send Random Share Destination: ") + destinationOid << std::endl;
-//    
+//
 //    using json = nlohmann::json; // for convenience
 //    std::string address = std::string("http://127.0.0.1:") + agentPort + std::string("/agent/remote/objects/") + destinationOid + std::string("/actions/randomshare");
 //    //std::cout << "URL: " + address << std::endl;
@@ -975,7 +981,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //            std::cout << "There was an error, when sending a share to a trusted party!" << std::endl;
 //            return std::string("");
 //        }
-//        std::string taskId = jOutput["message"][0]["taskId"];     
+//        std::string taskId = jOutput["message"][0]["taskId"];
 //        std::cout << "Send Random Share TaskID: " + taskId << std::endl;
 //        return taskId;
 //    } catch (...) {
@@ -985,7 +991,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //}
 //
 ////needed for distributed aggregation -> get plain property of encrypted device
-//long vicinity_handler::getPropertyOfEncryptedDevice(string encryptedDeviceOid, string pid) {    
+//long vicinity_handler::getPropertyOfEncryptedDevice(string encryptedDeviceOid, string pid) {
 //    using json = nlohmann::json; // for convenience
 //    std::string plainDeviceOid = m_pController->getDB_access()->getPlainDeviceOfOwnEncryptedDevice(encryptedDeviceOid.c_str());
 //    std::string address = "http://127.0.0.1:" + agentPort + "/agent/remote/objects/" + plainDeviceOid + "/properties/" + pid;
@@ -1005,7 +1011,7 @@ uint8_t vicinity_handler::getOwnPort() {
 //            returnValue = atoi(std::string(jOutput["message"][0]["value"].dump()).c_str());
 //        }
 //    } catch (...) {
-//        std::cout << "Error, received payload is wrong" << std::endl; 
+//        std::cout << "Error, received payload is wrong" << std::endl;
 //    }
 //    return returnValue;
 //}

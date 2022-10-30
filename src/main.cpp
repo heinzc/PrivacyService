@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     he_handler * he = (he_handler*) (new seal_he_handler());
     controller.setHE_handler(he);
     he->initialize(); //must be after setting he handler to be able to access database
-                      
+
     // RESTful API
     rest_handler* restHandler = new rest_handler();
     controller.setREST_handler(restHandler);
@@ -65,11 +65,11 @@ int main(int argc, char* argv[])
     // load plugins. This has to be the last step, as Plugins may interact with REST, the DB or VICINITY
     load_plugins();
 
-    
+
     //debugging... to be moved into unittesting
-    
+
     //std::cout << "Trusted parties: " + vicinity->readProperty(std::string("he_service"), std::string("trustedparties")) << std::endl;
-    
+
     //std::string value;
     //std::string pubKey;
     //std::vector<std::string> valuesvec;

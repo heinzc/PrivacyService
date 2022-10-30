@@ -4,17 +4,17 @@
 
 
 mpc_plugin::mpc_plugin():
-	QObject(), PrivacyPluginInterface() 
+	QObject(), PrivacyPluginInterface()
 {
 
 }
-mpc_plugin::~mpc_plugin() 
+mpc_plugin::~mpc_plugin()
 {
 
 }
 
 void mpc_plugin::initialize() {
-	addRoute("/mpc/huehuehue", QHttpServerRequest::Method::GET, [=](const QHttpServerRequest& request) {
+	addRoute("/mpc/huehuehue", QHttpServerRequest::Method::Get, [=](const QHttpServerRequest& request) {
 		return handleHueHue();
 		});
 }

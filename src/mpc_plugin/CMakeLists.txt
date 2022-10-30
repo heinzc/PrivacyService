@@ -1,4 +1,4 @@
-set(SRC_FILES  
+set(SRC_FILES
     mpc_plugin.cpp
 )
 
@@ -8,4 +8,8 @@ target_link_libraries(mpc_plugin PRIVATE
     ${PROJECT_NAME}lib
     Qt6::Core
     Qt6::HttpServer
+)
+
+install(TARGETS mpc_plugin
+    LIBRARY DESTINATION bin/plugins
 )

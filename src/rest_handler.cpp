@@ -11,6 +11,7 @@
 #include <QHttpServer>
 
 #include <QStringConverter>
+#include <QJsonArray>
 
 
 rest_handler::rest_handler() :
@@ -36,32 +37,32 @@ void rest_handler::setController(he_controller * controller) {
 }
 
 int rest_handler::setupRoutes() {
-    addRoute("/vicinity/objects", QHttpServerRequest::Method::GET, [=](const QHttpServerRequest& request) {
-        return handle_VICINITY_GET_objects(request);
+    addRoute("/vicinity/objects", QHttpServerRequest::Method::Get, [=](const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_VICINITY_GET_objects(request, responder);
         });
 
-    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::GET, [=](QString oid, QString pid, const QHttpServerRequest& request) {
-        return handle_VICINITY_GET_properties(oid, pid, request);
+    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::Get, [=](QString oid, QString pid, const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_VICINITY_GET_properties(oid, pid, request, responder);
         });
 
-    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::PUT, [=](QString oid, QString pid, const QHttpServerRequest& request) {
-        return handle_VICINITY_PUT_properties(oid, pid, request);
+    addRoute("/vicinity/objects/<arg>/properties/<arg>", QHttpServerRequest::Method::Put, [=](QString oid, QString pid, const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_VICINITY_PUT_properties(oid, pid, request, responder);
         });
 
-    addRoute("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::POST, [=](QString oid, QString aid, const QHttpServerRequest& request) {
-        return handle_VICINITY_POST_action(oid, aid, request);
+    addRoute("/vicinity/objects/<arg>/actions/<arg>", QHttpServerRequest::Method::Post, [=](QString oid, QString aid, const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_VICINITY_POST_action(oid, aid, request, responder);
         });
 
-    addRoute(QString("/encrypt"), QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
-        return handle_local_encrypt(request);
+    addRoute(QString("/encrypt"), QHttpServerRequest::Method::Post, [=](const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_local_encrypt(request, responder);
         });
 
-    addRoute("/aggregate", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
-        return handle_local_aggregate(request);
+    addRoute("/aggregate", QHttpServerRequest::Method::Post, [=](const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_local_aggregate(request, responder);
         });
 
-    addRoute("/decrypt", QHttpServerRequest::Method::POST, [=](const QHttpServerRequest& request) {
-        return handle_local_decrypt(request);
+    addRoute("/decrypt", QHttpServerRequest::Method::Post, [=](const QHttpServerRequest& request, QHttpServerResponder &&responder) {
+        return handle_local_decrypt(request, responder);
         });
 
     const auto port = m_pHttpServer->listen(QHostAddress::Any, 4242);
@@ -87,15 +88,20 @@ void rest_handler::get(const QUrl& endpoint, QObject * caller) {
     connect(m_pNetManager, SIGNAL(finished(QNetworkReply*)), caller, SLOT(getAdapterTDFinished(QNetworkReply*)));
     QNetworkRequest request(endpoint);
 
-    m_pNetManager->get(request); 
+    m_pNetManager->get(request);
 }
 
 
-QJsonDocument rest_handler::get_blocking(const QUrl& endpoint) {
+QJsonDocument rest_handler::get_blocking(const QUrl& endpoint, const QList<QPair<QByteArray, QByteArray>>& headers) {
     // disconnect first, so the reply buffer is not read by the slot
     disconnect(m_pNetManager, SIGNAL(finished(QNetworkReply*)), nullptr, nullptr);
 
     QNetworkRequest req(endpoint);
+    // add given headers
+    for(auto header : headers)
+    {
+        req.setRawHeader(header.first, header.second);
+    }
     QScopedPointer<QNetworkReply> reply(m_pNetManager->get(req));
 
     QTime timeout = QTime::currentTime().addSecs(10);
@@ -215,7 +221,7 @@ double rest_handler::extract_double_from_request(const QHttpServerRequest& reque
     double value;
 
     // check content type and extract value accordingly
-    QVariant contentType = request.headers().value("Content-Type");
+    QVariant contentType = request.value("Content-Type");
     if (contentType.toString() == "application/json") {
         QJsonDocument body_json = extractJsonFromRequest(request);
 
@@ -259,7 +265,7 @@ QString rest_handler::extract_ctxt_from_request(const QHttpServerRequest& reques
     QString value;
 
     // check content type and extract value accordingly
-    QVariant contentType = request.headers().value("Content-Type");
+    QVariant contentType = request.value("Content-Type");
     if (contentType.toString() == "application/json") {
         // read body as JSON
         QJsonDocument body_json = extractJsonFromRequest(request);
@@ -275,13 +281,13 @@ QString rest_handler::extract_ctxt_from_request(const QHttpServerRequest& reques
 }
 
 
-QJsonObject rest_handler::handle_VICINITY_GET_objects(const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_VICINITY_GET_objects(const QHttpServerRequest& request, QHttpServerResponder &responder) {
     qDebug() << "VICINITY Get Objects!";
     return m_pController->getVICINITY_handler()->getThingDescription();
 }
 
 
-QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pid, const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pid, const QHttpServerRequest& request, QHttpServerResponder &responder) {
     // TODO: sanitycheck for properties
     qDebug() << "VICINITY Get Parameters!";
     qDebug() << oid << pid;
@@ -290,7 +296,7 @@ QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pi
 }
 
 
-QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pid, const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pid, const QHttpServerRequest& request, QHttpServerResponder &responder) {
     qDebug() << "VICINITY Put Request!";
     QJsonDocument doc;
     try {
@@ -308,7 +314,7 @@ QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pi
 }
 
 
-QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, const QHttpServerRequest& request, QHttpServerResponder &responder) {
     qDebug() << "VICINITY Post Request!";
     qDebug() << "oid: " << oid << ", aid: " << aid;
     qDebug() << "headers: " << request.headers();
@@ -331,7 +337,7 @@ QJsonObject rest_handler::handle_VICINITY_POST_action(QString oid, QString aid, 
 }
 
 
-QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request, QHttpServerResponder &responder) {
     QJsonObject result;
     double value;
     try {
@@ -349,43 +355,57 @@ QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request
 }
 
 
-QJsonObject rest_handler::handle_local_aggregate(const QHttpServerRequest& request) {
-//            std::cout << "Aggregate called locally." << std::endl;
-//            //string stvalue = message.extract_string().get();
-//            //std::cout << "Body: " + stvalue << std::endl;
-//            json::object request_json = message.extract_json().get().as_object();
-//            if(request_json.find("values") != request_json.end()) {
-//                json::array values = request_json.at("values").as_array();
-//                std::vector<std::string> vec;
-//                for(auto it = values.begin(); it != values.end(); ++it) {
-//                    //std::cout << it->as_string() << std::endl;
-//                    try {
-//                        vec.push_back(it->as_string());
-//                    } catch (...) {
-//                        message.reply(status_codes::BadRequest,"Payload incorrect");
-//                        return;
-//                    }
-//                }
-//                std::string sourceOid = "";
-//                if(message.headers().has(U("sourceOid"))) { //does not need to be provided
-//                    sourceOid = ::utility::conversions::to_utf8string(message.headers().operator[](U("sourceOid")));
-//                }
-//                std::string result = "";
-//                if(sourceOid == "") {
-//                    result = m_pController->getHE_handler()->aggregate(vec, ""); //use own key
-//                } else {
-//                    result = m_pController->getHE_handler()->aggregate(vec, (m_pController->getVICINITY_handler()->getPublicKey(sourceOid)).c_str()).c_str();
-//                }
-//                //std::cout << "Result of aggregation: " + result << std::endl;
-//                std::cout << "Aggregate locally finished." << std::endl;
-//                message.reply(status_codes::OK, result);
-//                return;
-//            }
-//        }
+QJsonObject rest_handler::handle_local_aggregate(const QHttpServerRequest& request, QHttpServerResponder &responder) {
+    std::cout << "Aggregate called locally." << std::endl;
+    //string stvalue = message.extract_string().get();
+    //std::cout << "Body: " + stvalue << std::endl;
+
+    // check content type and extract value accordingly
+    QString contentType = QString::fromUtf8(request.value("Content-Type"));
+    if (contentType != "application/json") {
+        responder.write(QHttpServerResponder::StatusCode::BadRequest);
+        return QJsonObject();
+    }
+
+    // read body as JSON
+    QJsonDocument body_json = extractJsonFromRequest(request);
+
+    // at this point jsonValue contains the actual ctxt provided
+    QJsonArray jsonValues = body_json.object().value("values").toArray();
+
+    QStringList vec;
+    for(auto it = jsonValues.begin(); it != jsonValues.end(); ++it) {
+        //std::cout << it->as_string() << std::endl;
+        try {
+            vec.append(it->toString());
+        } catch (...) {
+            responder.write(QHttpServerResponder::StatusCode::BadRequest);
+            return QJsonObject();
+        }
+    }
+
+    std::string sourceOid = "";
+    QString requestSourceOid = QString::fromUtf8(request.value("sourceOid"));
+    if(!requestSourceOid.isEmpty()) {
+        sourceOid = requestSourceOid.toStdString();
+    }
+    QString result = "";
+    if(sourceOid == "") {
+        result = m_pController->getHE_handler()->sum(vec, ""); //use own key
+    } else {
+        result = m_pController->getHE_handler()->sum(vec, (m_pController->getVICINITY_handler()->getPublicKey(sourceOid)).c_str());
+    }
+    //std::cout << "Result of aggregation: " + result << std::endl;
+    std::cout << "Aggregate locally finished." << std::endl;
+    QJsonObject resultObj
+    {
+        {"result", result}
+    };
+    responder.write(QJsonDocument(resultObj));
     return QJsonObject();
 }
 
-QJsonObject rest_handler::handle_local_decrypt(const QHttpServerRequest& request) {
+QJsonObject rest_handler::handle_local_decrypt(const QHttpServerRequest& request, QHttpServerResponder &responder) {
     QJsonObject result;
     QString value;
     try {
