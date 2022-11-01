@@ -44,7 +44,11 @@ int main(int argc, char* argv[])
 
     // initialize compenents
     //database
-    db_access * db = new db_access("service.db");
+    db_access * db = new db_access(qApp->applicationDirPath()
+                                    + QString(QDir::separator())
+                                    + "data"
+                                    + QString(QDir::separator())
+                                    + "service.db");
     controller.setDB_access(db);
 
     // he
@@ -59,7 +63,11 @@ int main(int argc, char* argv[])
     // vicinity
     vicinity_handler* vicinity = new vicinity_handler();
     controller.setVICINITY_handler(vicinity);
-    vicinity->initialize("config_adapters.json");
+    vicinity->initialize(qApp->applicationDirPath()
+                            + QString(QDir::separator())
+                            + "data"
+                            + QString(QDir::separator())
+                            + "config_adapters.json");
 
 
     // load plugins. This has to be the last step, as Plugins may interact with REST, the DB or VICINITY

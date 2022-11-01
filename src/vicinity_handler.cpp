@@ -9,7 +9,9 @@
 
 //#include <unistd.h> //usleep
 
+#include <QCoreApplication>
 #include <QFile>
+#include <QDir>
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -87,7 +89,11 @@ void vicinity_handler::initialize(QString configfile) {
 */
 void vicinity_handler::generateThingDescription() {
     //load Service TD with endpoints for VAS
-    QFile file("ServiceThingDescription.json");
+    QFile file(qApp->applicationDirPath()
+                + QString(QDir::separator())
+                + "data"
+                + QString(QDir::separator())
+                + "ServiceThingDescription.json");
     if (file.open(QIODevice::ReadOnly))
     {
         QByteArray bytes = file.readAll();
