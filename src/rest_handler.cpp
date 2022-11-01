@@ -283,6 +283,7 @@ QString rest_handler::extract_ctxt_from_request(const QHttpServerRequest& reques
 
 QJsonObject rest_handler::handle_VICINITY_GET_objects(const QHttpServerRequest& request, QHttpServerResponder &responder) {
     qDebug() << "VICINITY Get Objects!";
+    responder.write(QJsonDocument(m_pController->getVICINITY_handler()->getThingDescription()));
     return m_pController->getVICINITY_handler()->getThingDescription();
 }
 
@@ -292,6 +293,7 @@ QJsonObject rest_handler::handle_VICINITY_GET_properties(QString oid, QString pi
     qDebug() << "VICINITY Get Parameters!";
     qDebug() << oid << pid;
 
+    responder.write(QJsonDocument(m_pController->getVICINITY_handler()->readProperty(oid, pid)));
     return m_pController->getVICINITY_handler()->readProperty(oid, pid);
 }
 
@@ -309,7 +311,7 @@ QJsonObject rest_handler::handle_VICINITY_PUT_properties(QString oid, QString pi
     }
 
     QJsonObject reply_payload = m_pController->getVICINITY_handler()->writeProperty(oid, pid, doc);
-
+    responder.write(QJsonDocument(reply_payload));
     return reply_payload;
 }
 
@@ -351,6 +353,8 @@ QJsonObject rest_handler::handle_local_encrypt(const QHttpServerRequest& request
     QString encrypted = m_pController->getHE_handler()->encrypt_as_QString(value);
 
     result.insert("value", encrypted);
+
+    responder.write(QJsonDocument(result));
     return result;
 }
 
@@ -419,5 +423,7 @@ QJsonObject rest_handler::handle_local_decrypt(const QHttpServerRequest& request
     double decrypted = m_pController->getHE_handler()->decrypt(value);
 
     result.insert("value", decrypted);
+
+    responder.write(QJsonDocument(result));
     return result;
 }
