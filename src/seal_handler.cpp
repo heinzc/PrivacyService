@@ -18,7 +18,7 @@ seal_he_handler::seal_he_handler(size_t poly_modulus_degree) :
     m_poly_modulus_degree = poly_modulus_degree;
 
     m_pContext = 0;
-    
+
     m_pParms = EncryptionParameters (scheme_type::ckks);
 }
 
@@ -32,31 +32,31 @@ seal_he_handler::~seal_he_handler() {
  * @brief Initialize the Handler and generate or reuse Keys
 */
 void seal_he_handler::initialize() {
-    
+
     m_pParms.set_poly_modulus_degree(m_poly_modulus_degree);
-    m_pParms.set_coeff_modulus(CoeffModulus::Create(m_poly_modulus_degree, { 60, 60, 60, 60, 60, 60 }));
-    m_scale = pow(2.0, 60);
+    m_pParms.set_coeff_modulus(CoeffModulus::Create(m_poly_modulus_degree, { 60, 40, 40, 60 }));
+    m_scale = pow(2.0, 40);
 //    m_pParms.set_plain_modulus(8192); //change this, if your own encrypted values can be larger than this!
 
     m_pContext = new SEALContext(m_pParms);
 
     //print_parameters(m_pContext);
-    
+
     //try to get saved keys from database. if there are none, use newly generated ones
     QString pk = m_pController->getDB_access()->get_own_key("PK");
     QString sk = m_pController->getDB_access()->get_own_key("SK");
     if(pk.isEmpty() || sk.isEmpty()) { //own keys missing in the database
         //save above generated keys in database
-        cout << "No own keys yet in database. Generated new keys." << endl;   
+        cout << "No own keys yet in database. Generated new keys." << endl;
         generate_keys();
         m_pController->getDB_access()->insert_own_key("PK", getPublicKey());
         m_pController->getDB_access()->insert_own_key("SK", getSecretKey());
     } else { //set keys to the values saved in the database
-        cout << "Found own keys in database. Use them." << endl;  
+        cout << "Found own keys in database. Use them." << endl;
         setPublicKey(m_pController->getDB_access()->get_own_key("PK"));
         setPrivateKey(m_pController->getDB_access()->get_own_key("SK"));
     }
-	
+
     cout << "*** END INITIALIZATION ***" << endl;
 }
 
@@ -69,7 +69,7 @@ void seal_he_handler::initialize() {
 QString seal_he_handler::encrypt_as_QString(double x, const QString& pkJson) {
     PublicKey useKey;
     SEALContext * useContext;
-    
+
     if (pkJson.isEmpty()) {
         useKey = m_PublicKey;
         useContext = m_pContext;
@@ -85,7 +85,7 @@ QString seal_he_handler::encrypt_as_QString(double x, const QString& pkJson) {
 
         qDebug() << "using given key";
     }
-    
+
     CKKSEncoder encoder(*useContext);
     Plaintext x_plain;
     encoder.encode(x, m_scale, x_plain);
@@ -154,13 +154,13 @@ void seal_he_handler::recrypt_for_svm(const QString& ctxt, int dimension, QJsonO
     CKKSEncoder encoder(*m_pContext);
     Encryptor encryptor(*m_pContext, m_PublicKey);
     Decryptor decryptor(*m_pContext, m_SecretKey);
-    
+
     Ciphertext old_cipher;
     StringToCipher(ctxt, old_cipher, m_pContext);
 
     Plaintext old_plain;
     decryptor.decrypt(old_cipher, old_plain);
-        
+
     vector<double> decoded;
     encoder.decode(old_plain, decoded);
 
@@ -180,14 +180,14 @@ void seal_he_handler::recrypt_for_svm(const QString& ctxt, int dimension, QJsonO
 
 /**
  * @brief Adds up the given List of Inputs and returns the Sum as Ciphertext
- * @param input List of Inputs 
+ * @param input List of Inputs
  * @param publickey Publickey under which the Inputs are encrypted. If left empty, the local one is used.
  * @return Ciphertext of the Sum
 */
 QString seal_he_handler::sum(QStringList& input, const QString& pkJson) {
     PublicKey useKey;
     SEALContext * useContext;
-    
+
     //std::cout << std::string("pk: ") + publickey << std::endl;
     if (pkJson.isEmpty()) {
         useKey = m_PublicKey;
@@ -211,10 +211,10 @@ QString seal_he_handler::sum(QStringList& input, const QString& pkJson) {
 
     Plaintext zero_plain;
     encoder.encode(0, m_scale, zero_plain);
-    
+
     Ciphertext sum;
     encryptor.encrypt(zero_plain, sum);
-    
+
     for(auto it = input.begin(); it != input.end(); ++it) {
         stringstream ss(QByteArray::fromBase64(it->toUtf8()).toStdString());
 
@@ -280,7 +280,7 @@ QString seal_he_handler::getPublicKey() {
     QJsonObject keyJson;
     keyJson.insert("key", key);
     keyJson.insert("params", params);
-    
+
     QJsonDocument returnDoc(keyJson);
     return returnDoc.toJson();
 }
@@ -340,7 +340,7 @@ void seal_he_handler::getGaloisKeys(QString& galoisKeys) {
 
     QByteArray b = QByteArray::fromStdString(ss.str());
     qDebug() << "Byte array size is: " << b.size();
-    
+
     galoisKeys = QString(b.toBase64());
     qDebug() << "and as a base64 encoded string: " << galoisKeys.size();
 }
@@ -435,20 +435,20 @@ void seal_he_handler::setPublicKey(const QString& pk) {
 
     m_PublicKey = pubKeyParams.first;
     m_pParms = pubKeyParams.second;
-    
+
     qDebug() << "OK!";
 }
 
 /**
  * @brief Used when loading existing Keys from the local Database.
- * @param sk Secret Key String 
+ * @param sk Secret Key String
 */
 void seal_he_handler::setPrivateKey(const QString& sk) {
     qDebug() << "Setting private key... ";
-    
+
     std::stringstream ss(QByteArray::fromBase64(sk.toUtf8()).toStdString());
     m_SecretKey.load(*m_pContext, ss);
-    
+
     qDebug() << "OK!";
 }
 

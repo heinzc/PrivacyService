@@ -16,7 +16,7 @@
 class seal_he_handler : he_handler
 {
     public:
-        seal_he_handler(size_t poly_modulus_degree = 16384);
+        seal_he_handler(size_t poly_modulus_degree = 8192);
         ~seal_he_handler();
 
         void initialize();
@@ -49,7 +49,7 @@ class seal_he_handler : he_handler
         double m_scale;
 
         seal::SEALContext * m_pContext = 0;
-        
+
         seal::EncryptionParameters m_pParms;
 
         seal::SecretKey m_SecretKey;
@@ -66,10 +66,10 @@ class seal_he_handler : he_handler
         void generate_keys();
 
         std::pair<seal::PublicKey, seal::EncryptionParameters> pubKeyParamsFromJson(const QString& pkJson);
-        
+
         void setPublicKey(const QString& pk);
         void setPrivateKey(const QString& sk);
-        
+
         QString getSecretKey();
 
         void StringToCipher(const QString& cipher, seal::Ciphertext& retVal, seal::SEALContext* useContext = 0);
@@ -87,7 +87,7 @@ Helper function: Prints a vector of floating-point values.
         {
             /*
             Save the formatting information for std::cout.
-            
+
             std::ios old_fmt(nullptr);
             old_fmt.copyfmt(std::cout);
 
@@ -124,7 +124,7 @@ Helper function: Prints a vector of floating-point values.
 
             /*
             Restore the old std::cout formatting.
-            
+
             std::cout.copyfmt(old_fmt);
         }
         */
