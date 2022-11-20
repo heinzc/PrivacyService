@@ -417,6 +417,7 @@ QJsonObject rest_handler::handle_local_decrypt(const QHttpServerRequest& request
     }
     catch (std::invalid_argument& e) {
         result.insert("error", e.what());
+        responder.write(QJsonDocument(result));
         return result;
     }
 
